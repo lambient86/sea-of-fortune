@@ -1,1 +1,1 @@
-# sea-of-fortune
+# Pirates: Sea of Fortune
