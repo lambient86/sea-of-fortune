@@ -55,8 +55,6 @@ Each island may spawn a procedurally generated dungeon. Inside, players will enc
 - Anna
 - Tim
 
-This will create an “infinite world” experience within a finite one.
-
 ---
 
 ## Midterm Goals
