@@ -77,7 +77,7 @@ By midterms, we plan to have:
 
 ---
 
-## Our Final Breakdown
+## Final Breakdown
 
 ### Advanced Topics - 30%
 - **Networking** - 15%
