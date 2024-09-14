@@ -2,18 +2,6 @@
 
 ---
 
-### Networking
-- Mark
-- Theo
-- Zac
-
-### Procedural Generation
-- Andrew
-- Anna
-- Tim
-
----
-
 ## An Overview of Sea of Fortune
 
 **Sea of Fortune** is a top-down pirate-themed PvP/PvE adventure game where players sail the seven seas in search of islands to explore. Up to 4 players can join a world and engage in thrilling adventures.
@@ -53,11 +41,19 @@ The goal is player-specific—whether you wish to:
 
 ### Networked Multiplayer
 **Sea of Fortune** will feature fully functional networked multiplayer, supporting up to 4 players in one world. Players can interact through in game and explore the vast oceans and islands the world has to offer.
+## Team
+- Mark
+- Theo
+- Zac
 
 ### Procedurally Generated Dungeons
 Each island may spawn a procedurally generated dungeon. Inside, players will encounter:
 - Random treasures,
 - Enemies, and more!
+## Team
+- Andrew
+- Anna
+- Tim
 
 This will create an “infinite world” experience within a finite one.
 
