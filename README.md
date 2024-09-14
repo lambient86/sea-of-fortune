@@ -25,7 +25,6 @@
 - Players will find procedurally generated dungeons on islands filled with enemies and treasures.
 - Players spawn on a home island, and as they explore further, better loot can be found, but at the risk of tougher enemies.
 - Random enemy spawns, such as the **Kraken**, await players during their journeys.
-- Player vs. Player (PvP) interactions: Players may encounter each other in the world, and what happens next is entirely up to them!
 
 ### Treasure & Upgrades
 The treasure found in dungeons can be used to purchase items and upgrades via the shop system.
@@ -50,29 +49,10 @@ The goal is player-specific—whether you wish to:
 
 ---
 
-## Concept Art
-
-### Ships
-- Classic
-- Ghost Ship
-- The **Gray Pearl**  
-  *This game is not affiliated with Disney's Pirates of the Caribbean franchise.*
-
-### Map
-Our overworld map will feature a vast ocean dotted with discoverable islands!
-
-### Enemies
-- **Skeleton Enemy**
-- **Mimic**
-
----
-
 ## Advanced Topics
 
 ### Networked Multiplayer
-**Sea of Fortune** will feature fully functional networked multiplayer, supporting up to 4 players in one world. Players can interact through chat or in-game by:
-- Collaborating in dungeons, or
-- Engaging in PvP combat.
+**Sea of Fortune** will feature fully functional networked multiplayer, supporting up to 4 players in one world. Players can interact through in game and explore the vast oceans and islands the world has to offer.
 
 ### Procedurally Generated Dungeons
 Each island may spawn a procedurally generated dungeon. Inside, players will encounter:
@@ -83,7 +63,7 @@ This will create an “infinite world” experience within a finite one.
 
 ---
 
-## Our Midterm Goals
+## Midterm Goals
 
 By midterms, we plan to have:
 - A default base map of **1000x1000 grid spaces**.
@@ -93,10 +73,10 @@ By midterms, we plan to have:
 
 ---
 
-## Finals Goals
+## Final Goals
 
 - Fully functional dungeons.
-- Multiplayer PvE and PvP combat.
+- Multiplayer PvE combat.
 - Boat and player combat systems.
 - Fully functional shop/looting system.
 - Overworld map generation fleshed out.
@@ -109,27 +89,16 @@ By midterms, we plan to have:
 - **Networking** - 15%
 - **Procedural Generation** - 15%
 
-### General Topics
-- **PvE Combat System** - 12%
-- **Looting/Shop System** - 12%
+### General Topics - 50%
+- **PvE Combat System** - 15%
+- **Looting/Shop System** - 15%
 - **Enemy AI** - 10%
 - **Movement/Physics (Boat, player, etc.)** - 10%
-- **PvP** - 5%
-- **Art/Animation** - 1%
 
 ---
 
-## Our Stretch Goals
+## Stretch Goals
 
 - **Localized Weather:** Randomized weather events, upgrading from a global weather system.
-- **Custom Character Creation:** Players will be able to personalize a custom avatar to their liking.
+- **PvP Combat:** Players will be able to engage in PvP combat on the open seas as well as on the islands and inside dungeons.
 
-### Additional Goals:
-- Goal One
-- Goal Two
-
----
-
-## And Our Manager for the Week Is…
-
-**Tim!!!**
