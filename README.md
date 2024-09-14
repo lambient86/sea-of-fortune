@@ -41,7 +41,7 @@ The goal is player-specific—whether you wish to:
 
 ### Networked Multiplayer
 **Sea of Fortune** will feature fully functional networked multiplayer, supporting up to 4 players in one world. Players can interact through in game and explore the vast oceans and islands the world has to offer.
-**Team**
+# Team
 - Mark
 - Theo
 - Zac
@@ -50,7 +50,7 @@ The goal is player-specific—whether you wish to:
 Each island may spawn a procedurally generated dungeon. Inside, players will encounter:
 - Random treasures,
 - Enemies, and more!
-**Team**
+# Team
 - Andrew
 - Anna
 - Tim
