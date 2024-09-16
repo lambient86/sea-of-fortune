@@ -42,18 +42,19 @@ The goal is player-specific—whether you wish to:
 ### Networked Multiplayer
 **Sea of Fortune** will feature fully functional networked multiplayer, supporting up to 4 players in one world. Players can interact through in game and explore the vast oceans and islands the world has to offer.
 #### Team
-- Mark
-- Theo
-- Zac
+- Mark Zarroli
+- Theo Zervos
+- Zac Chen
 
 ### Procedurally Generated Dungeons
 Each island may spawn a procedurally generated dungeon. Inside, players will encounter:
 - Random treasures,
-- Enemies, and more!
+- Enemies, and more!'
+- Wavefunction Collapse Algorithm to generate the terrain/layout inside the dungeons.
 #### Team
-- Andrew
-- Anna
-- Tim
+- Andrew Amilcar
+- Anna Plazek
+- Tim Sullivan
 
 ---
 
