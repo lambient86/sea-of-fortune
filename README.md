@@ -25,7 +25,7 @@ The treasure found in dungeons can be used to purchase items and upgrades via th
 
 #### Concept Art:
 ![Boats](concept-art/basicShip.png)![Boats](concept-art/grayShip.png)
-![Boats](concept-art/ghostShip.png)![Mimic](concept-art/mimic.png)
+![Boats](concept-art/ghostShip.png)![Mimic](concept-art/skeleton-1.png)
 
 ---
 
