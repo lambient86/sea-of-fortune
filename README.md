@@ -23,6 +23,9 @@ The treasure found in dungeons can be used to purchase items and upgrades via th
 - **Ship Upgrades:**
   - Increase ship’s speed, durability, and control.
 
+#### Concept Art:
+[Boats](concept-art/basicShip.png)
+
 ---
 
 ## Sea of Fortune Gameplay and Goals
