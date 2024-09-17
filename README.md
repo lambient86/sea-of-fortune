@@ -29,7 +29,7 @@ The treasure found in dungeons can be used to purchase items and upgrades via th
   <img src="/concept-art/basicShip.png" width="275">
 </picture>
 <picture>
-  <img src="/concept-art/grayShip.png" width="250">
+  <img src="/concept-art/grayShip.png" width="225">
 </picture>
 <picture>
   <img src="/concept-art/ghostShip.png" width="200">
