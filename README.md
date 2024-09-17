@@ -25,7 +25,7 @@ The treasure found in dungeons can be used to purchase items and upgrades via th
 
 ### Concept Art:
 #### Boats:
-<img src="[./concept-art/basicShip.png](https://github.com/lambient86/sea-of-fortune/blob/e8b3c940670839ac4a668b0deefa768bf1b1aa62/concept-art/basicShip.png)" width="100>
+<img src="https://github.com/lambient86/sea-of-fortune/blob/e8b3c940670839ac4a668b0deefa768bf1b1aa62/concept-art/basicShip.png" width="100>
 
 #### Skeletons:
 
