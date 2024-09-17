@@ -43,7 +43,7 @@ The treasure found in dungeons can be used to purchase items and upgrades via th
   <img src="/concept-art/skeleton-2.png" width="235">
 </picture>
 <picture>
-  <img src="/concept-art/skeleton-3.png" width="200">
+  <img src="/concept-art/skeleton-3.png" width="235">
 </picture>
 
 ---
