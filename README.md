@@ -24,7 +24,8 @@ The treasure found in dungeons can be used to purchase items and upgrades via th
   - Increase ship’s speed, durability, and control.
 
 #### Concept Art:
-![Boats](concept-art/basicShip.png)![Boats](concept-art/grayShip.png)![Boats](concept-art/ghostShip.png)
+![Boats](concept-art/basicShip.png)![Boats](concept-art/grayShip.png)
+![Boats](concept-art/ghostShip.png)![Mimic](concept-art/mimic.png)
 
 ---
 
