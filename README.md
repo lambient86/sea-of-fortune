@@ -69,7 +69,7 @@ The goal is player-specific—whether you wish to:
 ## Advanced Topics
 
 ### Networked Multiplayer
-**Sea of Fortune** will feature fully functional networked multiplayer, supporting up to 4 players in one world. Players can interact through in game and explore the vast oceans and islands the world has to offer. Players will communicate to one another through Peer-to-Peer (P2P) networking, fogoing the need for a central server.
+**Sea of Fortune** will feature fully functional networked multiplayer, supporting up to 4 players in one world. Players can interact through in game and explore the vast oceans and islands the world has to offer. Players will communicate to one another through Peer-to-Peer (P2P) networking, forgoing the need for a central server.
 #### Team
 - Mark Zarroli
 - Theo Zervos
@@ -110,19 +110,19 @@ By midterms, we plan to have:
 ## Final Breakdown
 
 ### Advanced Topics - 30%
-- **Networking** - Relatively lag-free p2p multiplayer with up to 4 people - 15%
+- **Networking** - Relatively lag-free P2P multiplayer with up to 4 people - 15%
 - **Procedural Generation** - Procedurally generated dungeons using waveform compression - 15%
 
 ### General Topics - 50%
-- **PvE Combat System** - 15%
-- **Looting/Shop System** - 15%
-- **Enemy AI** - 10%
-- **Movement/Physics (Boat, player, etc.)** - 10%
+- **PvE Combat System** - Multiple enemy types and attack patterns with co-op functionality - 15%
+- **Looting/Shop System** - Multiple weapon types that can be bought to fit different playstyles, armor and other upgrades for both player and ship - 15%
+- **Enemy AI** - Multiple enemies with differing AI that force players to adapt and learn in order to fight in the most effective wayd - 10%
+- **Movement/Physics (Boat, player, etc.)** - Player and enemy movement, ship physics affected by weather events - 10%
 
 ---
 
 ## Stretch Goals
 
-- **Localized Weather:** Randomized weather events, upgrading from a global weather system.
-- **PvP Combat:** Players will be able to engage in PvP combat on the open seas as well as on the islands and inside dungeons.
+- **Localized Weather:** Randomized weather events, upgrading from a global weather system. Used to make players experience different even when on the same map.
+- **PvP Combat:** Players will be able to engage in PvP combat on the open seas as well as on the islands and inside dungeons. This will add a whole new way to play the game, allowing players to shift their combat focus from looting dungeons, to stealing from other players.
 
