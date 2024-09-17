@@ -46,6 +46,12 @@ The treasure found in dungeons can be used to purchase items and upgrades via th
   <img src="/concept-art/skeleton-3.png" width="235">
 </picture>
 
+#### Overworld Map:
+
+<picture>
+  <img src="/concept-art/map.png" width="275">
+</picture>
+
 ---
 
 ## Sea of Fortune Gameplay and Goals
