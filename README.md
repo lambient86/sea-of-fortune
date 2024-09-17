@@ -91,27 +91,27 @@ Each island may spawn a procedurally generated dungeon. Inside, players will enc
 
 By midterms, we plan to have:
 - A default base map of **1000x1000 grid spaces**.
-- A variety of basic enemies (e.g., skeletons, mimics).
-- A working overworld enemy to be encountered while sailing.
+- One basic enemy found in dungeons (e.g., skeletons).
+- One working overworld enemy to be encountered while sailing.
 - A functional shop system with buy, sell, and upgrade mechanics.
 
 ---
 
 ## Final Goals
 
-- Fully functional dungeons.
+- Fully functional dungeons with multiple enemy types and randomized loot tables.
 - Multiplayer PvE combat.
-- Boat and player combat systems.
-- Fully functional shop/looting system.
-- Overworld map generation fleshed out.
+- Multiple overworld random events and enemy encounters.
+- Fully functional shop/upgrade system.
+- Overworld map generation fully finished.
 
 ---
 
 ## Final Breakdown
 
 ### Advanced Topics - 30%
-- **Networking** - 15%
-- **Procedural Generation** - 15%
+- **Networking** - Relatively lag-free p2p multiplayer with up to 4 people - 15%
+- **Procedural Generation** - Procedurally generated dungeons using waveform compression - 15%
 
 ### General Topics - 50%
 - **PvE Combat System** - 15%
