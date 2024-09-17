@@ -49,7 +49,7 @@ The treasure found in dungeons can be used to purchase items and upgrades via th
 #### Overworld Map:
 
 <picture>
-  <img src="/concept-art/map.png" width="275">
+  <img src="/concept-art/map.jpg" width="275">
 </picture>
 
 ---
