@@ -110,14 +110,13 @@ By midterms, we plan to have:
 
 ## Final Breakdown
 
-### Advanced Topics - 30%
-- **Networking** - Relatively lag-free P2P multiplayer with up to 4 people - 15%
-- **Procedural Generation** - Procedurally generated dungeons using waveform compression - 15%
+### Advanced Topics - 40%
+- **Networking** - Relatively lag-free P2P multiplayer with up to 4 people - 20%
+- **Procedural Generation** - Procedurally generated dungeons using waveform compression - 20%
 
-### General Topics - 50%
-- **PvE Combat System** - Multiple enemy types and attack patterns with co-op functionality - 15%
+### General Topics - 40%
+- **PvE Combat/Enemy AI System** - Multiple enemy types and attack patterns with co-op functionality - 15%
 - **Looting/Shop System** - Multiple weapon types that can be bought to fit different playstyles, armor and other upgrades for both player and ship - 15%
-- **Enemy AI** - Multiple enemies with differing AI that force players to adapt and learn in order to fight in the most effective wayd - 10%
 - **Movement/Physics (Boat, player, etc.)** - Player and enemy movement, ship physics affected by weather events - 10%
 
 ---
