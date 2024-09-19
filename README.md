@@ -91,6 +91,7 @@ Each island may spawn a procedurally generated dungeon. Inside, players will enc
 
 By midterms, we plan to have:
 - A default base map of **1000x1000 grid spaces**.
+- One static dungeon for all islands
 - One basic enemy found in dungeons (e.g., skeletons).
 - One working overworld enemy to be encountered while sailing.
 - A functional shop system with buy, sell, and upgrade mechanics.
