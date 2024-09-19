@@ -100,11 +100,11 @@ By midterms, we plan to have:
 
 ## Final Goals
 
-- Fully functional dungeons with multiple enemy types and randomized loot tables.
+- Fully functional dungeons with 3 tiers of difficulty and 4 different enemy types and a final dungeon with a final boss
 - Multiplayer PvE combat.
-- Multiple overworld random events and enemy encounters.
-- Fully functional shop/upgrade system.
-- Overworld map generation fully finished.
+- Four overworld random events and enemy encounters (Kraken, Ghost Ship, Whirlpool, Special Dungeon).
+- Fully functional shop/upgrade system (3 armor upgrades, 3 weapon upgrades, 12 ship upgrades).
+- Overworld map generation fully finished (1000x1000 grid)
 
 ---
 
