@@ -115,8 +115,27 @@ By midterms, we plan to have:
 - **Procedural Generation** - Procedurally generated dungeons using waveform compression - 20%
 
 ### General Topics - 40%
-- **PvE Combat/Enemy AI System** - Multiple enemy types and attack patterns with co-op functionality - 15%
-- **Looting/Shop System** - Multiple weapon types that can be bought to fit different playstyles, armor and other upgrades for both player and ship - 15%
+- **PvE Combat/Enemy AI System** - 6 enemy types and attack patterns with co-op functionality - 15%
+  - Dungeon Enemies (x4)
+    - melee skeletons
+    - ranged skeletons with bone projectiles
+    - sentient evil rocks
+    - sonic scream bats
+  - Overworld Ocean Enemies (x2)
+    - The Kraken
+    - ghost ship
+- **Looting/Shop System** - different weapon types that can be bought to fit different playstyles, armor and other upgrades for both player and ship - 15%
+  - Weapon Types (x4): 
+    - Ranged - Musket (with upgrades)
+    - Melee - Sword types (with upgrades)
+  - Armor (x4):
+    - 4 tiers of upgrades (iron, bronze, silver, gold)
+  - Ship Upgrades (x16):
+    - 4 tiers of upgrades for each stat
+      - control
+      - speed
+      - hp
+      - ship cannon
 - **Movement/Physics (Boat, player, etc.)** - Player and enemy movement, ship physics affected by weather events - 10%
 
 ---
