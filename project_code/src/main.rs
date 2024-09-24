@@ -22,7 +22,7 @@ fn main() {
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera2dBundle::default());
     commands.spawn(SpriteBundle {
-        texture: asset_server.load("1.png"),
+        texture: asset_server.load("Theo.png"),
         ..default()
     });
     commands
