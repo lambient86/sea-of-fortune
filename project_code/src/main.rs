@@ -27,7 +27,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
     commands
         .spawn(SpriteBundle {
-            texture: asset_server.load("2.png"),
+            texture: asset_server.load("Zac.png"),
             transform: Transform::from_xyz(0., 0., -1.),
             ..default()
         })
