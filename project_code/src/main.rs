@@ -34,7 +34,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(PopupTimer(Timer::from_seconds(3., TimerMode::Once)));
     commands
         .spawn(SpriteBundle {
-            texture: asset_server.load("3.png"),
+            texture: asset_server.load("Tim.png"),
             transform: Transform::from_xyz(0., 0., -1.),
             ..default()
         })
