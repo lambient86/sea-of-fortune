@@ -3,7 +3,12 @@ use bevy::{prelude::*, window::PresentMode};
 #[derive(Component, Deref, DerefMut)]
 struct PopupTimer(Timer);
 
+#[derive(Component, Clone)]
+struct ZIndex {
+    z_index: f32,
+}
 fn main() {
+
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
@@ -60,13 +65,27 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..default()
         })
         .insert(PopupTimer(Timer::from_seconds(15., TimerMode::Once)));
+    commands
+        .spawn(SpriteBundle {
+            texture: asset_server.load("end.png"),
+            transform: Transform::from_xyz(0., 0., -1.),
+            ..default()
+        })
+        .insert(PopupTimer(Timer::from_seconds(18., TimerMode::Once)));
+
+    commands.spawn(ZIndex{z_index: 0.});
 }
 
-fn show_popup(time: Res<Time>, mut popup: Query<(&mut PopupTimer, &mut Transform)>) {
+fn show_popup(time: Res<Time>, mut popup: Query<(&mut PopupTimer, &mut Transform)>, mut index: Query<&mut ZIndex>) {
+
+    let mut _z = index.single_mut();
+
     for (mut timer, mut transform) in popup.iter_mut() {
         timer.tick(time.delta());
         if timer.just_finished() {
-            transform.translation.z = 0.;
+            transform.translation.z = _z.z_index;
+            _z.z_index +=1.;
+            print!("z level: {}\n", _z.z_index);       // debug
         }
     }    
 }
