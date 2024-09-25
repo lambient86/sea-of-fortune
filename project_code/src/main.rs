@@ -60,6 +60,13 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..default()
         })
         .insert(PopupTimer(Timer::from_seconds(15., TimerMode::Once)));
+    commands
+        .spawn(SpriteBundle {
+            texture: asset_server.load("end.png"),
+            transform: Transform::from_xyz(0., 0., -1.),
+            ..default()
+        })
+        .insert(PopupTimer(Timer::from_seconds(15., TimerMode::Once)));
 }
 
 fn show_popup(time: Res<Time>, mut popup: Query<(&mut PopupTimer, &mut Transform)>) {
