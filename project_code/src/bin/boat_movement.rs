@@ -3,6 +3,8 @@ use bevy::{prelude::*, window::PresentMode};
 const TITLE: &str = "Boat Test";
 const BOUNDS: Vec2 = Vec2::new(1280.0, 720.0);
 
+use bevy::color::palettes::css::{BLUE, LIGHT_BLUE};
+
 // const ACCEL_RATE: f32 = 3600.;
 
 #[derive(Component)]
@@ -11,9 +13,10 @@ struct Player {
     rotation_speed: f32,
 }
 
+
 fn main() {
     App::new()
-        .insert_resource(ClearColor(Color::Srgba(Srgba::gray(0.25))))
+        .insert_resource(ClearColor(Color::Srgba(LIGHT_BLUE)))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: TITLE.into(),
