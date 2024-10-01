@@ -2,6 +2,11 @@ use bevy::{prelude::*, window::PresentMode};
 
 const TITLE: &str = "Boat Test";
 const BOUNDS: Vec2 = Vec2::new(1280.0, 720.0);
+const TILE_SIZE: u32 = 100;
+
+enum PlayerType {
+    Boat,
+}
 
 use bevy::color::palettes::css::{BLUE, LIGHT_BLUE};
 
@@ -13,6 +18,8 @@ struct Player {
     rotation_speed: f32,
 }
 
+#[derive(Component)]
+struct Background;
 
 fn main() {
     App::new()
@@ -37,17 +44,40 @@ fn main() {
         .run();
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+) {
     commands.spawn(Camera2dBundle::default());
 
-    let ship_handle = asset_server.load("basic_ship.png");
+    let bg_texture_handle = asset_server.load("ocean_demo.png");
 
+    commands
+        .spawn(SpriteBundle {
+            texture: bg_texture_handle.clone(),
+            transform: Transform::from_xyz(0., 0., -1.),
+            ..default()
+        })
+        .insert(Background);
+
+    let boat_sheet_handle = asset_server.load("basic_ship.png");
+    let boat_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 2, 2, None, None);
+    let boat_layout_handle = texture_atlases.add(boat_layout);
     commands.spawn((
         SpriteBundle {
-            texture: ship_handle,
+            texture: boat_sheet_handle,
+            transform: Transform {
+                translation: Vec3::new(0., 0., 900.),
+                ..default()
+            },
             ..default()
         },
-        Player {
+        TextureAtlas {
+            layout: boat_layout_handle.clone(),
+            index: PlayerType::Boat as usize,
+        },
+        Player{
             movement_speed: 250.0,
             rotation_speed: f32::to_radians(180.0),
         },
@@ -86,5 +116,17 @@ fn boat_movement(
 
     let extents = Vec3::from((BOUNDS / 2.0, 0.0));
     transform.translation = transform.translation.min(extents).max(-extents);
+}
 
+fn move_camera(
+    player: Query<&Transform, With<Player>>,
+    mut camera: Query<&mut Transform, (Without<Player>, With<Camera>)>,
+) {
+    let pt = player.single();
+    let mut ct = camera.single_mut();
+
+    let x_bound = LEVEL_W / 2. - WIN_W / 2.;
+    let y_bound = LEVEL_H / 2. - WIN_H / 2.;
+    ct.translation.x = pt.translation.x.clamp(-x_bound, x_bound);
+    ct.translation.y = pt.translation.y.clamp(-y_bound, y_bound);
 }
