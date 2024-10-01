@@ -3,15 +3,19 @@ use bevy::{math::VectorSpace, prelude::*, render::texture, window::PresentMode};
 // use crate::TILE_SIZE;
 
 // //setting window constants
-const WIN_W: f32 = 1280.;
-const WIN_H: f32 = 720.;
+const TITLE: &str = "Player Movement Test";
+
 const ACCELERATION: f32 = 5000.;
 const PLAYER_SPEED: f32 = 500.;
 const PLAYER_SIZE: f32 = 32.;
-const TITLE: &str = "Player Movement Test";
+
 const TILE_SIZE: u32 = 32;
-const LEVEL_W: f32 = 1920.;
-const LEVEL_H: f32 = 1080.;
+
+const WIN_W: f32 = 1280.;
+const WIN_H: f32 = 720.;
+
+const LEVEL_W: f32 = 3000.;
+const LEVEL_H: f32 = 3000.;
 
 const ANIMATION_TIME: f32 = 0.1;
 
@@ -26,6 +30,9 @@ pub struct Player {
     animation_state: SpriteState,
     timer: Timer,
 }
+
+#[derive(Component)]
+struct Background;
 
 impl SpriteState {
     fn animation_indices(&self) -> std::ops::Range<usize> {
@@ -85,11 +92,22 @@ fn main() {
     .add_systems(Startup, setup)
     .add_systems(Update, move_player)
     .add_systems(Update, player_animation.after(move_player))
+    .add_systems(Update, move_camera.after(move_player))
     .run();
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>) {
     commands.spawn(Camera2dBundle::default());
+
+    let bg_texture_handle = asset_server.load("sand_demo.png");
+
+    commands
+        .spawn(SpriteBundle {
+            texture: bg_texture_handle.clone(),
+            transform: Transform::from_xyz(0., 0., -1.),
+            ..default()
+        })
+        .insert(Background);
 
     let master_handle: Handle<Image> = asset_server.load("MasterCycleFINAL.png");
     let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
@@ -117,8 +135,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut texture_atl
         timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
 
       },
-    )
-    );
+    ));
 
 
 }
@@ -230,4 +247,17 @@ fn player_animation(
 
         }
 
+}
+
+fn move_camera(
+    player: Query<&Transform, With<Player>>,
+    mut camera: Query<&mut Transform, (Without<Player>, With<Camera>)>,
+) {
+    let pt = player.single();
+    let mut ct = camera.single_mut();
+
+    let x_bound = LEVEL_W / 2. - WIN_W / 2.;
+    let y_bound = LEVEL_H / 2. - WIN_H / 2.;
+    ct.translation.x = pt.translation.x.clamp(-x_bound, x_bound);
+    ct.translation.y = pt.translation.y.clamp(-y_bound, y_bound);
 }
