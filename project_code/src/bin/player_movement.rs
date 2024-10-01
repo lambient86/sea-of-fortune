@@ -10,6 +10,8 @@ const PLAYER_SPEED: f32 = 500.;
 const PLAYER_SIZE: f32 = 32.;
 const TITLE: &str = "Player Movement Test";
 const TILE_SIZE: u32 = 32;
+const LEVEL_W: f32 = 1920.;
+const LEVEL_H: f32 = 1080.;
 
 const ANIMATION_TIME: f32 = 0.1;
 
@@ -31,6 +33,8 @@ impl SpriteState {
             SpriteState::Idle => 0..8,
             SpriteState::LeftRun => 8..16,
             SpriteState::RightRun => 16..24,
+            SpriteState::ForwardRun => 24..32,
+            SpriteState::BackwardRun => 32..40
         }
     }
 
@@ -39,6 +43,8 @@ impl SpriteState {
             SpriteState::Idle => 0.1,
             SpriteState::LeftRun => 0.1,
             SpriteState::RightRun => 0.1,
+            SpriteState::ForwardRun => 0.1,
+            SpriteState::BackwardRun => 0.1,
         }
     }
 } 
@@ -47,6 +53,8 @@ enum SpriteState {
         Idle,
         LeftRun,
         RightRun,
+        ForwardRun,
+        BackwardRun
 }
 
 #[derive(Component)]
@@ -83,8 +91,8 @@ fn main() {
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>) {
     commands.spawn(Camera2dBundle::default());
 
-    let master_handle: Handle<Image> = asset_server.load("MasterSpriteSheetFINAL.png");
-    let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 4, None, None);
+    let master_handle: Handle<Image> = asset_server.load("MasterCycleFINAL.png");
+    let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
     let master_layout_length = master_layout.textures.len();
     let master_layout_handle = texture_atlases.add(master_layout);
 
@@ -115,101 +123,58 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut texture_atl
 
 }
 
-// pub fn player_movement(
-//     /*
-//     - query for player, time, keyboard input
-//     - also need to get mutable reference to player transformation and velocity
-//     - use velocity equation => v_final = v_initial + change_in_velocity
-//         - where change_in_velocity is acceleration * change_in_time
-//     */
 
-//     time: Res<Time>, 
-//     key_pressed: Res<ButtonInput<KeyCode>>, 
-//     mut player: Query<(&mut Transform, &mut Velocity),With<Player>>,) {
-
-//     let (mut player_transform, mut player_velocity) = player.single_mut();
-
-//     let mut delta_v = Vec2::splat(0.);
-
-//     // check which key was pressed and increase change in velocity in that direction
-
-//     if key_pressed.pressed(KeyCode::KeyW) {delta_v.y+=1.0;}      // increase velocity in +y
-
-//     if key_pressed.pressed(KeyCode::KeyA) {delta_v.x -=1.0;}     // increase velocity in -x
-
-//     if key_pressed.pressed(KeyCode::KeyS) {delta_v.y-=1.0;}      // increase velocity in -y
-
-//     if key_pressed.pressed(KeyCode::KeyD) {delta_v.x+=1.0;}      // increase velocity in +x
-
-//     let delta_t = time.delta_seconds();
-//     let acc = ACCELERATION * delta_t;
-
-//     player_velocity.v = if delta_v.length() > 0. {
-//      (player_velocity.v + (delta_v.normalize_or_zero() * acc)).clamp_length_max(PLAYER_SPEED)
-//     } else if player_velocity.v.length() > acc {
-//         (player_velocity.v + (player_velocity.v.normalize_or_zero() * -acc)).clamp_length_max(PLAYER_SPEED)
-//     } else {
-//         Vec2::splat(0.)
-//     };
-
-//     player_velocity.v = player_velocity.v + (acc * player_velocity.v);     // new velocity 
-
-//     let change_in_distance = player_velocity.v * delta_t;
-
-//     player_transform.translation.x = (player_transform.translation.x + change_in_distance.x).clamp(
-//         -(WIN_W / 2.) + PLAYER_SIZE / 2.,
-//         WIN_W / 2. - PLAYER_SIZE / 2.);
-//     player_transform.translation.y = (player_transform.translation.y + change_in_distance.y).clamp(
-//         -(WIN_H / 2.) + PLAYER_SIZE / 2.,
-//         WIN_H / 2. - PLAYER_SIZE / 2.);
-
-// }
 
 fn move_player(
     time: Res<Time>,
-    input: Res<ButtonInput<KeyCode>>,
+    key_pressed: Res<ButtonInput<KeyCode>>,
     mut player: Query<(&mut Transform, &mut Velocity), With<Player>>,
 ) {
-    let (mut pt, mut pv) = player.single_mut();
+    let (mut player_transform, mut player_velocity) = player.single_mut();
 
     let mut deltav = Vec2::splat(0.);
 
-    if input.pressed(KeyCode::KeyA) {
+    if key_pressed.pressed(KeyCode::KeyA) {
         deltav.x -= 1.;
     }
 
-    if input.pressed(KeyCode::KeyD) {
+    if key_pressed.pressed(KeyCode::KeyD) {
         deltav.x += 1.;
     }
 
-    if input.pressed(KeyCode::KeyW) {
+    if key_pressed.pressed(KeyCode::KeyW) {
         deltav.y += 1.;
     }
 
-    if input.pressed(KeyCode::KeyS) {
+    if key_pressed.pressed(KeyCode::KeyS) {
         deltav.y -= 1.;
     }
 
-    let deltat = time.delta_seconds();
-    let acc = ACCELERATION* deltat;
+    let delta_t = time.delta_seconds();
+    let acc = ACCELERATION * delta_t;
 
-    pv.v = if deltav.length() > 0. {
-        (pv.v+ (deltav.normalize_or_zero() * acc)).clamp_length_max(PLAYER_SPEED)
-    } else if pv.v.length() > acc {
-        pv.v + (pv.v.normalize_or_zero() * -acc)
+    player_velocity.v = if deltav.length() > 0. {
+        (player_velocity.v + (deltav.normalize_or_zero() * acc)).clamp_length_max(PLAYER_SPEED)
+    } else if player_velocity.v.length() > acc {
+        player_velocity.v + (player_velocity.v.normalize_or_zero() * -acc)
     } else {
         Vec2::splat(0.)
     };
-    let change = pv.v * deltat;
+    let change = player_velocity.v * delta_t;
 
-    pt.translation.x = (pt.translation.x + change.x).clamp(
-        -(WIN_W / 2.) + PLAYER_SIZE / 2.,
-        WIN_W / 2. - PLAYER_SIZE / 2.,
-    );
-    pt.translation.y = (pt.translation.y + change.y).clamp(
-        -(WIN_H / 2.) + PLAYER_SIZE / 2.,
-        WIN_H / 2. - PLAYER_SIZE / 2.,
-    );
+    let new_position = player_transform.translation + Vec3::new(change.x, 0., 0.);
+    if new_position.x >= -(LEVEL_W / 2.) + (TILE_SIZE as f32) / 2.
+        && new_position.x <= LEVEL_W / 2. - (TILE_SIZE as f32) / 2.
+    {
+        player_transform.translation = new_position;
+    }
+
+    let new_pos = player_transform.translation + Vec3::new(0., change.y, 0.);
+    if new_pos.y >= -(LEVEL_H / 2.) + (TILE_SIZE as f32) / 2.
+        && new_pos.y <= LEVEL_H / 2. - (TILE_SIZE as f32) / 2.
+    {
+        player_transform.translation = new_pos;
+    }
 }
 
 
@@ -233,6 +198,10 @@ fn player_animation(
             SpriteState::LeftRun         
         } else if velocity.v.x > 0. {
             SpriteState::RightRun
+        } else if velocity.v.y < 0.{ 
+            SpriteState::ForwardRun
+        } else if velocity.v.y > 0. {
+            SpriteState::BackwardRun
         } else {
             SpriteState::Idle
         };
