@@ -1,8 +1,13 @@
 use bevy::{prelude::*, window::PresentMode};
 
 const TITLE: &str = "Boat Test";
-const BOUNDS: Vec2 = Vec2::new(1280.0, 720.0);
+const BOUNDS: Vec2 = Vec2::new(1920.0, 1080.0);
 const TILE_SIZE: u32 = 100;
+const WIN_W: f32 = 1280.;
+const WIN_H: f32 = 720.;
+
+const LEVEL_W: f32 = 1920.;
+const LEVEL_H: f32 = 1080.;
 
 enum PlayerType {
     Boat,
@@ -41,6 +46,7 @@ fn main() {
                 boat_movement,
             ),
         )
+        .add_systems(Update, move_camera.after(boat_movement))
         .run();
 }
 
