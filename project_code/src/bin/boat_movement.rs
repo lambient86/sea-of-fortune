@@ -1,16 +1,17 @@
 use bevy::{prelude::*, window::PresentMode};
 
 const TITLE: &str = "Boat Test";
-const BOUNDS: Vec2 = Vec2::new(1920.0, 1080.0);
+const BOUNDS: Vec2 = Vec2::new(3000.0, 3000.0);
 const TILE_SIZE: u32 = 100;
 const WIN_W: f32 = 1280.;
 const WIN_H: f32 = 720.;
 
-const LEVEL_W: f32 = 1920.;
-const LEVEL_H: f32 = 1080.;
+const LEVEL_W: f32 = 3000.;
+const LEVEL_H: f32 = 3000.;
 
 enum PlayerType {
     Boat,
+    Player,
 }
 
 use bevy::color::palettes::css::{BLUE, LIGHT_BLUE};
@@ -28,7 +29,6 @@ struct Background;
 
 fn main() {
     App::new()
-        .insert_resource(ClearColor(Color::Srgba(LIGHT_BLUE)))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: TITLE.into(),
