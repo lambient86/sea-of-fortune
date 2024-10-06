@@ -109,9 +109,6 @@ pub fn player_animation(
             } else {
                 texture_atlas.index + 1
             };
-
-        print!("state: {}\n", texture_atlas.index);
-
         }
 }
 
@@ -143,10 +140,38 @@ pub fn spawn_player(
       AnimationTimer::new(Timer::from_seconds(ANIMATION_TIME, TimerMode::Repeating)),
       AnimationFrameCount::new(master_layout_length),
       Velocity::new(),
+      AttackCooldown {remaining: 0.0},
+      LastDirection::new(),
       Player {
         animation_state: SpriteState::Idle,
         timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
 
       },
     ));
+}
+
+/*   PLAYER_ATTACK FUNCTION   */
+/// Checks if player pressed attack input. If the player has attacked, the
+/// current weapons attack is then used
+pub fn player_attack(
+    time: Res<Time>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut player_query: Query<(&Transform, &LastDirection, &mut AttackCooldown), With<Player>>,
+) {
+    for (_, last_direction, mut cooldown) in player_query.iter_mut() {
+        //attacking only when cooldown is over
+        if cooldown.remaining > 0.0 {
+            cooldown.remaining -= time.delta_seconds();
+        }
+
+        //getting attack input
+        //if no attack, returns 0
+        let attack = get_player_input(PlayerControl::Attack, &keyboard_input);
+            
+        // Add logic for the attack here, projectiles, damage, etc
+        if attack == 1. && cooldown.remaining <= 0. {
+            println!("Player attacked in direction: {:?}", last_direction.direction);
+            cooldown.remaining = 1.0;
+        }
+    }
 }

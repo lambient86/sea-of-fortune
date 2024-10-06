@@ -33,6 +33,7 @@ impl AnimationTimer {
     }
 }
 
+/// Struct for the count of frames in the players animation
 #[derive(Component, Deref, DerefMut)]
 pub struct AnimationFrameCount(usize);
 
@@ -43,6 +44,7 @@ impl AnimationFrameCount {
     }
 }
 
+/// Struct that represents the current sprite for the players state
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum SpriteState {
         Idle,
@@ -68,6 +70,28 @@ impl SpriteState {
             SpriteState::Idle => 0.1,
             SpriteState::LeftRun => 0.1,
             SpriteState::RightRun => 0.1,
+        }
+    }
+}
+
+///Struct that keeps track of the cooldown between attacks
+#[derive(Component)]
+pub struct AttackCooldown {
+    pub remaining: f32,
+}
+
+/// Struct that keeps track of the last direction detected by
+/// the user
+#[derive(Component)]
+pub struct LastDirection {
+    pub direction: Vec2,
+}
+
+// Last direction detected by user for attack fn
+impl LastDirection {
+    pub fn new() -> Self {
+        Self {
+            direction: Vec2::ZERO,
         }
     }
 }
