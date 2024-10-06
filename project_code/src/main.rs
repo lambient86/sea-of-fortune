@@ -1,3 +1,17 @@
+<<<<<<< Updated upstream
+=======
+mod player;
+mod bat;
+mod boat;
+mod data;
+mod systems;
+mod components;
+// hit/hurt boxes
+mod hitbox_system;
+use hitbox_system::HitboxPlugin;
+
+use data::gameworld_data::*;
+>>>>>>> Stashed changes
 use bevy::{prelude::*, window::PresentMode};
 
 #[derive(Component, Deref, DerefMut)]
@@ -19,8 +33,15 @@ fn main() {
             }),
             ..default()
         }))
+<<<<<<< Updated upstream
         .add_systems(Startup, setup)
         .add_systems(Update, show_popup)
+=======
+        .add_systems(Startup, setup_gameworld)
+        .add_plugins(PlayerPlugin)
+        .add_systems(Update, move_camera)
+        .add_plugins(HitboxPlugin)
+>>>>>>> Stashed changes
         .run();
 }
 
