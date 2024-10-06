@@ -21,3 +21,4 @@ Cargo.lock
 #.idea/
 project_code/target/.rustc_info.json
 
+project_code/target/.rustc_info.json
