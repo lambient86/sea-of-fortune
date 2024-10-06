@@ -83,3 +83,31 @@ pub fn create_hurtbox(
     let aabb = Aabb2d::new(offset - half_size, offset + half_size);
     commands.entity(entity).insert(Hurtbox { aabb });
 }
+
+pub fn draw_debug_boxes(
+    mut gizmos: Gizmos,
+    hitbox_query: Query<(&Transform, &Hitbox)>,
+    hurtbox_query: Query<(&Transform, &Hurtbox)>,
+) {
+    for (transform, hitbox) in hitbox_query.iter() {
+        draw_aabb(&mut gizmos, hitbox.aabb, transform, Color::WHITE);
+    }
+
+    for (transform, hurtbox) in hurtbox_query.iter() {
+        draw_aabb(&mut gizmos, hurtbox.aabb, transform, Color::RED);
+    }
+}
+
+fn draw_aabb(gizmos: &mut Gizmos, aabb: Aabb2d, transform: &Transform, color: Color) {
+    let position = transform.translation.truncate();
+    let scale = transform.scale.truncate();
+    let min = aabb.min * scale + position;
+    let max = aabb.max * scale + position;
+
+    gizmos.rect_2d(
+        (min + max) / 2.0,
+        0.0,
+        max - min,
+        color
+    );
+}
