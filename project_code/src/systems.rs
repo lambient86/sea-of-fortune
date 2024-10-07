@@ -20,11 +20,14 @@ pub fn move_camera(
     ct.translation.y = pt.translation.y.clamp(-y_bound, y_bound);
 }
 
-pub fn setup_gameworld(mut commands: Commands, asset_server: Res<AssetServer>, mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>) {
+/// Sets up the gameworld
+pub fn setup_gameworld(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera2dBundle::default());
 
+    //getting background texture
     let bg_texture_handle = asset_server.load("bg_sand_demo.png");
 
+    //spawning background sprite
     commands
         .spawn(SpriteBundle {
             texture: bg_texture_handle.clone(),

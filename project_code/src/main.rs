@@ -4,10 +4,13 @@ mod boat;
 mod data;
 mod systems;
 mod components;
+mod hitbox_system;
+mod controls;
 
 use data::gameworld_data::*;
 use bevy::{prelude::*, window::PresentMode};
 use player::PlayerPlugin;
+use bat::BatPlugin;
 use systems::*;
 
 
@@ -24,6 +27,7 @@ fn main() {
         }))
         .add_systems(Startup, setup_gameworld)
         .add_plugins(PlayerPlugin)
+        .add_plugins(BatPlugin)
         .add_systems(Update, move_camera)
         .run();
 }
