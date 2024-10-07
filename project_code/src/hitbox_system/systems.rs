@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::math::bounding::Aabb2d;
+use bevy::sprite::MaterialMesh2dBundle;
 use crate::hitbox_system::components::*;
 
 // System to check collisions between hitboxes and hurtboxes
@@ -24,6 +25,22 @@ pub fn check_hitbox_hurtbox_collisions(
                     commands.entity(hurtbox_entity).insert(Colliding);
                     break;
                 }
+            }
+        }
+    }
+}
+
+// update hitbox lifetimes
+pub fn update_hitbox_lifetimes(
+    time: Res<Time>,
+    mut commands: Commands,
+    mut query: Query<(Entity, &mut Hitbox)>,
+) {
+    for (entity, mut hitbox) in query.iter_mut() {
+        if let Some(ref mut lifetime) = hitbox.lifetime {
+            lifetime.tick(time.delta());
+            if lifetime.finished() {
+                commands.entity(entity).remove::<Hitbox>();
             }
         }
     }
@@ -83,11 +100,12 @@ pub fn create_hitbox(
     entity: Entity,
     size: Vec2,
     offset: Vec2,
-    lifetime: f32,
+    lifetime: Option<f32>,
 ) {
     let half_size = size / 2.0;
     let aabb = Aabb2d::new(offset - half_size, offset + half_size);
-    commands.entity(entity).insert(Hitbox { aabb, lifetime});
+    let lifetime_timer = lifetime.map(|duration| Timer::from_seconds(duration, TimerMode::Once));
+    commands.entity(entity).insert(Hitbox { aabb, lifetime: lifetime_timer});
 }
 
 // Function to create a hurtbox for an entity

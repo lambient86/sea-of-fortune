@@ -5,7 +5,7 @@ use bevy::math::bounding::Aabb2d;
 #[derive(Component)]
 pub struct Hitbox {
     pub aabb: Aabb2d,
-    pub lifetime: f32, //time the hitbox is present
+    pub lifetime: Option<Timer>, //time the hitbox is present
 }
 
 // Hurtbox component: Represents an area that can receive interactions
