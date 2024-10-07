@@ -1,8 +1,7 @@
-use bevy::{prelude::*};
-use crate::player::controls::*;
-use crate::player::components::*;
 use crate::data::gameworld_data::*;
-
+use crate::player::components::*;
+use crate::player::controls::*;
+use bevy::prelude::*;
 
 /// The speed at which the player accelerates
 pub const ACCELERATION: f32 = 5000.;
@@ -24,11 +23,13 @@ pub fn move_player(
 
     //checking left/right input and deciding movement
     //if left pressed and right not : 0 - 1 = -1
-    deltav.x = get_player_input( PlayerControl::Right, &keyboard_input) - get_player_input( PlayerControl::Left, &keyboard_input);
+    deltav.x = get_player_input(PlayerControl::Right, &keyboard_input)
+        - get_player_input(PlayerControl::Left, &keyboard_input);
 
     //checking up/down input and deciding movement
     //if up pressed and down not; 0 - 1 = -1
-    deltav.y = get_player_input(PlayerControl::Up, &keyboard_input) - get_player_input( PlayerControl::Down, &keyboard_input);
+    deltav.y = get_player_input(PlayerControl::Up, &keyboard_input)
+        - get_player_input(PlayerControl::Down, &keyboard_input);
 
     //getting acceleration
     let delta_t = time.delta_seconds();
@@ -74,48 +75,49 @@ pub fn player_animation(
             &mut TextureAtlas,
             &mut AnimationTimer,
             &AnimationFrameCount,
-            &mut Player
+            &mut Player,
         ),
         With<Player>,
     >,
 ) {
-    let (velocity, mut texture_atlas, mut timer, frame_count, mut player) = player_query.single_mut();
-        let new_state = if velocity.v.cmpeq(Vec2::ZERO).all() {
-            SpriteState::Idle
-        } else if velocity.v.x < 0.{
-            SpriteState::LeftRun         
-        } else if velocity.v.x > 0. {
-            SpriteState::RightRun
+    let (velocity, mut texture_atlas, mut _timer, frame_count, mut player) =
+        player_query.single_mut();
+    let new_state = if velocity.v.cmpeq(Vec2::ZERO).all() {
+        SpriteState::Idle
+    } else if velocity.v.x < 0. {
+        SpriteState::LeftRun
+    } else if velocity.v.x > 0. {
+        SpriteState::RightRun
+    } else {
+        SpriteState::Idle
+    };
+
+    if new_state != player.animation_state {
+        player.animation_state = new_state;
+        player.timer = Timer::from_seconds(
+            player.animation_state.animation_speed(),
+            TimerMode::Repeating,
+        );
+        let start = player.animation_state.animation_indices();
+        texture_atlas.index = start.start;
+    }
+
+    player.timer.tick(time.delta());
+
+    if player.timer.just_finished() {
+        let indices = player.animation_state.animation_indices();
+        texture_atlas.index = if texture_atlas.index + 1 >= indices.end {
+            indices.start
         } else {
-            SpriteState::Idle
+            texture_atlas.index + 1
         };
-
-        if new_state != player.animation_state {
-            player.animation_state = new_state;
-            player.timer = Timer::from_seconds(
-                player.animation_state.animation_speed(),
-                TimerMode::Repeating,
-            );
-            let start = player.animation_state.animation_indices();
-            texture_atlas.index = start.start;
-        }
-
-        player.timer.tick(time.delta());
-
-        if player.timer.just_finished() {
-            let indices = player.animation_state.animation_indices();
-            texture_atlas.index = if texture_atlas.index + 1 >= indices.end {
-                indices.start
-            } else {
-                texture_atlas.index + 1
-            };
-        }
+    }
 }
 
 /*   SPAWN_PLAYER FUNCTION */
 /// Spawns the player in the gameworld
 pub fn spawn_player(
-    mut commands: Commands, 
+    mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
@@ -125,28 +127,27 @@ pub fn spawn_player(
     let master_layout_handle = texture_atlases.add(master_layout);
 
     commands.spawn((
-      SpriteBundle {
-        texture: master_handle,
-        transform: Transform {
-            scale: Vec3::splat(2.0),
+        SpriteBundle {
+            texture: master_handle,
+            transform: Transform {
+                scale: Vec3::splat(2.0),
+                ..default()
+            },
             ..default()
         },
-        ..default()
-      },
-      TextureAtlas {
-        layout: master_layout_handle,
-        index: 0,
-      },
-      AnimationTimer::new(Timer::from_seconds(ANIMATION_TIME, TimerMode::Repeating)),
-      AnimationFrameCount::new(master_layout_length),
-      Velocity::new(),
-      AttackCooldown {remaining: 0.0},
-      LastDirection::new(),
-      Player {
-        animation_state: SpriteState::Idle,
-        timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
-
-      },
+        TextureAtlas {
+            layout: master_layout_handle,
+            index: 0,
+        },
+        AnimationTimer::new(Timer::from_seconds(ANIMATION_TIME, TimerMode::Repeating)),
+        AnimationFrameCount::new(master_layout_length),
+        Velocity::new(),
+        AttackCooldown { remaining: 0.0 },
+        LastDirection::new(),
+        Player {
+            animation_state: SpriteState::Idle,
+            timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
+        },
     ));
 }
 
@@ -167,10 +168,13 @@ pub fn player_attack(
         //getting attack input
         //if no attack, returns 0
         let attack = get_player_input(PlayerControl::Attack, &keyboard_input);
-            
+
         // Add logic for the attack here, projectiles, damage, etc
         if attack == 1. && cooldown.remaining <= 0. {
-            println!("Player attacked in direction: {:?}", last_direction.direction);
+            println!(
+                "Player attacked in direction: {:?}",
+                last_direction.direction
+            );
             cooldown.remaining = 1.0;
         }
     }
