@@ -1,5 +1,5 @@
 use bevy::{prelude::*};
-use crate::player::controls::*;
+use crate::controls::*;
 use crate::player::components::*;
 use crate::data::gameworld_data::*;
 
@@ -46,7 +46,7 @@ pub fn move_player(
     //getting change in location
     let change = player_velocity.v * delta_t;
 
-    //setting new player x position
+    //setting new player x position if within bounds
     let new_position = player_transform.translation + Vec3::new(change.x, 0., 0.);
     if new_position.x >= -(LEVEL_W / 2.) + (TILE_SIZE as f32) / 2.
         && new_position.x <= LEVEL_W / 2. - (TILE_SIZE as f32) / 2.
@@ -54,7 +54,7 @@ pub fn move_player(
         player_transform.translation = new_position;
     }
 
-    //setting new player y position
+    //setting new player y position if within bounds
     let new_pos = player_transform.translation + Vec3::new(0., change.y, 0.);
     if new_pos.y >= -(LEVEL_H / 2.) + (TILE_SIZE as f32) / 2.
         && new_pos.y <= LEVEL_H / 2. - (TILE_SIZE as f32) / 2.
@@ -82,10 +82,14 @@ pub fn player_animation(
     let (velocity, mut texture_atlas, mut timer, frame_count, mut player) = player_query.single_mut();
         let new_state = if velocity.v.cmpeq(Vec2::ZERO).all() {
             SpriteState::Idle
-        } else if velocity.v.x < 0.{
+        } else if velocity.v.x < 0. {
             SpriteState::LeftRun         
         } else if velocity.v.x > 0. {
             SpriteState::RightRun
+        } else if velocity.v.y < 0. {
+            SpriteState::BackwardRun
+        } else if velocity.v.y > 0. {
+            SpriteState::ForwardRun
         } else {
             SpriteState::Idle
         };
@@ -119,11 +123,13 @@ pub fn spawn_player(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
+    //getting sprite info
     let master_handle: Handle<Image> = asset_server.load("s_pirate.png");
     let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
     let master_layout_length = master_layout.textures.len();
     let master_layout_handle = texture_atlases.add(master_layout);
 
+    //setting up player for spawning
     commands.spawn((
       SpriteBundle {
         texture: master_handle,

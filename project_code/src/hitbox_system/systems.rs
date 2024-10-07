@@ -1,7 +1,6 @@
 use bevy::prelude::*;
-use bevy::math::Aabb2d;
-use bevy::sprite::MaterialMesh2dBundle;
-use crate::hitbox_system::components::{Hitbox, Hurtbox, Colliding};
+use bevy::math::bounding::Aabb2d;
+use crate::hitbox_system::components::*;
 
 // System to check collisions between hitboxes and hurtboxes
 pub fn check_hitbox_hurtbox_collisions(
@@ -36,14 +35,14 @@ pub fn draw_debug_boxes(
     hitbox_query: Query<(&Transform, &Hitbox)>,
     hurtbox_query: Query<(&Transform, &Hurtbox)>,
 ) {
-    // Draw white outlines for hitboxes
+    // Draw red box for hitboxes
     for (transform, hitbox) in hitbox_query.iter() {
-        draw_aabb(&mut gizmos, hitbox.aabb, transform, Color::WHITE);
+        draw_aabb(&mut gizmos, hitbox.aabb, transform, Color::srgba(1., 0., 0., 0.5));
     }
 
-    // Draw red outlines for hurtboxes
+    // Draw green box for hurtboxes
     for (transform, hurtbox) in hurtbox_query.iter() {
-        draw_aabb(&mut gizmos, hurtbox.aabb, transform, Color::RED);
+        draw_aabb(&mut gizmos, hurtbox.aabb, transform, Color::srgba(0., 1., 0., 0.5));
     }
 }
 
@@ -84,10 +83,11 @@ pub fn create_hitbox(
     entity: Entity,
     size: Vec2,
     offset: Vec2,
+    lifetime: f32,
 ) {
     let half_size = size / 2.0;
     let aabb = Aabb2d::new(offset - half_size, offset + half_size);
-    commands.entity(entity).insert(Hitbox { aabb });
+    commands.entity(entity).insert(Hitbox { aabb, lifetime});
 }
 
 // Function to create a hurtbox for an entity
