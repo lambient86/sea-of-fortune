@@ -6,7 +6,7 @@ pub enum PlayerControl {
     Down,   //S
     Left,   //A
     Right,  //D
-    //Attack, //Left Click
+    Attack, //Spacebar, change to Left Mouse Button
     //Charge, //subject to change, for range (right click)
 }
 
@@ -30,6 +30,9 @@ impl PlayerControl {
             }
             PlayerControl::Right => {
                 input.pressed(KeyCode::KeyD)
+            }
+            PlayerControl::Attack => {
+                input.pressed(KeyCode::Space)
             }
         }
     }
