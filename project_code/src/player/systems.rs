@@ -2,6 +2,10 @@ use bevy::{prelude::*};
 use crate::controls::*;
 use crate::player::components::*;
 use crate::data::gameworld_data::*;
+use crate::hitbox_system::*;
+use bevy::input::mouse::{self, MouseButtonInput};
+
+
 
 
 /// The speed at which the player accelerates
@@ -147,7 +151,6 @@ pub fn spawn_player(
       AnimationFrameCount::new(master_layout_length),
       Velocity::new(),
       AttackCooldown {remaining: 0.0},
-      LastDirection::new(),
       Player {
         animation_state: SpriteState::Idle,
         timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
@@ -156,28 +159,63 @@ pub fn spawn_player(
     ));
 }
 
+
+
 /*   PLAYER_ATTACK FUNCTION   */
 /// Checks if player pressed attack input. If the player has attacked, the
 /// current weapons attack is then used
+/*   PLAYER_ATTACK FUNCTION   */
+/// Checks if player pressed attack input. If the player has attacked, the
+/// current weapon's attack is then used
 pub fn player_attack(
     time: Res<Time>,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut player_query: Query<(&Transform, &LastDirection, &mut AttackCooldown), With<Player>>,
+    mouse_button_input: Res<ButtonInput<MouseButton>>, 
+    mut cursor: EventReader<CursorMoved>,
+    mut commands: Commands,
+    mut player_query: Query<(Entity, &Transform, &mut AttackCooldown), With<Player>>,
 ) {
-    for (_, last_direction, mut cooldown) in player_query.iter_mut() {
-        //attacking only when cooldown is over
+    for (entity, transform, mut cooldown) in player_query.iter_mut() {
+        // Attacking only when cooldown is over
         if cooldown.remaining > 0.0 {
             cooldown.remaining -= time.delta_seconds();
         }
 
-        //getting attack input
-        //if no attack, returns 0
-        let attack = get_player_input(PlayerControl::Attack, &keyboard_input);
-            
-        // Add logic for the attack here, projectiles, damage, etc
-        if attack == 1. && cooldown.remaining <= 0. {
-            println!("Player attacked in direction: {:?}", last_direction.direction);
-            cooldown.remaining = 1.0;
+        for ev in cursor.read() {
+            let cursor_direction = ev.position.trunc();
+            println!("Cursor direction: X: {}, Y: {}", cursor_direction.x, cursor_direction.y);
         }
+
+        if mouse_button_input.just_pressed(MouseButton::Left) && cooldown.remaining <= 0. {
+            println!("Player attacked!");
+        }
+        
+        /* 
+        // Check if the left mouse button is pressed
+        if mouse_button_input.just_pressed(MouseButton::Left) && cooldown.remaining <= 0. {
+            println!("Player attacked!");
+            
+            // Player position
+            let player_position = transform.translation.truncate();
+
+            // Calculate hitbox position
+            let hitbox_position = transform.translation.truncate(); 
+
+            // Define the size of the hitbox
+            let hitbox_size = Vec2::new(50.0, 50.0); // Example size
+
+            // Create the hitbox 
+            create_hitbox(
+                &mut commands,
+                entity,
+                hitbox_size,
+                hitbox_position,
+                Some(30.0), 
+            );
+
+            cooldown.remaining = 1.0; 
+        
+        }
+        */
     }
+    
 }
