@@ -8,12 +8,8 @@ pub const ANIMATION_TIME: f32 = 0.2;
 #[derive(Component)]
 pub struct Bat {
     pub rotation_speed: f32,
-}
-
-/// Struct to represent the rotation of the bat to the player
-#[derive(Component)]
-pub struct RotateToPlayer {
-    pub rotation_speed: f32,
+    pub current_hp: f32,
+    pub max_hp: f32,
 }
 
 /// Struct for the time between the bat's animation frames
@@ -22,7 +18,7 @@ pub struct AnimationTimer(Timer);
 
 impl AnimationTimer {
     /// Initializes the animation timer
-    pub fn new(timer:Timer) -> AnimationTimer {
+    pub fn new(timer: Timer) -> AnimationTimer {
         AnimationTimer(timer)
     }
 }
@@ -37,7 +33,6 @@ impl AnimationFrameCount {
         AnimationFrameCount(size)
     }
 }
-
 
 /// Struct to represent a bat entities velocity
 #[derive(Component)]
