@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+
 #[derive(Component)]
 pub struct Player {
     pub animation_state: SpriteState,
@@ -16,7 +17,7 @@ pub struct Velocity {
 impl Velocity {
     pub fn new() -> Self {
         Self {
-            //sets x and y velocity dsto 0
+            //sets x and y velocity to 0
             v: Vec2::splat(0.),
         }
     }
@@ -50,6 +51,8 @@ pub enum SpriteState {
         Idle,
         LeftRun,
         RightRun,
+        BackwardRun,
+        ForwardRun,
 }
 
 impl SpriteState {
@@ -60,6 +63,8 @@ impl SpriteState {
             SpriteState::Idle => 0..8,
             SpriteState::LeftRun => 8..16,
             SpriteState::RightRun => 16..24,
+            SpriteState::ForwardRun => 24..32,
+            SpriteState::BackwardRun => 32..40,
         }
     }
 
@@ -70,6 +75,8 @@ impl SpriteState {
             SpriteState::Idle => 0.1,
             SpriteState::LeftRun => 0.1,
             SpriteState::RightRun => 0.1,
+            SpriteState::BackwardRun => 0.1,
+            SpriteState::ForwardRun => 0.1,
         }
     }
 }
@@ -78,20 +85,4 @@ impl SpriteState {
 #[derive(Component)]
 pub struct AttackCooldown {
     pub remaining: f32,
-}
-
-/// Struct that keeps track of the last direction detected by
-/// the user
-#[derive(Component)]
-pub struct LastDirection {
-    pub direction: Vec2,
-}
-
-// Last direction detected by user for attack fn
-impl LastDirection {
-    pub fn new() -> Self {
-        Self {
-            direction: Vec2::ZERO,
-        }
-    }
 }
