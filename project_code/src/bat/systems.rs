@@ -3,11 +3,10 @@ use bevy::prelude::*;
 use crate::bat::components::*;
 use crate::data::gameworld_data::*;
 
-use crate::controls::*;
 use crate::hitbox_system::*;
 use crate::player::components::AttackCooldown;
 use crate::player::components::Player;
-use bevy::input::mouse::{self, MouseButtonInput};
+
 /*   ROTATE_BAT FUNCTION   */
 /// This should be changed to a function called "track_player", which will
 /// be how the bat knows where to check where the player is for shooting projectiles
@@ -15,14 +14,14 @@ use bevy::input::mouse::{self, MouseButtonInput};
 /// WE DON'T NEED TO ROTATE THE BAT! I WILL MAKE A BACK FACING SPRITE IF NEEDED
 pub fn rotate_bat(
     time: Res<Time>,
-    mut query: Query<(&RotateToPlayer, &mut Transform), Without<Player>>,
+    mut query: Query<(&Bat, &mut Transform), Without<Player>>,
     player_query: Query<&Transform, With<Player>>,
 ) {
     // getting player position
     let player_transform = player_query.single();
     let player_translation = player_transform.translation.xy();
 
-    for (config, mut enemy_transform) in &mut query {
+    for (bat, mut enemy_transform) in &mut query {
         //getting bat's position relative to player position
         let bat_position = enemy_transform.translation.xy();
         let distance_to_player = bat_position.distance(player_translation);
@@ -49,7 +48,7 @@ pub fn rotate_bat(
         let max_angle = forward_dot_player.clamp(-1.0, 1.0).acos();
 
         let rotation_angle =
-            rotation_sign * (config.rotation_speed * time.delta_seconds()).min(max_angle);
+            rotation_sign * (bat.rotation_speed * time.delta_seconds()).min(max_angle);
 
         enemy_transform.rotate_z(rotation_angle);
     }
@@ -97,9 +96,6 @@ pub fn spawn_bat(
             current_hp: 1.,
             max_hp: 1.,
         },
-        RotateToPlayer {
-            rotation_speed: f32::to_radians(90.0),
-        },
         TextureAtlas {
             layout: bat_layout_handle,
             index: 0,
@@ -111,9 +107,19 @@ pub fn spawn_bat(
     ));
 }
 
+/*
+    Detects when player is within Bat attack range and attacks.
+
+    Things not added:
+    - Attack cooldown timer
+    - Projectile shooting
+
+    Things currently added:
+    - Distance-to-player checking
+
+*/
 pub fn bat_attack(
     time: Res<Time>,
-    mut commands: Commands,
     mut bat_query: Query<(&Transform, &mut AttackCooldown), With<Bat>>,
     player_query: Query<&Transform, With<Player>>,
 ) {
@@ -133,17 +139,21 @@ pub fn bat_attack(
             break;
         }
 
-        println!("Bat attacks player! :O");
+        /* Debug */
+        //println!("Bat attacks player! :O");
     }
 }
 
+/*
+    Current functionality: Detects when a player is within player attack range (this will later be replaced with
+    player weapon/attack collision) and then takes 1 damage (dies)
+*/
 pub fn bat_damaged(
-    time: Res<Time>,
     mut commands: Commands,
-    mut bat_query: Query<(&Transform, &mut AttackCooldown, &mut Bat, Entity), With<Bat>>,
+    mut bat_query: Query<(&Transform, &mut Bat, Entity), With<Bat>>,
     player_query: Query<&Transform, With<Player>>,
 ) {
-    for (bat_transform, cooldown, mut bat, entity) in bat_query.iter_mut() {
+    for (bat_transform, mut bat, entity) in bat_query.iter_mut() {
         let player_transform = player_query.single();
         let player_translation = player_transform.translation.xy();
 
@@ -157,7 +167,7 @@ pub fn bat_damaged(
 
         bat.current_hp -= 1.;
 
-        if (bat.current_hp <= 0.) {
+        if bat.current_hp <= 0. {
             println!("Bat was attacked by player, it is dead :(");
             commands.entity(entity).despawn();
         } else {

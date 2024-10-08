@@ -12,12 +12,6 @@ pub struct Bat {
     pub max_hp: f32,
 }
 
-/// Struct to represent the rotation of the bat to the player
-#[derive(Component)]
-pub struct RotateToPlayer {
-    pub rotation_speed: f32,
-}
-
 /// Struct for the time between the bat's animation frames
 #[derive(Component, Deref, DerefMut)]
 pub struct AnimationTimer(Timer);

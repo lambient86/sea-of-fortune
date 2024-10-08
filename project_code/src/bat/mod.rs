@@ -13,6 +13,7 @@ impl Plugin for BatPlugin {
         app.add_systems(Startup, spawn_bat)
             .add_systems(Update, animate_bat)
             .add_systems(Update, rotate_bat)
-            .add_systems(Update, bat_attack);
+            .add_systems(Update, bat_attack)
+            .add_systems(Update, bat_damaged);
     }
 }

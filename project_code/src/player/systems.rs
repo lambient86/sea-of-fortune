@@ -5,11 +5,14 @@ use crate::player::components::*;
 use bevy::input::mouse::{self, MouseButtonInput};
 use bevy::prelude::*;
 
-/// The speed at which the player accelerates
+/// Player movement and size
 pub const ACCELERATION: f32 = 5000.;
 pub const SPEED: f32 = 500.;
 pub const SIZE: f32 = 32.;
 pub const ANIMATION_TIME: f32 = 0.1;
+
+/// Base player stats
+pub const PLAYER_MAX_HP: f32 = 3.;
 
 /*   MOVE_PLAYER FUNCTION */
 /// Moves the player, updating its position depending on
@@ -161,11 +164,14 @@ pub fn spawn_player(
         Player {
             animation_state: SpriteState::Idle,
             timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
-            health: 3,
-            max_health: 3,
+            health: PLAYER_MAX_HP,
+            max_health: PLAYER_MAX_HP,
         },
         TestTimer::new(Timer::from_seconds(1., TimerMode::Repeating)),
     ));
+
+    /* Debug */
+    println!("Full HP! {}/{}", PLAYER_MAX_HP, PLAYER_MAX_HP);
 }
 
 /*   PLAYER_ATTACK FUNCTION   */
@@ -190,13 +196,16 @@ pub fn player_attack(
 
         for ev in cursor.read() {
             let cursor_direction = ev.position.trunc();
-            println!(
+
+            /* Debug */
+            /*println!(
                 "Cursor direction: X: {}, Y: {}",
                 cursor_direction.x, cursor_direction.y
-            );
+            );*/
         }
 
         /*// Check if the left mouse button is pressed
+
         if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. && cooldown.remaining <= 0. {
             println!("Player attacked!");
 
@@ -231,18 +240,34 @@ pub fn player_attack(
 */
 pub fn check_player_health(
     time: Res<Time>,
-    mut player_query: Query<(&mut Player, &mut TestTimer), With<Player>>,
+    mut commands: Commands,
+    mut player_query: Query<(&mut Player, &mut TestTimer, Entity), With<Player>>,
+    asset_server: Res<AssetServer>,
+    texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    for (mut player, mut timer) in player_query.iter_mut() {
-        if player.health <= 0 {
-            panic!("Health reached {}...You died :(", player.health);
+    for (mut player, mut timer, entity) in player_query.iter_mut() {
+        if player.health <= 0. {
+            println!("You have died!");
+            commands.entity(entity).despawn();
+
+            println!("Respawning...");
+            spawn_player(commands, asset_server, texture_atlases);
+            break;
         }
 
         timer.tick(time.delta());
-        print!("health: {}\n", player.health);
+
+        /*Debug*/
+        //print!("health: {}\n", player.health);
 
         if timer.just_finished() {
-            player.health -= 1;
+            player.health -= 1.;
+
+            /* Debug */
+            println!(
+                "Damage taken! Current HP: {}/{}",
+                player.health, player.max_health
+            );
         }
     }
 }
