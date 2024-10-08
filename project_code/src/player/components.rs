@@ -5,6 +5,8 @@ use bevy::prelude::*;
 pub struct Player {
     pub animation_state: SpriteState,
     pub timer: Timer,
+    pub health: i8,
+    pub max_health: i8, 
 }
 
 /// Velocity struct
@@ -33,6 +35,17 @@ impl AnimationTimer {
         AnimationTimer(timer)
     }
 }
+
+#[derive(Component, Deref, DerefMut)]
+pub struct TestTimer(Timer);
+
+impl TestTimer {
+    
+    pub fn new(timer:Timer) -> TestTimer {
+        TestTimer(timer)
+    }
+}
+    
 
 /// Struct for the count of frames in the players animation
 #[derive(Component, Deref, DerefMut)]
@@ -86,3 +99,6 @@ impl SpriteState {
 pub struct AttackCooldown {
     pub remaining: f32,
 }
+
+
+

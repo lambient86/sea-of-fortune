@@ -14,6 +14,7 @@ impl Plugin for PlayerPlugin {
             .add_systems(Startup, spawn_player)
             .add_systems(Update,move_player)
             .add_systems(Update, player_animation.after(move_player))
-            .add_systems(Update, player_attack);
+            .add_systems(Update, player_attack)
+            .add_systems(Update, check_player_health);
     }
 }

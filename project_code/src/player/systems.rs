@@ -161,7 +161,10 @@ pub fn spawn_player(
         Player {
             animation_state: SpriteState::Idle,
             timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
+            health: 3,
+            max_health: 3,
         },
+        TestTimer::new(Timer::from_seconds(1., TimerMode::Repeating)),
     ));
 }
 
@@ -193,15 +196,8 @@ pub fn player_attack(
             );
         }
 
-        if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1.
-            && cooldown.remaining <= 0.
-        {
-            println!("Player attacked!");
-        }
-
-        /*
-        // Check if the left mouse button is pressed
-        if mouse_button_input.just_pressed(MouseButton::Left) && cooldown.remaining <= 0. {
+        /*// Check if the left mouse button is pressed
+        if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. && cooldown.remaining <= 0. {
             println!("Player attacked!");
 
             // Player position
@@ -224,7 +220,29 @@ pub fn player_attack(
 
             cooldown.remaining = 1.0;
 
+        }*/
+    }
+}
+
+/*
+ Function checks the current state of the player's health
+ if current health == 0 --> panic and close program
+
+*/
+pub fn check_player_health(
+    time: Res<Time>,
+    mut player_query: Query<(&mut Player, &mut TestTimer), With<Player>>,
+) {
+    for (mut player, mut timer) in player_query.iter_mut() {
+        if player.health <= 0 {
+            panic!("Health reached {}...You died :(", player.health);
         }
-        */
+
+        timer.tick(time.delta());
+        print!("health: {}\n", player.health);
+
+        if timer.just_finished() {
+            player.health -= 1;
+        }
     }
 }
