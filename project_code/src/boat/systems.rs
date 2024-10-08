@@ -3,11 +3,12 @@ use crate::controls::*;
 use crate::boat::components::*;
 use crate::data::gameworld_data::*;
 
-/*   BOAT_MOVEMENT FUNCTION   */
+/*   MOVE_BOAT FUNCTION   */
 /// Moves and updates the boats position
-fn boat_movement(
+pub fn move_boat(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    mouse_input: Res<ButtonInput<MouseButton>>,
     mut query: Query<(&Boat, &mut Transform)>,
 ) {
     let (ship, mut transform) = query.single_mut();
@@ -20,10 +21,10 @@ fn boat_movement(
     //e.g if left pressed and right no : 1 - 0 = 1
     //will accout for both left and right being pressed in one check
     //e.g 1 - 1 = 0
-    rotation_factor += get_player_input(PlayerControl::Left, &keyboard_input) - get_player_input(PlayerControl::Right, &keyboard_input); 
+    rotation_factor += get_player_input(PlayerControl::Left, &keyboard_input, &mouse_input) - get_player_input(PlayerControl::Right, &keyboard_input, &mouse_input); 
 
     //checking if player is pressing up
-    movement_factor = get_player_input(PlayerControl::Up, &keyboard_input);
+    movement_factor = get_player_input(PlayerControl::Up, &keyboard_input, &mouse_input);
 
     //transforming the players rotation
     transform.rotate_z(rotation_factor * ship.rotation_speed * time.delta_seconds());

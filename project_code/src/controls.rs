@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::input::mouse::MouseButtonInput;
 
 /// enum for different types of player input
 pub enum PlayerControl {
@@ -6,7 +7,7 @@ pub enum PlayerControl {
     Down,   //S
     Left,   //A
     Right,  //D
-    Attack, //Spacebar, change to Left Mouse Button
+    Attack, //Left Mouse Button
     //Charge, //subject to change, for range (right click)
 }
 
@@ -17,22 +18,22 @@ impl PlayerControl {
     /// * returns true if pressed
     /// else
     /// * returns false
-    pub fn pressed(&self, input: &Res<ButtonInput<KeyCode>>) -> bool {
+    pub fn pressed(&self, keyboard_input: &Res<ButtonInput<KeyCode>>, mouse_input: &Res<ButtonInput<MouseButton>>) -> bool {
         match self {
             PlayerControl::Up => {
-                input.pressed(KeyCode::KeyW)
+                keyboard_input.pressed(KeyCode::KeyW)
             }
             PlayerControl::Down => {
-                input.pressed(KeyCode::KeyS)
+                keyboard_input.pressed(KeyCode::KeyS)
             }
             PlayerControl::Left => {
-                input.pressed(KeyCode::KeyA)
+                keyboard_input.pressed(KeyCode::KeyA)
             }
             PlayerControl::Right => {
-                input.pressed(KeyCode::KeyD)
+                keyboard_input.pressed(KeyCode::KeyD)
             }
             PlayerControl::Attack => {
-                input.pressed(KeyCode::Space)
+                mouse_input.pressed(MouseButton::Left)
             }
         }
     }
@@ -48,10 +49,11 @@ impl PlayerControl {
 /// for actions such as attack
 pub fn get_player_input(
     control: PlayerControl, 
-    input: &Res<ButtonInput<KeyCode>>
+    keyboard_input: &Res<ButtonInput<KeyCode>>,
+    mouse_input: &Res<ButtonInput<MouseButton>>,
 ) -> f32 {
     //checking for input
-    if control.pressed(input) {
+    if control.pressed(keyboard_input, mouse_input) {
         //if given input was found, returns 1.0
         //which can be used as a multiplier for
         //movement or a boolean for an attack
@@ -60,3 +62,6 @@ pub fn get_player_input(
         0.0
     }
 }
+
+/*  GET_MOUSE_POSITION FUNCTION   */
+// Gets the current (x, y) position of the mouse cursor and returns it

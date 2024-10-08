@@ -20,6 +20,7 @@ pub const ANIMATION_TIME: f32 = 0.1;
 pub fn move_player(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    mouse_input: Res<ButtonInput<MouseButton>>,
     mut player: Query<(&mut Transform, &mut Velocity), With<Player>>,
 ) {
     let (mut player_transform, mut player_velocity) = player.single_mut();
@@ -28,11 +29,11 @@ pub fn move_player(
 
     //checking left/right input and deciding movement
     //if left pressed and right not : 0 - 1 = -1
-    deltav.x = get_player_input( PlayerControl::Right, &keyboard_input) - get_player_input( PlayerControl::Left, &keyboard_input);
+    deltav.x = get_player_input( PlayerControl::Right, &keyboard_input, &mouse_input) - get_player_input( PlayerControl::Left, &keyboard_input, &mouse_input);
 
     //checking up/down input and deciding movement
     //if up pressed and down not; 0 - 1 = -1
-    deltav.y = get_player_input(PlayerControl::Up, &keyboard_input) - get_player_input( PlayerControl::Down, &keyboard_input);
+    deltav.y = get_player_input(PlayerControl::Up, &keyboard_input,&mouse_input) - get_player_input( PlayerControl::Down, &keyboard_input, &mouse_input);
 
     //getting acceleration
     let delta_t = time.delta_seconds();
@@ -84,6 +85,7 @@ pub fn player_animation(
     >,
 ) {
     let (velocity, mut texture_atlas, mut timer, frame_count, mut player) = player_query.single_mut();
+        //deciding what animation to use
         let new_state = if velocity.v.cmpeq(Vec2::ZERO).all() {
             SpriteState::Idle
         } else if velocity.v.x < 0. {
@@ -91,25 +93,30 @@ pub fn player_animation(
         } else if velocity.v.x > 0. {
             SpriteState::RightRun
         } else if velocity.v.y < 0. {
-            SpriteState::BackwardRun
-        } else if velocity.v.y > 0. {
             SpriteState::ForwardRun
+        } else if velocity.v.y > 0. {
+            SpriteState::BackwardRun
         } else {
             SpriteState::Idle
         };
 
+        //changing player animation state if needed
         if new_state != player.animation_state {
             player.animation_state = new_state;
             player.timer = Timer::from_seconds(
                 player.animation_state.animation_speed(),
                 TimerMode::Repeating,
             );
+            
+            //setting animation at start
             let start = player.animation_state.animation_indices();
             texture_atlas.index = start.start;
         }
 
+        //passing time
         player.timer.tick(time.delta());
 
+        //going to next frame
         if player.timer.just_finished() {
             let indices = player.animation_state.animation_indices();
             texture_atlas.index = if texture_atlas.index + 1 >= indices.end {
@@ -169,7 +176,8 @@ pub fn spawn_player(
 /// current weapon's attack is then used
 pub fn player_attack(
     time: Res<Time>,
-    mouse_button_input: Res<ButtonInput<MouseButton>>, 
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mouse_input: Res<ButtonInput<MouseButton>>, 
     mut cursor: EventReader<CursorMoved>,
     mut commands: Commands,
     mut player_query: Query<(Entity, &Transform, &mut AttackCooldown), With<Player>>,
@@ -185,7 +193,7 @@ pub fn player_attack(
             println!("Cursor direction: X: {}, Y: {}", cursor_direction.x, cursor_direction.y);
         }
 
-        if mouse_button_input.just_pressed(MouseButton::Left) && cooldown.remaining <= 0. {
+        if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. && cooldown.remaining <= 0. {
             println!("Player attacked!");
         }
         
