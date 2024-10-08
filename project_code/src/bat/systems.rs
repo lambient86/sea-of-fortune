@@ -140,20 +140,28 @@ pub fn bat_attack(
 pub fn bat_damaged(
     time: Res<Time>,
     mut commands: Commands,
-    mut bat_query: Query<(&Transform, &mut AttackCooldown), With<Bat>>,
+    mut bat_query: Query<(&Transform, &mut AttackCooldown, &mut Bat, Entity), With<Bat>>,
     player_query: Query<&Transform, With<Player>>,
 ) {
-    for (bat_transform, mut cooldown) in bat_query.iter_mut() {
+    for (bat_transform, cooldown, mut bat, entity) in bat_query.iter_mut() {
         let player_transform = player_query.single();
         let player_translation = player_transform.translation.xy();
 
         let bat_position = bat_transform.translation.xy();
         let distance_to_player = bat_position.distance(player_translation);
+        let player_attack_range = 50.;
 
-        if distance_to_player > ATTACK_DIST {
+        if distance_to_player > player_attack_range {
             break;
         }
 
-        println!("Bat attacks player! :O");
+        bat.current_hp -= 1.;
+
+        if (bat.current_hp <= 0.) {
+            println!("Bat was attacked by player, it is dead :(");
+            commands.entity(entity).despawn();
+        } else {
+            println!("Bat was attacked by player");
+        }
     }
 }
