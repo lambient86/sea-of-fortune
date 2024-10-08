@@ -13,6 +13,8 @@ use player::PlayerPlugin;
 use hitbox_system::HitboxPlugin;
 use bat::BatPlugin;
 use systems::*;
+use hitbox_system::HitboxPlugin;
+use bevy::gizmos::GizmoPlugin;
 
 
 fn main() {
@@ -30,6 +32,7 @@ fn main() {
         .add_plugins(PlayerPlugin)
         .add_plugins(HitboxPlugin)
         .add_plugins(BatPlugin)
+        .add_plugins(HitboxPlugin)
         .add_systems(Update, move_camera)
         .run();
 }

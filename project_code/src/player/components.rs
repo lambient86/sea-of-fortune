@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+
 #[derive(Component)]
 pub struct Player {
     pub animation_state: SpriteState,
@@ -84,20 +85,4 @@ impl SpriteState {
 #[derive(Component)]
 pub struct AttackCooldown {
     pub remaining: f32,
-}
-
-/// Struct that keeps track of the last direction detected by
-/// the user
-#[derive(Component)]
-pub struct LastDirection {
-    pub direction: Vec2,
-}
-
-// Last direction detected by user for attack fn
-impl LastDirection {
-    pub fn new() -> Self {
-        Self {
-            direction: Vec2::ZERO,
-        }
-    }
 }
