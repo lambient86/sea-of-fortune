@@ -161,7 +161,7 @@ pub fn spawn_player(
       Player {
         animation_state: SpriteState::Idle,
         timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
-
+        health: 3,
       },
     ));
 }
@@ -192,14 +192,9 @@ pub fn player_attack(
             let cursor_direction = ev.position.trunc();
             println!("Cursor direction: X: {}, Y: {}", cursor_direction.x, cursor_direction.y);
         }
-
-        if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. && cooldown.remaining <= 0. {
-            println!("Player attacked!");
-        }
         
-        /* 
-        // Check if the left mouse button is pressed
-        if mouse_button_input.just_pressed(MouseButton::Left) && cooldown.remaining <= 0. {
+        /*// Check if the left mouse button is pressed
+        if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. && cooldown.remaining <= 0. {
             println!("Player attacked!");
             
             // Player position
@@ -222,8 +217,7 @@ pub fn player_attack(
 
             cooldown.remaining = 1.0; 
         
-        }
-        */
+        }*/
     }
     
 }
