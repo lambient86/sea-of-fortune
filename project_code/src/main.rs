@@ -10,6 +10,7 @@ mod controls;
 use data::gameworld_data::*;
 use bevy::{prelude::*, window::PresentMode};
 use player::PlayerPlugin;
+use hitbox_system::HitboxPlugin;
 use bat::BatPlugin;
 use systems::*;
 use hitbox_system::HitboxPlugin;
@@ -29,6 +30,7 @@ fn main() {
         }))
         .add_systems(Startup, setup_gameworld)
         .add_plugins(PlayerPlugin)
+        .add_plugins(HitboxPlugin)
         .add_plugins(BatPlugin)
         .add_plugins(HitboxPlugin)
         .add_systems(Update, move_camera)
