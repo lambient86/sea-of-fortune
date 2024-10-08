@@ -1,13 +1,17 @@
 use bevy::prelude::*;
 
 use crate::bat::components::*;
-use crate::player::components::Player;
 use crate::data::gameworld_data::*;
 
+use crate::controls::*;
+use crate::hitbox_system::*;
+use crate::player::components::AttackCooldown;
+use crate::player::components::Player;
+use bevy::input::mouse::{self, MouseButtonInput};
 /*   ROTATE_BAT FUNCTION   */
 /// This should be changed to a function called "track_player", which will
 /// be how the bat knows where to check where the player is for shooting projectiles
-/// 
+///
 /// WE DON'T NEED TO ROTATE THE BAT! I WILL MAKE A BACK FACING SPRITE IF NEEDED
 pub fn rotate_bat(
     time: Res<Time>,
@@ -28,24 +32,21 @@ pub fn rotate_bat(
             break;
         }
 
-
         //getting enemy forward
         let enemy_forward = (enemy_transform.rotation * Vec3::Y).xy();
         let to_player = (player_translation - enemy_transform.translation.xy()).normalize();
         let forward_dot_player = enemy_forward.dot(to_player);
 
-
         if (forward_dot_player - 1.0).abs() < f32::EPSILON {
             continue;
         }
-
 
         let enemy_right = (enemy_transform.rotation * Vec3::X).xy();
 
         let right_dot_player = enemy_right.dot(to_player);
 
         let rotation_sign = -f32::copysign(1.0, right_dot_player);
-        let max_angle = forward_dot_player.clamp(-1.0, 1.0).acos(); 
+        let max_angle = forward_dot_player.clamp(-1.0, 1.0).acos();
 
         let rotation_angle =
             rotation_sign * (config.rotation_speed * time.delta_seconds()).min(max_angle);
@@ -86,11 +87,15 @@ pub fn spawn_bat(
     commands.spawn((
         SpriteBundle {
             texture: bat_sheet_handle,
-            transform: Transform::from_xyz(0., -(WIN_H / 2.) + ((TILE_SIZE as f32) * 1.5), 900.).with_scale(Vec3::splat(2.0)),
+            transform: Transform::from_xyz(0., -(WIN_H / 2.) + ((TILE_SIZE as f32) * 1.5), 900.)
+                .with_scale(Vec3::splat(2.0)),
             ..default()
         },
         Bat {
+            //Setting default stats
             rotation_speed: f32::to_radians(90.0),
+            current_hp: 1.,
+            max_hp: 1.,
         },
         RotateToPlayer {
             rotation_speed: f32::to_radians(90.0),
@@ -99,8 +104,56 @@ pub fn spawn_bat(
             layout: bat_layout_handle,
             index: 0,
         },
+        AttackCooldown { remaining: 0.0 },
         AnimationTimer::new(Timer::from_seconds(ANIMATION_TIME, TimerMode::Repeating)),
         AnimationFrameCount::new(bat_layout_len),
         Velocity::new(),
     ));
+}
+
+pub fn bat_attack(
+    time: Res<Time>,
+    mut commands: Commands,
+    mut bat_query: Query<(&Transform, &mut AttackCooldown), With<Bat>>,
+    player_query: Query<&Transform, With<Player>>,
+) {
+    for (bat_transform, mut cooldown) in bat_query.iter_mut() {
+        // Attacking only when cooldown is over
+        if cooldown.remaining > 0.0 {
+            cooldown.remaining -= time.delta_seconds();
+        }
+
+        let player_transform = player_query.single();
+        let player_translation = player_transform.translation.xy();
+
+        let bat_position = bat_transform.translation.xy();
+        let distance_to_player = bat_position.distance(player_translation);
+
+        if distance_to_player > ATTACK_DIST {
+            break;
+        }
+
+        println!("Bat attacks player! :O");
+    }
+}
+
+pub fn bat_damaged(
+    time: Res<Time>,
+    mut commands: Commands,
+    mut bat_query: Query<(&Transform, &mut AttackCooldown), With<Bat>>,
+    player_query: Query<&Transform, With<Player>>,
+) {
+    for (bat_transform, mut cooldown) in bat_query.iter_mut() {
+        let player_transform = player_query.single();
+        let player_translation = player_transform.translation.xy();
+
+        let bat_position = bat_transform.translation.xy();
+        let distance_to_player = bat_position.distance(player_translation);
+
+        if distance_to_player > ATTACK_DIST {
+            break;
+        }
+
+        println!("Bat attacks player! :O");
+    }
 }

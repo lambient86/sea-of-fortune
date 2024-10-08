@@ -1,8 +1,9 @@
-use bevy::{prelude::*};
 use crate::controls::*;
-use crate::player::components::*;
 use crate::data::gameworld_data::*;
-
+use crate::hitbox_system::*;
+use crate::player::components::*;
+use bevy::input::mouse::{self, MouseButtonInput};
+use bevy::prelude::*;
 
 /// The speed at which the player accelerates
 pub const ACCELERATION: f32 = 5000.;
@@ -25,11 +26,13 @@ pub fn move_player(
 
     //checking left/right input and deciding movement
     //if left pressed and right not : 0 - 1 = -1
-    deltav.x = get_player_input( PlayerControl::Right, &keyboard_input) - get_player_input( PlayerControl::Left, &keyboard_input);
+    deltav.x = get_player_input(PlayerControl::Right, &keyboard_input, &mouse_input)
+        - get_player_input(PlayerControl::Left, &keyboard_input, &mouse_input);
 
     //checking up/down input and deciding movement
     //if up pressed and down not; 0 - 1 = -1
-    deltav.y = get_player_input(PlayerControl::Up, &keyboard_input) - get_player_input( PlayerControl::Down, &keyboard_input);
+    deltav.y = get_player_input(PlayerControl::Up, &keyboard_input, &mouse_input)
+        - get_player_input(PlayerControl::Down, &keyboard_input, &mouse_input);
 
     //getting acceleration
     let delta_t = time.delta_seconds();
@@ -80,37 +83,48 @@ pub fn player_animation(
         With<Player>,
     >,
 ) {
-    let (velocity, mut texture_atlas, mut timer, frame_count, mut player) = player_query.single_mut();
-        let new_state = if velocity.v.cmpeq(Vec2::ZERO).all() {
-            SpriteState::Idle
-        } else if velocity.v.x < 0.{
-            SpriteState::LeftRun         
-        } else if velocity.v.x > 0. {
-            SpriteState::RightRun
+    let (velocity, mut texture_atlas, mut timer, frame_count, mut player) =
+        player_query.single_mut();
+    //deciding what animation to use
+    let new_state = if velocity.v.cmpeq(Vec2::ZERO).all() {
+        SpriteState::Idle
+    } else if velocity.v.x < 0. {
+        SpriteState::LeftRun
+    } else if velocity.v.x > 0. {
+        SpriteState::RightRun
+    } else if velocity.v.y < 0. {
+        SpriteState::ForwardRun
+    } else if velocity.v.y > 0. {
+        SpriteState::BackwardRun
+    } else {
+        SpriteState::Idle
+    };
+
+    //changing player animation state if needed
+    if new_state != player.animation_state {
+        player.animation_state = new_state;
+        player.timer = Timer::from_seconds(
+            player.animation_state.animation_speed(),
+            TimerMode::Repeating,
+        );
+
+        //setting animation at start
+        let start = player.animation_state.animation_indices();
+        texture_atlas.index = start.start;
+    }
+
+    //passing time
+    player.timer.tick(time.delta());
+
+    //going to next frame
+    if player.timer.just_finished() {
+        let indices = player.animation_state.animation_indices();
+        texture_atlas.index = if texture_atlas.index + 1 >= indices.end {
+            indices.start
         } else {
-            SpriteState::Idle
+            texture_atlas.index + 1
         };
-
-        if new_state != player.animation_state {
-            player.animation_state = new_state;
-            player.timer = Timer::from_seconds(
-                player.animation_state.animation_speed(),
-                TimerMode::Repeating,
-            );
-            let start = player.animation_state.animation_indices();
-            texture_atlas.index = start.start;
-        }
-
-        player.timer.tick(time.delta());
-
-        if player.timer.just_finished() {
-            let indices = player.animation_state.animation_indices();
-            texture_atlas.index = if texture_atlas.index + 1 >= indices.end {
-                indices.start
-            } else {
-                texture_atlas.index + 1
-            };
-        }
+    }
 }
 
 /*   SPAWN_PLAYER FUNCTION */
@@ -128,32 +142,28 @@ pub fn spawn_player(
 
     //setting up player for spawning
     commands.spawn((
-      SpriteBundle {
-        texture: master_handle,
-        transform: Transform {
-            scale: Vec3::splat(2.0),
+        SpriteBundle {
+            texture: master_handle,
+            transform: Transform {
+                scale: Vec3::splat(2.0),
+                ..default()
+            },
             ..default()
         },
-        ..default()
-      },
-      TextureAtlas {
-        layout: master_layout_handle,
-        index: 0,
-      },
-      AnimationTimer::new(Timer::from_seconds(ANIMATION_TIME, TimerMode::Repeating)),
-      AnimationFrameCount::new(master_layout_length),
-      Velocity::new(),
-      AttackCooldown {remaining: 0.0},
-      LastDirection::new(),
-      Player {
-        animation_state: SpriteState::Idle,
-        timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
-
-      },
+        TextureAtlas {
+            layout: master_layout_handle,
+            index: 0,
+        },
+        AnimationTimer::new(Timer::from_seconds(ANIMATION_TIME, TimerMode::Repeating)),
+        AnimationFrameCount::new(master_layout_length),
+        Velocity::new(),
+        AttackCooldown { remaining: 0.0 },
+        Player {
+            animation_state: SpriteState::Idle,
+            timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
+        },
     ));
 }
-
-
 
 /*   PLAYER_ATTACK FUNCTION   */
 /// Checks if player pressed attack input. If the player has attacked, the
@@ -164,7 +174,7 @@ pub fn spawn_player(
 pub fn player_attack(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mouse_input: Res<ButtonInput<MouseButton>>, 
+    mouse_input: Res<ButtonInput<MouseButton>>,
     mut cursor: EventReader<CursorMoved>,
     mut commands: Commands,
     mut player_query: Query<(Entity, &Transform, &mut AttackCooldown), With<Player>>,
@@ -175,16 +185,46 @@ pub fn player_attack(
             cooldown.remaining -= time.delta_seconds();
         }
 
-        //getting attack input
-        //if no attack, returns 0
-        let attack = get_player_input(PlayerControl::Attack, &keyboard_input);
-            
-        // Add logic for the attack here, projectiles, damage, etc
-        if attack == 1. && cooldown.remaining <= 0. {
-            println!("Player attacked in direction: {:?}", last_direction.direction);
+        for ev in cursor.read() {
+            let cursor_direction = ev.position.trunc();
+            println!(
+                "Cursor direction: X: {}, Y: {}",
+                cursor_direction.x, cursor_direction.y
+            );
+        }
+
+        if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1.
+            && cooldown.remaining <= 0.
+        {
+            println!("Player attacked!");
+        }
+
+        /*
+        // Check if the left mouse button is pressed
+        if mouse_button_input.just_pressed(MouseButton::Left) && cooldown.remaining <= 0. {
+            println!("Player attacked!");
+
+            // Player position
+            let player_position = transform.translation.truncate();
+
+            // Calculate hitbox position
+            let hitbox_position = transform.translation.truncate();
+
+            // Define the size of the hitbox
+            let hitbox_size = Vec2::new(50.0, 50.0); // Example size
+
+            // Create the hitbox
+            create_hitbox(
+                &mut commands,
+                entity,
+                hitbox_size,
+                hitbox_position,
+                Some(30.0),
+            );
+
             cooldown.remaining = 1.0;
+
         }
         */
     }
-    
 }
