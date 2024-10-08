@@ -5,6 +5,7 @@ use bevy::prelude::*;
 pub struct Player {
     pub animation_state: SpriteState,
     pub timer: Timer,
+    pub health: i8,
 }
 
 /// Velocity struct
