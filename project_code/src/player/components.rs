@@ -1,5 +1,7 @@
 use bevy::prelude::*;
+use crate::hitbox_system::Hurtbox;
 
+//maintaining last cursor position
 #[derive(Component)]
 pub struct Player {
     pub animation_state: SpriteState,
