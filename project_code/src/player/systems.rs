@@ -160,7 +160,9 @@ pub fn spawn_player(
         AnimationTimer::new(Timer::from_seconds(ANIMATION_TIME, TimerMode::Repeating)),
         AnimationFrameCount::new(master_layout_length),
         Velocity::new(),
-        AttackCooldown { remaining: 0.0 },
+        AttackCooldown {
+            remaining: Timer::from_seconds(1.5, TimerMode::Once),
+        },
         Player {
             animation_state: SpriteState::Idle,
             timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
@@ -177,9 +179,6 @@ pub fn spawn_player(
 /*   PLAYER_ATTACK FUNCTION   */
 /// Checks if player pressed attack input. If the player has attacked, the
 /// current weapons attack is then used
-/*   PLAYER_ATTACK FUNCTION   */
-/// Checks if player pressed attack input. If the player has attacked, the
-/// current weapon's attack is then used
 pub fn player_attack(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
@@ -189,10 +188,16 @@ pub fn player_attack(
     mut player_query: Query<(Entity, &Transform, &mut AttackCooldown), With<Player>>,
 ) {
     for (entity, transform, mut cooldown) in player_query.iter_mut() {
-        // Attacking only when cooldown is over
-        if cooldown.remaining > 0.0 {
-            cooldown.remaining -= time.delta_seconds();
+        //If cooldown isn't over, tick the cooldown and break because player can't attack
+        if !cooldown.remaining.finished() {
+            cooldown.remaining.tick(time.delta());
+            break;
         }
+
+        //Only gets here after cooldown has elapsed
+
+        /* Debug */
+        //println!("You can attack!");
 
         for ev in cursor.read() {
             let cursor_direction = ev.position.trunc();
@@ -204,10 +209,13 @@ pub fn player_attack(
             );*/
         }
 
-        /*// Check if the left mouse button is pressed
+        // Check if the left mouse button is pressed
 
-        if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. && cooldown.remaining <= 0. {
+        if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {
             println!("Player attacked!");
+            cooldown.remaining = Timer::from_seconds(1.5, TimerMode::Once);
+
+            /* Commenting this out for now because it's causing game to crash
 
             // Player position
             let player_position = transform.translation.truncate();
@@ -226,10 +234,8 @@ pub fn player_attack(
                 hitbox_position,
                 Some(30.0),
             );
-
-            cooldown.remaining = 1.0;
-
-        }*/
+            */
+        }
     }
 }
 
@@ -255,19 +261,20 @@ pub fn check_player_health(
             break;
         }
 
-        timer.tick(time.delta());
+        /* Debug */
 
-        /*Debug*/
-        //print!("health: {}\n", player.health);
+        //UNCOMMENT ONLY IF YOU NEED TO RE-IMPLEMENT THE TESTTIMER DEATH
+
+        /*timer.tick(time.delta());
 
         if timer.just_finished() {
             player.health -= 1.;
 
             /* Debug */
-            println!(
+            /*println!(
                 "Damage taken! Current HP: {}/{}",
                 player.health, player.max_health
-            );
-        }
+            );*/
+        }*/
     }
 }

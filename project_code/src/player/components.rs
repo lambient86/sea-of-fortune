@@ -94,5 +94,5 @@ impl SpriteState {
 ///Struct that keeps track of the cooldown between attacks
 #[derive(Component)]
 pub struct AttackCooldown {
-    pub remaining: f32,
+    pub remaining: Timer,
 }

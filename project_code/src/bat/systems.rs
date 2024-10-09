@@ -100,7 +100,9 @@ pub fn spawn_bat(
             layout: bat_layout_handle,
             index: 0,
         },
-        AttackCooldown { remaining: 0.0 },
+        AttackCooldown {
+            remaining: Timer::from_seconds(1.5, TimerMode::Once),
+        },
         AnimationTimer::new(Timer::from_seconds(ANIMATION_TIME, TimerMode::Repeating)),
         AnimationFrameCount::new(bat_layout_len),
         Velocity::new(),
@@ -111,23 +113,29 @@ pub fn spawn_bat(
     Detects when player is within Bat attack range and attacks.
 
     Things not added:
-    - Attack cooldown timer
-    - Projectile shooting
+    - Done!...?
 
     Things currently added:
     - Distance-to-player checking
-
+    - Attack cooldown timer
+    - Projectile shooting
 */
+
 pub fn bat_attack(
+    mut commands: Commands,
     time: Res<Time>,
     mut bat_query: Query<(&Transform, &mut AttackCooldown), With<Bat>>,
     player_query: Query<&Transform, With<Player>>,
+    asset_server: Res<AssetServer>,
 ) {
     for (bat_transform, mut cooldown) in bat_query.iter_mut() {
         // Attacking only when cooldown is over
-        if cooldown.remaining > 0.0 {
-            cooldown.remaining -= time.delta_seconds();
+        cooldown.remaining.tick(time.delta());
+        if !cooldown.remaining.just_finished() {
+            break;
         }
+
+        cooldown.remaining = Timer::from_seconds(1.5, TimerMode::Once);
 
         let player_transform = player_query.single();
         let player_translation = player_transform.translation.xy();
@@ -141,6 +149,26 @@ pub fn bat_attack(
 
         /* Debug */
         //println!("Bat attacks player! :O");
+
+        let bat_translation = bat_transform.translation;
+
+        let player_translation = player_transform.translation;
+
+        let direction = (player_translation - bat_translation).normalize();
+
+        let bat_projectile_handle = asset_server.load("s_cutlass.png");
+
+        commands.spawn((
+            SpriteBundle {
+                texture: bat_projectile_handle,
+                transform: Transform::from_translation(bat_translation),
+                ..default()
+            },
+            BatProjectile,
+            Velocity {
+                v: direction * 500.,
+            },
+        ));
     }
 }
 
@@ -173,5 +201,14 @@ pub fn bat_damaged(
         } else {
             println!("Bat was attacked by player");
         }
+    }
+}
+
+pub fn move_projectile(
+    mut proj_query: Query<(&mut Transform, &mut Velocity), With<BatProjectile>>,
+    time: Res<Time>,
+) {
+    for (mut transform, mut velocity) in proj_query.iter_mut() {
+        transform.translation += velocity.v * time.delta_seconds();
     }
 }
