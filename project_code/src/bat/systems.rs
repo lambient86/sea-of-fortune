@@ -2,7 +2,6 @@ use bevy::prelude::*;
 
 use crate::bat::components::*;
 use crate::data::gameworld_data::*;
-
 use crate::hitbox_system::*;
 use crate::player::components::AttackCooldown;
 use crate::player::components::Player;
@@ -27,7 +26,7 @@ pub fn rotate_bat(
         let distance_to_player = bat_position.distance(player_translation);
 
         //ensuring bat is close enough to player to attack
-        if distance_to_player > ATTACK_DIST {
+        if distance_to_player > BAT_ATTACK_DIST {
             break;
         }
 
@@ -93,8 +92,8 @@ pub fn spawn_bat(
         Bat {
             //Setting default stats
             rotation_speed: f32::to_radians(90.0),
-            current_hp: 1.,
-            max_hp: 1.,
+            current_hp: BAT_MAX_HP,
+            max_hp: BAT_MAX_HP,
         },
         TextureAtlas {
             layout: bat_layout_handle,
@@ -103,7 +102,10 @@ pub fn spawn_bat(
         AttackCooldown {
             remaining: Timer::from_seconds(1.5, TimerMode::Once),
         },
-        AnimationTimer::new(Timer::from_seconds(ANIMATION_TIME, TimerMode::Repeating)),
+        AnimationTimer::new(Timer::from_seconds(
+            BAT_ANIMATION_TIME,
+            TimerMode::Repeating,
+        )),
         AnimationFrameCount::new(bat_layout_len),
         Velocity::new(),
     ));
@@ -146,7 +148,7 @@ pub fn bat_attack(
         //Gets distance
         let distance_to_player = bat_position.distance(player_position);
 
-        if distance_to_player > ATTACK_DIST {
+        if distance_to_player > BAT_ATTACK_DIST {
             continue;
         }
 
@@ -163,16 +165,19 @@ pub fn bat_attack(
         //Sets the projectile texture
         let bat_projectile_handle = asset_server.load("s_cutlass.png");
 
+        let projectile_start_position = bat_translation + direction * 100.0; // Adjust the multiplier as needed
+
         //Creates Projectile
         commands.spawn((
             SpriteBundle {
                 texture: bat_projectile_handle,
-                transform: Transform::from_translation(bat_translation), //Spawns at the bat's location
+                transform: Transform::from_translation(projectile_start_position), //Spawns at the bat's location
                 ..default()
             },
             BatProjectile,
+            Lifetime(BAT_PROJECTILE_LIFETIME),
             Velocity {
-                v: direction * 500., /* (direction * speed of projectile) */
+                v: direction * BAT_PROJECTILE_SPEED, /* (direction * speed of projectile) */
             },
         ));
     }
@@ -228,5 +233,24 @@ pub fn move_bat_projectile(
     for (mut transform, velocity) in proj_query.iter_mut() {
         // Calculates/moves the projectile
         transform.translation += velocity.v * time.delta_seconds();
+
+        //Remove this line if you want the projectile to stop at the coordinate player was targetted
+        transform.translation.z = 0.;
+    }
+}
+
+pub fn bat_proj_lifetime_check(
+    time: Res<Time>,
+    mut commands: Commands,
+    mut proj_query: Query<(Entity, &mut Lifetime)>,
+) {
+    for (entity, mut lifetime) in proj_query.iter_mut() {
+        lifetime.0 -= time.delta_seconds();
+        if lifetime.0 <= 0.0 {
+            commands.entity(entity).despawn();
+
+            /* Debug */
+            println!("Projectile despawned");
+        }
     }
 }
