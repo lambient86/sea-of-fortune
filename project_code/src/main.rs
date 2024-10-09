@@ -13,8 +13,6 @@ use player::PlayerPlugin;
 use hitbox_system::HitboxPlugin;
 use bat::BatPlugin;
 use systems::*;
-use bevy::input::mouse::{self, MouseButtonInput};
-use bevy::gizmos::GizmoPlugin;
 
 
 fn main() {
