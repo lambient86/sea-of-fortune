@@ -12,6 +12,9 @@ pub struct Bat {
     pub max_hp: f32,
 }
 
+#[derive(Component)]
+pub struct BatProjectile;
+
 /// Struct for the time between the bat's animation frames
 #[derive(Component, Deref, DerefMut)]
 pub struct AnimationTimer(Timer);
@@ -37,14 +40,12 @@ impl AnimationFrameCount {
 /// Struct to represent a bat entities velocity
 #[derive(Component)]
 pub struct Velocity {
-    pub velocity: Vec2,
+    pub v: Vec3,
 }
 
 impl Velocity {
     /// Initializes a new velocity struct for a bat entity
     pub fn new() -> Self {
-        Self {
-            velocity: Vec2::splat(0.),
-        }
+        Self { v: Vec3::splat(0.) }
     }
 }

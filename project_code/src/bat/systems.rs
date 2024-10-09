@@ -100,7 +100,9 @@ pub fn spawn_bat(
             layout: bat_layout_handle,
             index: 0,
         },
-        AttackCooldown { remaining: 0.0 },
+        AttackCooldown {
+            remaining: Timer::from_seconds(1.5, TimerMode::Once),
+        },
         AnimationTimer::new(Timer::from_seconds(ANIMATION_TIME, TimerMode::Repeating)),
         AnimationFrameCount::new(bat_layout_len),
         Velocity::new(),
@@ -110,37 +112,69 @@ pub fn spawn_bat(
 /*
     Detects when player is within Bat attack range and attacks.
 
+    Collision handling will be done in move_bat_projectile
+
     Things not added:
-    - Attack cooldown timer
-    - Projectile shooting
+    - Done!...?
 
     Things currently added:
     - Distance-to-player checking
-
+    - Attack cooldown timer
+    - Projectile shooting
 */
+
 pub fn bat_attack(
+    mut commands: Commands,
     time: Res<Time>,
     mut bat_query: Query<(&Transform, &mut AttackCooldown), With<Bat>>,
     player_query: Query<&Transform, With<Player>>,
+    asset_server: Res<AssetServer>,
 ) {
     for (bat_transform, mut cooldown) in bat_query.iter_mut() {
-        // Attacking only when cooldown is over
-        if cooldown.remaining > 0.0 {
-            cooldown.remaining -= time.delta_seconds();
+        // Attacks only when cooldown is over
+        cooldown.remaining.tick(time.delta());
+        if !cooldown.remaining.just_finished() {
+            continue;
         }
 
-        let player_transform = player_query.single();
-        let player_translation = player_transform.translation.xy();
+        cooldown.remaining = Timer::from_seconds(1.5, TimerMode::Once);
 
+        //Gets positions (Vec2) of the entities
+        let player_position = player_query.single().translation.xy();
         let bat_position = bat_transform.translation.xy();
-        let distance_to_player = bat_position.distance(player_translation);
+
+        //Gets distance
+        let distance_to_player = bat_position.distance(player_position);
 
         if distance_to_player > ATTACK_DIST {
-            break;
+            continue;
         }
 
         /* Debug */
-        //println!("Bat attacks player! :O");
+        //println!("Bat can attack player! :O");
+
+        //Gets positions (Vec3) of the entities
+        let bat_translation = bat_transform.translation;
+        let player_translation = player_query.single().translation;
+
+        //Gets direction projectile will be going
+        let direction = (player_translation - bat_translation).normalize();
+
+        //Sets the projectile texture
+        let bat_projectile_handle = asset_server.load("s_cutlass.png");
+
+        //Creates Projectile
+        commands.spawn((
+            SpriteBundle {
+                texture: bat_projectile_handle,
+                transform: Transform::from_translation(bat_translation), //Spawns at the bat's location
+                ..default()
+            },
+            BatProjectile,
+            Velocity {
+                v: direction * 500., /* (direction * speed of projectile) */
+            },
+        ));
     }
 }
 
@@ -154,17 +188,22 @@ pub fn bat_damaged(
     player_query: Query<&Transform, With<Player>>,
 ) {
     for (bat_transform, mut bat, entity) in bat_query.iter_mut() {
-        let player_transform = player_query.single();
-        let player_translation = player_transform.translation.xy();
-
+        //Gets entity locations
+        let player_position = player_query.single().translation.xy();
         let bat_position = bat_transform.translation.xy();
-        let distance_to_player = bat_position.distance(player_translation);
+
+        //Calculates distance
+        let distance_to_player = bat_position.distance(player_position);
+
+        //Placeholder value for player attack range
         let player_attack_range = 50.;
 
+        //If the distance is too large (in this case larger than 50) then continue to next bat entity
         if distance_to_player > player_attack_range {
-            break;
+            continue;
         }
 
+        //HP deduction and check
         bat.current_hp -= 1.;
 
         if bat.current_hp <= 0. {
@@ -173,5 +212,21 @@ pub fn bat_damaged(
         } else {
             println!("Bat was attacked by player");
         }
+    }
+}
+
+/*
+    Updates the locations of bat projectiles
+
+    Things to add:
+    - Collision handling, dealing damage on collision
+*/
+pub fn move_bat_projectile(
+    mut proj_query: Query<(&mut Transform, &mut Velocity), With<BatProjectile>>,
+    time: Res<Time>,
+) {
+    for (mut transform, velocity) in proj_query.iter_mut() {
+        // Calculates/moves the projectile
+        transform.translation += velocity.v * time.delta_seconds();
     }
 }
