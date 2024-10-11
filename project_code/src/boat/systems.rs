@@ -73,3 +73,15 @@ pub fn spawn_boat(
         },
     ));
 }
+
+/*   DESPAWN_BOAT FUNCTION   */
+/// Despawns the boat
+/// DEBUG: Will despawn any and all boats
+pub fn despawn_boat(
+    mut commands: Commands,
+    query: Query<Entity, With<Boat>>,
+) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
+    }
+}

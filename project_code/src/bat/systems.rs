@@ -107,17 +107,13 @@ pub fn spawn_bat(
     ));
 }
 
-/*
-    Detects when player is within Bat attack range and attacks.
-
-    Things not added:
-    - Attack cooldown timer
-    - Projectile shooting
-
-    Things currently added:
-    - Distance-to-player checking
-
-*/
+/*   BAT_ATTACK FUCNTION   */
+/// Detects when player is within Bat attack range and attacks.
+/// Things not added:
+/// * Attack cooldown timer
+/// * Projectile shooting
+/// Things currently added:
+/// * Distance-to-player checking
 pub fn bat_attack(
     time: Res<Time>,
     mut bat_query: Query<(&Transform, &mut AttackCooldown), With<Bat>>,
@@ -144,10 +140,9 @@ pub fn bat_attack(
     }
 }
 
-/*
-    Current functionality: Detects when a player is within player attack range (this will later be replaced with
-    player weapon/attack collision) and then takes 1 damage (dies)
-*/
+/*   BAT_DAMAGED FUNCTION   */
+/// Current functionality: Detects when a player is within player attack range (this will later be replaced with
+// player weapon/attack collision) and then takes 1 damage (dies)
 pub fn bat_damaged(
     mut commands: Commands,
     mut bat_query: Query<(&Transform, &mut Bat, Entity), With<Bat>>,
@@ -173,5 +168,17 @@ pub fn bat_damaged(
         } else {
             println!("Bat was attacked by player");
         }
+    }
+}
+
+/*   DESPAWN_ALL_BAT FUNCTION   */
+/// Despawns a bat entity
+/// DEBUG: Despwans all bat entities
+pub fn despawn_all_bats(
+    mut commands: Commands,
+    query: Query<Entity, With <Bat>>,
+) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
     }
 }
