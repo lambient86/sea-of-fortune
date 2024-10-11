@@ -111,20 +111,15 @@ pub fn spawn_bat(
     ));
 }
 
-/*
-    Detects when player is within Bat attack range and attacks.
-
-    Collision handling will be done in move_bat_projectile
-
-    Things not added:
-    - Done!...?
-
-    Things currently added:
-    - Distance-to-player checking
-    - Attack cooldown timer
-    - Projectile shooting
-*/
-
+/*   BAT_ATTACK FUCNTION   */
+/// Detects when player is within Bat attack range and attacks.
+/// Things not added:
+/// * Attack cooldown timer
+/// * Projectile shooting
+/// Things currently added:
+/// * Distance-to-player checking
+/// * Attack cooldown timer
+/// * Projectile shooting
 pub fn bat_attack(
     mut commands: Commands,
     time: Res<Time>,
@@ -183,10 +178,9 @@ pub fn bat_attack(
     }
 }
 
-/*
-    Current functionality: Detects when a player is within player attack range (this will later be replaced with
-    player weapon/attack collision) and then takes 1 damage (dies)
-*/
+/*   BAT_DAMAGED FUNCTION   */
+/// Current functionality: Detects when a player is within player attack range (this will later be replaced with
+// player weapon/attack collision) and then takes 1 damage (dies)
 pub fn bat_damaged(
     mut commands: Commands,
     mut bat_query: Query<(&Transform, &mut Bat, Entity), With<Bat>>,
@@ -220,12 +214,22 @@ pub fn bat_damaged(
     }
 }
 
-/*
-    Updates the locations of bat projectiles
+/*   DESPAWN_ALL_BAT FUNCTION   */
+/// Despawns a bat entity
+/// DEBUG: Despwans all bat entities
+pub fn despawn_all_bats(
+    mut commands: Commands,
+    query: Query<Entity, With <Bat>>,
+) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
+    }
+}
 
-    Things to add:
-    - Collision handling, dealing damage on collision
-*/
+/*   MOVE_BAT_PROJECTILE FUNCTION   */
+/// Updates the locations of bat projectiles
+/// Things to add:
+/// * Collision handling, dealing damage on collision
 pub fn move_bat_projectile(
     mut proj_query: Query<(&mut Transform, &mut Velocity), With<BatProjectile>>,
     time: Res<Time>,
@@ -239,6 +243,9 @@ pub fn move_bat_projectile(
     }
 }
 
+/*   BAT_PROJ_LIFETIME_CHECK FUNCTION   */
+/// Checks the lifetime left on a bat's projectile, and despawns
+/// after the lifetime expires
 pub fn bat_proj_lifetime_check(
     time: Res<Time>,
     mut commands: Commands,
@@ -254,3 +261,4 @@ pub fn bat_proj_lifetime_check(
         }
     }
 }
+
