@@ -17,6 +17,8 @@ impl Plugin for BatPlugin {
                 rotate_bat,
                 bat_attack,
                 bat_damaged,
+                move_bat_projectile,
+                bat_proj_lifetime_check
             )
             .run_if(in_state(GameworldState::Island)))
             .add_systems(OnExit(GameworldState::Island), despawn_all_bats);
