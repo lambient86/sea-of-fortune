@@ -240,6 +240,7 @@ pub fn player_attack(
     }
 }
 
+/*   CHECK_PLAYER_HEALTH FUNCTION   */
 /// Function checks the current state of the player's health
 /// if current health == 0 --> panic and close program
 pub fn check_player_health(
@@ -266,5 +267,17 @@ pub fn check_player_health(
                 player.health, player.max_health
             );*/
         }*/
+    }
+}
+
+/*   DESPAWN_PLAYER FUNCTION   */
+/// Despawns the player entity
+/// DEBUG: Will despawn any and all players
+pub fn despawn_player(
+    mut commands: Commands,
+    query: Query<Entity, With<Player>>,
+) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
     }
 }
