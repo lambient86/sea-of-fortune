@@ -7,8 +7,8 @@ mod components;
 mod hitbox_system;
 mod controls;
 mod transition_box;
-
 use components::GameworldState;
+use components::GameState;
 use data::gameworld_data::*;
 use bevy::{prelude::*, window::PresentMode};
 use player::PlayerPlugin;
@@ -38,9 +38,11 @@ fn main() {
         .add_plugins(HitboxPlugin)
         .add_systems(Update, move_player_camera.after(move_player)
                 .run_if(in_state(GameworldState::Island)))
-        .add_systems(Update, move_boat_camera.after((move_boat))
+        .add_systems(Update, move_boat_camera.after(move_boat)
                 .run_if(in_state(GameworldState::Ocean)))
         .add_systems(Update, change_gameworld_state)
-        .insert_state(GameworldState::Island)
+        .add_systems(Update, change_game_state)
+        .insert_state(GameworldState::MainMenu)
+        .insert_state(GameState::Running)
         .run();
 }
