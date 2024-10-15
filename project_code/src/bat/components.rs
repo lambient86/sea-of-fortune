@@ -1,20 +1,27 @@
 use bevy::prelude::*;
 
 //constants
-pub const ATTACK_DIST: f32 = 200.;
-pub const ANIMATION_TIME: f32 = 0.2;
+pub const BAT_ANIMATION_TIME: f32 = 0.2;
+pub const BAT_PROJECTILE_LIFETIME: f32 = 3.;
+pub const BAT_PROJECTILE_SPEED: f32 = 1000.;
+
+//Bat base stats
+pub const BAT_MAX_HP: f32 = 1.;
+pub const BAT_ATTACK_DIST: f32 = 500.;
 
 /// Struct to represent the bat entity
 #[derive(Component)]
 pub struct Bat {
     pub rotation_speed: f32,
+    pub current_hp: f32,
+    pub max_hp: f32,
 }
 
-/// Struct to represent the rotation of the bat to the player
 #[derive(Component)]
-pub struct RotateToPlayer {
-    pub rotation_speed: f32,
-}
+pub struct BatProjectile;
+
+#[derive(Component)]
+pub struct Lifetime(pub f32);
 
 /// Struct for the time between the bat's animation frames
 #[derive(Component, Deref, DerefMut)]
@@ -22,7 +29,7 @@ pub struct AnimationTimer(Timer);
 
 impl AnimationTimer {
     /// Initializes the animation timer
-    pub fn new(timer:Timer) -> AnimationTimer {
+    pub fn new(timer: Timer) -> AnimationTimer {
         AnimationTimer(timer)
     }
 }
@@ -38,18 +45,15 @@ impl AnimationFrameCount {
     }
 }
 
-
 /// Struct to represent a bat entities velocity
 #[derive(Component)]
 pub struct Velocity {
-    pub velocity: Vec2,
+    pub v: Vec3,
 }
 
 impl Velocity {
     /// Initializes a new velocity struct for a bat entity
     pub fn new() -> Self {
-        Self {
-            velocity: Vec2::splat(0.),
-        }
+        Self { v: Vec3::splat(0.) }
     }
 }

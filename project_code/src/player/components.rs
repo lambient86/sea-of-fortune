@@ -1,17 +1,24 @@
 use bevy::prelude::*;
+use crate::hitbox_system::Hurtbox;
 
-
+//maintaining last cursor position
 #[derive(Component)]
 pub struct Player {
     pub animation_state: SpriteState,
     pub timer: Timer,
-    pub health: i8,
+    pub health: f32,
+    pub max_health: f32,
 }
 
 /// Velocity struct
 #[derive(Component)]
 pub struct Velocity {
     pub v: Vec2,
+}
+
+/// Struct for tracking players last position for out of transition spawning
+pub struct PlayerLastPosition {
+    pub last_pos: Vec2,
 }
 
 /// Velocity implementation
@@ -30,8 +37,17 @@ pub struct AnimationTimer(Timer);
 
 impl AnimationTimer {
     /// Initializes the animation timer
-    pub fn new(timer:Timer) -> AnimationTimer {
+    pub fn new(timer: Timer) -> AnimationTimer {
         AnimationTimer(timer)
+    }
+}
+
+#[derive(Component, Deref, DerefMut)]
+pub struct TestTimer(Timer);
+
+impl TestTimer {
+    pub fn new(timer: Timer) -> TestTimer {
+        TestTimer(timer)
     }
 }
 
@@ -49,11 +65,11 @@ impl AnimationFrameCount {
 /// Struct that represents the current sprite for the players state
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum SpriteState {
-        Idle,
-        LeftRun,
-        RightRun,
-        BackwardRun,
-        ForwardRun,
+    Idle,
+    LeftRun,
+    RightRun,
+    BackwardRun,
+    ForwardRun,
 }
 
 impl SpriteState {
@@ -85,5 +101,5 @@ impl SpriteState {
 ///Struct that keeps track of the cooldown between attacks
 #[derive(Component)]
 pub struct AttackCooldown {
-    pub remaining: f32,
+    pub remaining: Timer,
 }

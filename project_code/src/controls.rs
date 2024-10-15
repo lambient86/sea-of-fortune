@@ -3,11 +3,12 @@ use bevy::input::mouse::MouseButtonInput;
 
 /// enum for different types of player input
 pub enum PlayerControl {
-    Up,     //W
-    Down,   //S
-    Left,   //A
-    Right,  //D
-    Attack, //Left Mouse Button
+    Up,         //W
+    Down,       //S
+    Left,       //A
+    Right,      //D
+    Interact,  //E 
+    Attack,     //Left Mouse Button
     //Charge, //subject to change, for range (right click)
 }
 
@@ -31,6 +32,9 @@ impl PlayerControl {
             }
             PlayerControl::Right => {
                 keyboard_input.pressed(KeyCode::KeyD)
+            }
+            PlayerControl::Interact => {
+                keyboard_input.pressed(KeyCode::KeyE)
             }
             PlayerControl::Attack => {
                 mouse_input.pressed(MouseButton::Left)

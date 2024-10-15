@@ -50,7 +50,7 @@ pub fn spawn_boat(
 ) {
     //getting boat sprite info
     let boat_sheet_handle = asset_server.load("s_basic_ship.png");
-    let boat_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 2, 2, None, None);
+    let boat_layout = TextureAtlasLayout::from_grid(UVec2::splat(100), 2, 2, None, None);
     let boat_layout_handle = texture_atlases.add(boat_layout);
 
     //spawning boat
@@ -72,4 +72,16 @@ pub fn spawn_boat(
             rotation_speed: f32::to_radians(180.0),
         },
     ));
+}
+
+/*   DESPAWN_BOAT FUNCTION   */
+/// Despawns the boat
+/// DEBUG: Will despawn any and all boats
+pub fn despawn_boat(
+    mut commands: Commands,
+    query: Query<Entity, With<Boat>>,
+) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
+    }
 }
