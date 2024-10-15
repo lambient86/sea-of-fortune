@@ -50,7 +50,7 @@ pub fn spawn_boat(
 ) {
     //getting boat sprite info
     let boat_sheet_handle = asset_server.load("s_basic_ship.png");
-    let boat_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 2, 2, None, None);
+    let boat_layout = TextureAtlasLayout::from_grid(UVec2::splat(100), 2, 2, None, None);
     let boat_layout_handle = texture_atlases.add(boat_layout);
 
     //spawning boat
