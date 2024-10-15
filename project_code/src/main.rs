@@ -6,6 +6,7 @@ mod systems;
 mod components;
 mod hitbox_system;
 mod controls;
+mod transition_box;
 
 use components::GameworldState;
 use data::gameworld_data::*;
