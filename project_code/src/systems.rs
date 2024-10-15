@@ -1,8 +1,8 @@
-use crate::player::components::*;
 use crate::boat::components::*;
-use bevy::{prelude::*, window::PresentMode};
-use crate::data::gameworld_data::*;
 use crate::components::*;
+use crate::data::gameworld_data::*;
+use crate::player::components::*;
+use bevy::{prelude::*, window::PresentMode};
 
 /*   MOVE_CAMERA_ FUNCTIONS  */
 /// Updates the cameras position to center the current player
@@ -63,10 +63,11 @@ pub fn change_gameworld_state(
     state: Res<State<GameworldState>>,
     mut next_state: ResMut<NextState<GameworldState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut commands: Commands, 
+    mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::KeyI) {   //ISLAND
+    if keyboard_input.just_pressed(KeyCode::KeyI) {
+        //ISLAND
         //getting background texture
         let bg_texture_handle = asset_server.load("bg_sand_demo.png");
 
@@ -77,14 +78,14 @@ pub fn change_gameworld_state(
                 transform: Transform::from_xyz(0., 0., -1.),
                 ..default()
             })
-        .insert(Background);
-        
+            .insert(Background);
+
         //switching states to island
         next_state.set(GameworldState::Island);
-
-    } else if keyboard_input.just_pressed(KeyCode::KeyO) {   //OCEAN
+    } else if keyboard_input.just_pressed(KeyCode::KeyO) {
+        //OCEAN
         //getting background texture
-        let bg_texture_handle = asset_server.load("bg_ocean_demo.png");
+        let bg_texture_handle = asset_server.load("bg_ocean_temp.png");
 
         //spawning background sprite
         commands
@@ -93,12 +94,12 @@ pub fn change_gameworld_state(
                 transform: Transform::from_xyz(0., 0., -1.),
                 ..default()
             })
-        .insert(Background);
+            .insert(Background);
 
         //switching state to ocean
         next_state.set(GameworldState::Ocean);
-
-    } else if keyboard_input.just_pressed(KeyCode::KeyU) {   //DUNGEON
+    } else if keyboard_input.just_pressed(KeyCode::KeyU) {
+        //DUNGEON
         //switching state to dungeon
         next_state.set(GameworldState::Dungeon)
     }
@@ -108,7 +109,7 @@ pub fn change_gameworld_state(
 /// Changes the state of the game. Such as a switch between running and paused
 /// DEBUG: On keypress, the game state will switch
 /// * E - if Running, to InShop, if InShop, to Running
-pub fn change_game_state (
+pub fn change_game_state(
     state: Res<State<GameState>>,
     mut next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
