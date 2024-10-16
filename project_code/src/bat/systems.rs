@@ -210,8 +210,8 @@ pub fn bat_attack(
                 texture: bat_projectile_handle,
                 transform: Transform {
                     translation: projectile_start_position,
-                    rotation: Quat::from_rotation_z(180_f32.to_radians()), //png is backwards fix
                     scale: Vec3::splat(2.0),
+                    ..default()
                 },
                 ..default()
             },
@@ -287,6 +287,8 @@ pub fn move_bat(
 
         //Moves bat
         transform.translation += velocity * time.delta_seconds();
+    }
+}
 
 /*   DESPAWN_ALL_BAT_PROJ   */
 /// Despawns all the bat's projectiles
