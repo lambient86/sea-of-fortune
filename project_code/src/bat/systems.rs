@@ -257,3 +257,35 @@ pub fn bat_proj_lifetime_check(
         }
     }
 }
+
+//Moves the bat as long as a player is within agro range
+pub fn move_bat(
+    time: Res<Time>,
+    mut bat_query: Query<&mut Transform, With<Bat>>,
+    player_query: Query<&Transform, (With<Player>, Without<Bat>)>,
+) {
+    for mut transform in bat_query.iter_mut() {
+        //Gets positions (Vec3) of the entities
+        let bat_translation = transform.translation;
+        let player_translation = player_query.single().translation;
+
+        //Gets positions (Vec2) of the entities
+        let player_position = player_translation.xy();
+        let bat_position = bat_translation.xy();
+
+        //Gets distance
+        let distance_to_player = bat_position.distance(player_position);
+
+        //Check
+        if distance_to_player > BAT_AGRO_RANGE || distance_to_player <= BAT_AGRO_STOP {
+            continue;
+        }
+
+        //Gets direction projectile will be going
+        let direction = (player_translation - bat_translation).normalize();
+        let velocity = direction * BAT_MOVEMENT_SPEED;
+
+        //Moves bat
+        transform.translation += velocity * time.delta_seconds();
+    }
+}

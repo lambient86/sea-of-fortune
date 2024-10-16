@@ -1,12 +1,10 @@
 use bevy::prelude::*;
 
 mod components;
-mod movement;
 mod systems;
 
 use crate::GameState;
 use crate::GameworldState;
-use movement::*;
 use systems::*;
 
 pub struct BatPlugin;
