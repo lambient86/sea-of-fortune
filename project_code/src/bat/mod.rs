@@ -1,11 +1,13 @@
 use bevy::prelude::*;
 
 mod components;
+mod movement;
 mod systems;
 
-use systems::*;
-use crate::GameworldState;
 use crate::GameState;
+use crate::GameworldState;
+use movement::*;
+use systems::*;
 
 pub struct BatPlugin;
 
@@ -13,16 +15,20 @@ impl Plugin for BatPlugin {
     /// Builds the bat plugin
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameworldState::Island), spawn_bat)
-            .add_systems(Update, (
-                animate_bat,
-                rotate_bat,
-                bat_attack,
-                bat_damaged,
-                move_bat_projectile,
-                bat_proj_lifetime_check
+            .add_systems(
+                Update,
+                (
+                    animate_bat,
+                    rotate_bat,
+                    bat_attack,
+                    bat_damaged,
+                    move_bat_projectile,
+                    bat_proj_lifetime_check,
+                    move_bat,
+                )
+                    .run_if(in_state(GameworldState::Island))
+                    .run_if(in_state(GameState::Running)),
             )
-            .run_if(in_state(GameworldState::Island))
-            .run_if(in_state(GameState::Running)))
             .add_systems(OnExit(GameworldState::Island), despawn_all_bats);
     }
 }

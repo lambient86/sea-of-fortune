@@ -1,5 +1,3 @@
-use std::f32::consts::PI;
-
 use bevy::prelude::*;
 
 use crate::bat::components::*;
@@ -96,6 +94,7 @@ pub fn spawn_bat(
             rotation_speed: f32::to_radians(90.0),
             current_hp: BAT_MAX_HP,
             max_hp: BAT_MAX_HP,
+            velocity: Velocity { v: Vec3::splat(0.) },
         },
         TextureAtlas {
             layout: bat_layout_handle,
@@ -113,7 +112,52 @@ pub fn spawn_bat(
     ));
 }
 
-/*   BAT_ATTACK FUCNTION   */
+/*   BAT_DAMAGED FUNCTION   */
+/// Current functionality: Detects when a player is within player attack range (this will later be replaced with
+// player weapon/attack collision) and then takes 1 damage (dies)
+pub fn bat_damaged(
+    mut commands: Commands,
+    mut bat_query: Query<(&Transform, &mut Bat, Entity), With<Bat>>,
+    player_query: Query<&Transform, With<Player>>,
+) {
+    for (bat_transform, mut bat, entity) in bat_query.iter_mut() {
+        //Gets entity locations
+        let player_position = player_query.single().translation.xy();
+        let bat_position = bat_transform.translation.xy();
+
+        //Calculates distance
+        let distance_to_player = bat_position.distance(player_position);
+
+        //Placeholder value for player attack range
+        let player_attack_range = 50.;
+
+        //If the distance is too large (in this case larger than 50) then continue to next bat entity
+        if distance_to_player > player_attack_range {
+            continue;
+        }
+
+        //HP deduction and check
+        bat.current_hp -= 1.;
+
+        if bat.current_hp <= 0. {
+            println!("Bat was attacked by player, it is dead :(");
+            commands.entity(entity).despawn();
+        } else {
+            println!("Bat was attacked by player");
+        }
+    }
+}
+
+/*   DESPAWN_ALL_BAT FUNCTION   */
+/// Despawns a bat entity
+/// DEBUG: Despwans all bat entities
+pub fn despawn_all_bats(mut commands: Commands, query: Query<Entity, With<Bat>>) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
+    }
+}
+
+/*   BAT_ATTACK FUNCTION   */
 /// Detects when player is within Bat attack range and attacks.
 /// Things not added:
 /// * Attack cooldown timer
@@ -181,51 +225,6 @@ pub fn bat_attack(
     }
 }
 
-/*   BAT_DAMAGED FUNCTION   */
-/// Current functionality: Detects when a player is within player attack range (this will later be replaced with
-// player weapon/attack collision) and then takes 1 damage (dies)
-pub fn bat_damaged(
-    mut commands: Commands,
-    mut bat_query: Query<(&Transform, &mut Bat, Entity), With<Bat>>,
-    player_query: Query<&Transform, With<Player>>,
-) {
-    for (bat_transform, mut bat, entity) in bat_query.iter_mut() {
-        //Gets entity locations
-        let player_position = player_query.single().translation.xy();
-        let bat_position = bat_transform.translation.xy();
-
-        //Calculates distance
-        let distance_to_player = bat_position.distance(player_position);
-
-        //Placeholder value for player attack range
-        let player_attack_range = 50.;
-
-        //If the distance is too large (in this case larger than 50) then continue to next bat entity
-        if distance_to_player > player_attack_range {
-            continue;
-        }
-
-        //HP deduction and check
-        bat.current_hp -= 1.;
-
-        if bat.current_hp <= 0. {
-            println!("Bat was attacked by player, it is dead :(");
-            commands.entity(entity).despawn();
-        } else {
-            println!("Bat was attacked by player");
-        }
-    }
-}
-
-/*   DESPAWN_ALL_BAT FUNCTION   */
-/// Despawns a bat entity
-/// DEBUG: Despwans all bat entities
-pub fn despawn_all_bats(mut commands: Commands, query: Query<Entity, With<Bat>>) {
-    for entity in query.iter() {
-        commands.entity(entity).despawn();
-    }
-}
-
 /*   MOVE_BAT_PROJECTILE FUNCTION   */
 /// Updates the locations of bat projectiles
 /// Things to add:
@@ -237,9 +236,6 @@ pub fn move_bat_projectile(
     for (mut transform, velocity) in proj_query.iter_mut() {
         // Calculates/moves the projectile
         transform.translation += velocity.v * time.delta_seconds();
-
-        //Remove this line if you want the projectile to stop at the coordinate player was targetted
-        transform.translation.z = 0.;
     }
 }
 
