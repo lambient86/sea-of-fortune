@@ -252,7 +252,8 @@ pub fn bat_proj_lifetime_check(
     }
 }
 
-//Moves the bat as long as a player is within agro range
+/*   MOVE_BAT FUNCTION   */
+/// Moves the bat as long as a player is within agro range
 pub fn move_bat(
     time: Res<Time>,
     mut bat_query: Query<&mut Transform, With<Bat>>,
@@ -281,5 +282,14 @@ pub fn move_bat(
 
         //Moves bat
         transform.translation += velocity * time.delta_seconds();
+
+/*   DESPAWN_ALL_BAT_PROJ   */
+/// Despawns all the bat's projectiles
+pub fn despawn_all_bat_proj(
+    mut commands: Commands,
+    mut proj_query: Query<(Entity, &mut Lifetime)>,
+) {
+    for (entity, mut lifetime) in proj_query.iter_mut() {
+        commands.entity(entity).despawn();
     }
 }
