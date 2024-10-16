@@ -140,7 +140,7 @@ pub fn spawn_player(
 ) {
     //getting sprite info
     let master_handle: Handle<Image> = asset_server.load("s_pirate.png");
-    let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
+    let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(64), 8, 5, None, None);
     let master_layout_length = master_layout.textures.len();
     let master_layout_handle = texture_atlases.add(master_layout);
 
@@ -149,7 +149,7 @@ pub fn spawn_player(
         SpriteBundle {
             texture: master_handle,
             transform: Transform {
-                scale: Vec3::splat(2.0),
+                // scale: Vec3::splat(2.0),
                 ..default()
             },
             ..default()
@@ -187,6 +187,7 @@ pub fn spawn_weapon(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+    player_query: Query<Entity, With<Player>>,
 ){  
     //getting sprite info
     let master_handle: Handle<Image> = asset_server.load("s_cutlass.png");
@@ -194,23 +195,29 @@ pub fn spawn_weapon(
     let master_layout_length = master_layout.textures.len();
     let master_layout_handle = texture_atlases.add(master_layout);
 
-    //setting up weapon for spawning
-    commands.spawn((
-        SpriteBundle {
-            texture: master_handle,
-            transform: Transform {
-                scale: Vec3::splat(1.75),
-                translation: Vec3::splat(0.),
-                ..default()
-            },
-            ..default()
-        },
-        TextureAtlas {
-            layout: master_layout_handle,
-            index: 0,
-        },
-        Sword{ ..Default::default() },
-    ));
+    // get player + set weapon as child
+    let player = player_query.single();
+    commands.entity(player)
+        .with_children(|parent| {
+            parent.spawn((
+                SpriteBundle {
+                    texture: master_handle,
+                    transform: Transform {
+                        scale: Vec3::splat(2.),
+                        translation: Vec3::new(32., 0.0, 0.0),
+                        ..default()
+                    },
+                    ..default()
+                },
+                TextureAtlas {
+                    layout: master_layout_handle,
+                    index: 0,
+                },
+                Sword{ ..Default::default() },
+            ));
+        });
+
+
 }
 
 /*   MOVE_WEAPON FUNCITON   */
@@ -219,6 +226,14 @@ pub fn move_weapon(
     mut weapon: Query<&mut Transform, Without<Sword>>,
 ) { 
     
+}
+
+/* MOVE_HURTBOX FUNCTION */
+/// moves the hurtbox with the player
+pub fn move_hurtbox(
+    mut player_query: Query<(Entity, &Transform, &Velocity), With<Player>>
+) {
+
 }
 
 /*   PLAYER_ATTACK FUNCTION   */
