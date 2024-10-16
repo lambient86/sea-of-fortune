@@ -282,6 +282,8 @@ pub fn move_bat(
 
         //Moves bat
         transform.translation += velocity * time.delta_seconds();
+    }
+}
 
 /*   DESPAWN_ALL_BAT_PROJ   */
 /// Despawns all the bat's projectiles
