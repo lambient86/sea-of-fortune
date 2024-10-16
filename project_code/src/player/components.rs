@@ -1,13 +1,31 @@
 use bevy::prelude::*;
 use crate::hitbox_system::Hurtbox;
 
-//maintaining last cursor position
+/// Struct representing the player
 #[derive(Component)]
 pub struct Player {
     pub animation_state: SpriteState,
     pub timer: Timer,
     pub health: f32,
     pub max_health: f32,
+}
+
+/// Struct representing the sword weapon for the player
+#[derive(Component)]
+pub struct Sword {
+    pub damage: f32,
+    pub upgraded: bool,
+}
+
+//implementing sword
+impl Default for Sword {
+    /// Sets default values for the sword
+    fn default() -> Sword {
+        Sword {
+            damage: 1.,         //unupgraded damage
+            upgraded: false,    //upgraded damage
+        }
+    }
 }
 
 /// Velocity struct

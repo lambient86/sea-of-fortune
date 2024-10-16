@@ -14,8 +14,8 @@ pub fn move_player_camera(
     let pt = player.single();
     let mut ct = camera.single_mut();
 
-    let x_bound = LEVEL_W / 2. - WIN_W / 2.;
-    let y_bound = LEVEL_H / 2. - WIN_H / 2.;
+    let x_bound = SAND_LEVEL_W / 2. - WIN_W / 2.;
+    let y_bound = SAND_LEVEL_H / 2. - WIN_H / 2.;
     ct.translation.x = pt.translation.x.clamp(-x_bound, x_bound);
     ct.translation.y = pt.translation.y.clamp(-y_bound, y_bound);
 }
@@ -29,8 +29,8 @@ pub fn move_boat_camera(
     let bt = boat.single();
     let mut ct = camera.single_mut();
 
-    let x_bound = LEVEL_W / 2. - WIN_W / 2.;
-    let y_bound = LEVEL_H / 2. - WIN_H / 2.;
+    let x_bound = OCEAN_LEVEL_W / 2. - WIN_W / 2.;
+    let y_bound = OCEAN_LEVEL_H / 2. - WIN_H / 2.;
     ct.translation.x = bt.translation.x.clamp(-x_bound, x_bound);
     ct.translation.y = bt.translation.y.clamp(-y_bound, y_bound);
 }

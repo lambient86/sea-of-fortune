@@ -1,7 +1,7 @@
-use bevy::prelude::*;
-use bevy::math::bounding::Aabb2d;
-use bevy::sprite::MaterialMesh2dBundle;
 use crate::hitbox_system::components::*;
+use bevy::math::bounding::Aabb2d;
+use bevy::prelude::*;
+use bevy::sprite::MaterialMesh2dBundle;
 
 // System to check collisions between hitboxes and hurtboxes
 pub fn check_hitbox_hurtbox_collisions(
@@ -22,8 +22,10 @@ pub fn check_hitbox_hurtbox_collisions(
                 // Check for overlap
                 if aabbs_overlap(hurtbox_aabb, hitbox_aabb) {
                     // Mark the entity with the hurtbox as colliding
-                    commands.entity(hurtbox_entity).insert(Colliding);
-                    break;
+                    commands.entity(hurtbox_entity).insert(Colliding(1));
+                    continue;
+                } else {
+                    commands.entity(hurtbox_entity).insert(Colliding(0));
                 }
             }
         }
@@ -54,12 +56,22 @@ pub fn draw_debug_boxes(
 ) {
     // Draw red box for hitboxes
     for (transform, hitbox) in hitbox_query.iter() {
-        draw_aabb(&mut gizmos, hitbox.aabb, transform, Color::srgba(1., 0., 0., 0.5));
+        draw_aabb(
+            &mut gizmos,
+            hitbox.aabb,
+            transform,
+            Color::srgba(1., 0., 0., 0.5),
+        );
     }
 
     // Draw green box for hurtboxes
     for (transform, hurtbox) in hurtbox_query.iter() {
-        draw_aabb(&mut gizmos, hurtbox.aabb, transform, Color::srgba(0., 1., 0., 0.5));
+        draw_aabb(
+            &mut gizmos,
+            hurtbox.aabb,
+            transform,
+            Color::srgba(0., 1., 0., 0.5),
+        );
     }
 }
 
@@ -71,10 +83,10 @@ fn draw_aabb(gizmos: &mut Gizmos, aabb: Aabb2d, transform: &Transform, color: Co
     let max = aabb.max * scale + position;
 
     gizmos.rect_2d(
-        (min + max) / 2.0,  // center point
-        0.0,                // rotation (in radians)
-        max - min,          // size
-        color
+        (min + max) / 2.0, // center point
+        0.0,               // rotation (in radians)
+        max - min,         // size
+        color,
     );
 }
 
@@ -82,11 +94,8 @@ fn draw_aabb(gizmos: &mut Gizmos, aabb: Aabb2d, transform: &Transform, color: Co
 fn transform_aabb(aabb: Aabb2d, transform: &Transform) -> Aabb2d {
     let position = transform.translation.truncate();
     let scale = transform.scale.truncate();
-    
-    Aabb2d::new(
-        aabb.min * scale + position,
-        aabb.max * scale + position,
-    )
+
+    Aabb2d::new(aabb.min * scale + position, aabb.max * scale + position)
 }
 
 // Helper function to check if two AABBs overlap
@@ -105,17 +114,30 @@ pub fn create_hitbox(
     let half_size = size / 2.0;
     let aabb = Aabb2d::new(offset - half_size, offset + half_size);
     let lifetime_timer = lifetime.map(|duration| Timer::from_seconds(duration, TimerMode::Once));
-    commands.entity(entity).insert(Hitbox { aabb, lifetime: lifetime_timer});
+    commands.entity(entity).insert(Hitbox {
+        aabb,
+        lifetime: lifetime_timer,
+    });
 }
 
 // Function to create a hurtbox for an entity
-pub fn create_hurtbox(
-    commands: &mut Commands,
-    entity: Entity,
-    size: Vec2,
-    offset: Vec2,
-) {
+pub fn create_hurtbox(commands: &mut Commands, entity: Entity, size: Vec2, offset: Vec2) {
     let half_size = size / 2.0;
     let aabb = Aabb2d::new(offset - half_size, offset + half_size);
-    commands.entity(entity).insert(Hurtbox { aabb });
+
+    // CHANGE: hurtbox is now a child of entity
+    commands.entity(entity)
+        .with_children(|parent| {
+            parent.spawn(
+                Hurtbox {
+                    aabb,
+            });
+        });
+}
+
+pub fn get_aabb(size: Vec2, offset: Vec2) -> Aabb2d {
+    let half_size = size / 2.0;
+    let aabb = Aabb2d::new(offset - half_size, offset + half_size);
+
+    aabb
 }

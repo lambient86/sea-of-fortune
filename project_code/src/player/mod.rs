@@ -18,6 +18,8 @@ impl Plugin for PlayerPlugin {
                 player_animation.after(move_player),
                 player_attack,
                 check_player_health,
+                spawn_weapon,
+                move_weapon.after(move_player),
                 )
                 .run_if(in_state(GameworldState::Island))
                 .run_if(in_state(GameState::Running)))
