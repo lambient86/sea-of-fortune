@@ -16,6 +16,11 @@ pub struct Velocity {
     pub v: Vec2,
 }
 
+/// Struct for tracking players last position for out of transition spawning
+pub struct PlayerLastPosition {
+    pub last_pos: Vec2,
+}
+
 /// Velocity implementation
 impl Velocity {
     pub fn new() -> Self {

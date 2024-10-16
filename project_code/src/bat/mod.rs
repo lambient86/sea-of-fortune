@@ -5,6 +5,7 @@ mod systems;
 
 use systems::*;
 use crate::GameworldState;
+use crate::GameState;
 
 pub struct BatPlugin;
 
@@ -20,7 +21,8 @@ impl Plugin for BatPlugin {
                 move_bat_projectile,
                 bat_proj_lifetime_check
             )
-            .run_if(in_state(GameworldState::Island)))
+            .run_if(in_state(GameworldState::Island))
+            .run_if(in_state(GameState::Running)))
             .add_systems(OnExit(GameworldState::Island), despawn_all_bats);
     }
 }

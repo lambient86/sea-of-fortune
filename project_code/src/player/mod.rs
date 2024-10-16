@@ -5,6 +5,7 @@ pub mod systems;
 
 use systems::*;
 use crate::GameworldState;
+use crate::components::GameState;
 
 pub struct PlayerPlugin;
 
@@ -18,7 +19,8 @@ impl Plugin for PlayerPlugin {
                 player_attack,
                 check_player_health,
                 )
-                .run_if(in_state(GameworldState::Island)))
+                .run_if(in_state(GameworldState::Island))
+                .run_if(in_state(GameState::Running)))
             .add_systems(OnExit(GameworldState::Island), despawn_player);
     }
 }

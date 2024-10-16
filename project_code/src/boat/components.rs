@@ -8,6 +8,11 @@ pub struct Boat {
     pub rotation_speed: f32,
 }
 
+/// Struct to maintain last boat position for out of transition spawning
+pub struct BoatLastPosition {
+    pub last_pos: Vec2,
+}
+
 /// Velocity struct
 #[derive(Component)]
 pub struct Velocity {
