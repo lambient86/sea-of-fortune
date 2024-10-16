@@ -23,6 +23,9 @@ impl Plugin for BatPlugin {
             )
             .run_if(in_state(GameworldState::Island))
             .run_if(in_state(GameState::Running)))
-            .add_systems(OnExit(GameworldState::Island), despawn_all_bats);
+            .add_systems(OnExit(GameworldState::Island), (
+                despawn_all_bats,
+                despawn_all_bat_proj,
+            ));
     }
 }

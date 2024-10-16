@@ -55,16 +55,16 @@ pub fn move_player(
 
     //setting new player x position if within bounds
     let new_position = player_transform.translation + Vec3::new(change.x, 0., 0.);
-    if new_position.x >= -(LEVEL_W / 2.) + (TILE_SIZE as f32) / 2.
-        && new_position.x <= LEVEL_W / 2. - (TILE_SIZE as f32) / 2.
+    if new_position.x >= -(SAND_LEVEL_W / 2.) + (TILE_SIZE as f32) / 2.
+        && new_position.x <= SAND_LEVEL_W / 2. - (TILE_SIZE as f32) / 2.
     {
         player_transform.translation = new_position;
     }
 
     //setting new player y position if within bounds
     let new_pos = player_transform.translation + Vec3::new(0., change.y, 0.);
-    if new_pos.y >= -(LEVEL_H / 2.) + (TILE_SIZE as f32) / 2.
-        && new_pos.y <= LEVEL_H / 2. - (TILE_SIZE as f32) / 2.
+    if new_pos.y >= -(SAND_LEVEL_H / 2.) + (TILE_SIZE as f32) / 2.
+        && new_pos.y <= SAND_LEVEL_H / 2. - (TILE_SIZE as f32) / 2.
     {
         player_transform.translation = new_pos;
     }
