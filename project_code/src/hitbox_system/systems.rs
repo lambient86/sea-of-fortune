@@ -124,7 +124,15 @@ pub fn create_hitbox(
 pub fn create_hurtbox(commands: &mut Commands, entity: Entity, size: Vec2, offset: Vec2) {
     let half_size = size / 2.0;
     let aabb = Aabb2d::new(offset - half_size, offset + half_size);
-    commands.entity(entity).insert(Hurtbox { aabb });
+
+    // CHANGE: hurtbox is now a child of entity
+    commands.entity(entity)
+        .with_children(|parent| {
+            parent.spawn(
+                Hurtbox {
+                    aabb,
+            });
+        });
 }
 
 pub fn get_aabb(size: Vec2, offset: Vec2) -> Aabb2d {
