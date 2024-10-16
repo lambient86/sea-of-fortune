@@ -85,7 +85,7 @@ pub fn change_gameworld_state(
     } else if keyboard_input.just_pressed(KeyCode::KeyO) {
         //OCEAN
         //getting background texture
-        let bg_texture_handle = asset_server.load("bg_ocean_temp.png");
+        let bg_texture_handle = asset_server.load("bg_ocean_demo.png");
 
         //spawning background sprite
         commands

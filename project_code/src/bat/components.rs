@@ -3,7 +3,7 @@ use bevy::prelude::*;
 //constants
 pub const BAT_ANIMATION_TIME: f32 = 0.2;
 pub const BAT_PROJECTILE_LIFETIME: f32 = 3.;
-pub const BAT_PROJECTILE_SPEED: f32 = 1000.;
+pub const BAT_PROJECTILE_SPEED: f32 = 500.;
 
 //Bat base stats
 pub const BAT_MAX_HP: f32 = 1.;

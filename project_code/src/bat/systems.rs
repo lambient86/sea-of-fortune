@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use bevy::prelude::*;
 
 use crate::bat::components::*;
@@ -136,9 +138,13 @@ pub fn bat_attack(
 
         cooldown.remaining = Timer::from_seconds(1.5, TimerMode::Once);
 
+        //Gets positions (Vec3) of the entities
+        let bat_translation = bat_transform.translation;
+        let player_translation = player_query.single().translation;
+
         //Gets positions (Vec2) of the entities
-        let player_position = player_query.single().translation.xy();
-        let bat_position = bat_transform.translation.xy();
+        let player_position = player_translation.xy();
+        let bat_position = bat_translation.xy();
 
         //Gets distance
         let distance_to_player = bat_position.distance(player_position);
@@ -150,17 +156,14 @@ pub fn bat_attack(
         /* Debug */
         //println!("Bat can attack player! :O");
 
-        //Gets positions (Vec3) of the entities
-        let bat_translation = bat_transform.translation;
-        let player_translation = player_query.single().translation;
-
         //Gets direction projectile will be going
-        let direction = (player_translation - bat_translation).normalize();
+        let original_direction = (player_translation - bat_translation).normalize();
+        let angle = original_direction.y.atan2(original_direction.x);
+        let angle_direction = Vec3::new(angle.cos(), angle.sin(), 0.0).normalize();
+        let projectile_start_position = bat_translation + angle_direction * 10.0; //bat_pos + direction * offset wanted
 
         //Sets the projectile texture
         let bat_projectile_handle = asset_server.load("s_cutlass.png");
-
-        let projectile_start_position = bat_translation + direction * 100.0; // Adjust the multiplier as needed
 
         //Creates Projectile
         commands.spawn((
@@ -172,7 +175,7 @@ pub fn bat_attack(
             BatProjectile,
             Lifetime(BAT_PROJECTILE_LIFETIME),
             Velocity {
-                v: direction * BAT_PROJECTILE_SPEED, /* (direction * speed of projectile) */
+                v: angle_direction * BAT_PROJECTILE_SPEED, /* (direction * speed of projectile) */
             },
         ));
     }
@@ -217,10 +220,7 @@ pub fn bat_damaged(
 /*   DESPAWN_ALL_BAT FUNCTION   */
 /// Despawns a bat entity
 /// DEBUG: Despwans all bat entities
-pub fn despawn_all_bats(
-    mut commands: Commands,
-    query: Query<Entity, With <Bat>>,
-) {
+pub fn despawn_all_bats(mut commands: Commands, query: Query<Entity, With<Bat>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn();
     }
@@ -261,4 +261,3 @@ pub fn bat_proj_lifetime_check(
         }
     }
 }
-
