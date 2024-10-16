@@ -1,5 +1,5 @@
-use bevy::prelude::*;
 use bevy::math::bounding::Aabb2d;
+use bevy::prelude::*;
 
 // Hitbox component: Represents an area that can cause interactions
 #[derive(Component)]
@@ -16,4 +16,4 @@ pub struct Hurtbox {
 
 // Colliding component: Added to entities when a collision is detected
 #[derive(Component)]
-pub struct Colliding;
+pub struct Colliding(pub i32);
