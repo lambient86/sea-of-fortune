@@ -262,3 +262,13 @@ pub fn bat_proj_lifetime_check(
     }
 }
 
+/*   DESPAWN_ALL_BAT_PROJ   */
+/// Despawns all the bat's projectiles
+pub fn despawn_all_bat_proj(
+    mut commands: Commands,
+    mut proj_query: Query<(Entity, &mut Lifetime)>,
+) {
+    for (entity, mut lifetime) in proj_query.iter_mut() {
+        commands.entity(entity).despawn();
+    }
+}
