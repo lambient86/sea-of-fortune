@@ -1,3 +1,4 @@
+use bevy::math::vec2;
 use bevy::prelude::*;
 
 use crate::bat::components::*;
@@ -5,6 +6,8 @@ use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
 use crate::player::components::AttackCooldown;
 use crate::player::components::Player;
+
+use bevy::math::bounding::Aabb2d;
 
 /*   ROTATE_BAT FUNCTION   */
 /// This should be changed to a function called "track_player", which will
@@ -81,6 +84,9 @@ pub fn spawn_bat(
     let bat_layout_len = 3;
     let bat_layout_handle = texture_atlases.add(bat_layout.clone());
 
+    let size = Vec2::new(28., 28.);
+    let offset = Vec2::new(16., 16.);
+
     //spawning bat and setting bat information
     commands.spawn((
         SpriteBundle {
@@ -117,26 +123,14 @@ pub fn spawn_bat(
 // player weapon/attack collision) and then takes 1 damage (dies)
 pub fn bat_damaged(
     mut commands: Commands,
-    mut bat_query: Query<(&Transform, &mut Bat, Entity), With<Bat>>,
+    mut bat_query: Query<(&mut Bat, Entity, &Colliding), With<Bat>>,
     player_query: Query<&Transform, With<Player>>,
 ) {
-    for (bat_transform, mut bat, entity) in bat_query.iter_mut() {
-        //Gets entity locations
-        let player_position = player_query.single().translation.xy();
-        let bat_position = bat_transform.translation.xy();
-
-        //Calculates distance
-        let distance_to_player = bat_position.distance(player_position);
-
-        //Placeholder value for player attack range
-        let player_attack_range = 50.;
-
-        //If the distance is too large (in this case larger than 50) then continue to next bat entity
-        if distance_to_player > player_attack_range {
+    for (mut bat, entity, collision) in bat_query.iter_mut() {
+        if collision.0 == 0 {
             continue;
         }
 
-        //HP deduction and check
         bat.current_hp -= 1.;
 
         if bat.current_hp <= 0. {
