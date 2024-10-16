@@ -181,6 +181,48 @@ pub fn spawn_player(
     }
 }
 
+/*   SPAWN_WEAPON FUNCTION   */
+/// Spawns the weapon on the player
+pub fn spawn_weapon(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+){  
+    //getting sprite info
+    let master_handle: Handle<Image> = asset_server.load("s_cutlass.png");
+    let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
+    let master_layout_length = master_layout.textures.len();
+    let master_layout_handle = texture_atlases.add(master_layout);
+
+    //setting up weapon for spawning
+    commands.spawn((
+        SpriteBundle {
+            texture: master_handle,
+            transform: Transform {
+                scale: Vec3::splat(1.75),
+                translation: Vec3::splat(0.),
+                ..default()
+            },
+            ..default()
+        },
+        TextureAtlas {
+            layout: master_layout_handle,
+            index: 0,
+        },
+        Sword{ ..Default::default() },
+    ));
+}
+
+/*   MOVE_WEAPON FUNCITON   */
+/// Move the weapon with the player
+pub fn move_weapon(
+    mut weapon: Query<&mut Transform, Without<Sword>>,
+) { 
+    
+}
+
+/*   PLAYER_ATTACK FUNCTION   */
+/// Creates an attacking hitbox that will deal damage to enemy entities
 pub fn player_attack(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
@@ -200,20 +242,6 @@ pub fn player_attack(
 
         /* Debug */
         //println!("You can attack!");
-
-        // | Theo's work or something, I didn't want to mess with it in the merge - Zac
-        // V
-
-        /*let mut cursor_position=;
-        for ev in cursor.read() {
-            let cursor_direction = ev.position.trunc();
-
-            /* Debug */
-            /*println!(
-                "Cursor direction: X: {}, Y: {}",
-                cursor_direction.x, cursor_direction.y
-            );*/
-        }*/
 
         // Checks if the left mouse button is pressed
         if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {
