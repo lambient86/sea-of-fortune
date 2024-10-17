@@ -144,6 +144,10 @@ pub fn spawn_player(
     let master_layout_length = master_layout.textures.len();
     let master_layout_handle = texture_atlases.add(master_layout);
 
+    //creating hurtbox for player
+    let size = Vec2::new(28., 28.);
+    let offset = Vec2::new(16., 16.);
+
     //setting up player for spawning
     commands.spawn((
         SpriteBundle {
@@ -171,14 +175,12 @@ pub fn spawn_player(
             max_health: PLAYER_MAX_HP,
         },
         TestTimer::new(Timer::from_seconds(1., TimerMode::Repeating)),
+        Hurtbox {
+            size,
+            offset,
+        }
     ));
 
-    //creating hurtbox for player
-    let hurtbox_size = Vec2::new(28., 28.);
-    let hurtbox_offset = Vec2::new(16., 16.);
-    for (entity, transform, mut cooldown) in player_query.iter_mut() {
-        create_hurtbox(&mut commands, entity, hurtbox_size, hurtbox_offset);
-    }
 }
 
 /*   SPAWN_WEAPON FUNCTION   */
@@ -267,7 +269,7 @@ pub fn player_attack(
             let player_position = transform.translation.truncate();
 
             // Deciding side of player to put hitbox
-            let hitbox_offset = Vec2::new(0., 0.);
+            let hitbox_offset = Vec2::new(-25.0, -50.);
             /*if cursor_position.x > player_position.x {
                 hitbox_offset = Vec2::new(10., 16.);
             } else {

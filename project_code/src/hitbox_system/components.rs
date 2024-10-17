@@ -4,14 +4,16 @@ use bevy::prelude::*;
 // Hitbox component: Represents an area that can cause interactions
 #[derive(Component)]
 pub struct Hitbox {
-    pub aabb: Aabb2d,
-    pub lifetime: Option<Timer>, //time the hitbox is present
+    pub size: Vec2,
+    pub offset: Vec2,
+    pub lifetime: Option<Timer>,
 }
 
 // Hurtbox component: Represents an area that can receive interactions
 #[derive(Component)]
 pub struct Hurtbox {
-    pub aabb: Aabb2d,
+    pub size: Vec2,
+    pub offset: Vec2,
 }
 
 // Colliding component: Added to entities when a collision is detected

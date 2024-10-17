@@ -9,27 +9,27 @@ pub fn check_hitbox_hurtbox_collisions(
     mut hurtbox_query: Query<(Entity, &Transform, &Hurtbox)>,
     mut commands: Commands,
 ) {
-    // Iterate through all entities with hurtboxes
-    for (hurtbox_entity, hurtbox_transform, hurtbox) in hurtbox_query.iter_mut() {
-        let hurtbox_aabb = transform_aabb(hurtbox.aabb, hurtbox_transform);
+    // // Iterate through all entities with hurtboxes
+    // for (hurtbox_entity, hurtbox_transform, hurtbox) in hurtbox_query.iter_mut() {
+    //     let hurtbox_aabb = transform_aabb(hurtbox.aabb, hurtbox_transform);
 
-        // Check against all hitboxes
-        for (hitbox_entity, hitbox_transform, hitbox) in hitbox_query.iter() {
-            // Avoid self-collision
-            if hurtbox_entity != hitbox_entity {
-                let hitbox_aabb = transform_aabb(hitbox.aabb, hitbox_transform);
+    //     // Check against all hitboxes
+    //     for (hitbox_entity, hitbox_transform, hitbox) in hitbox_query.iter() {
+    //         // Avoid self-collision
+    //         if hurtbox_entity != hitbox_entity {
+    //             let hitbox_aabb = transform_aabb(hitbox.aabb, hitbox_transform);
 
-                // Check for overlap
-                if aabbs_overlap(hurtbox_aabb, hitbox_aabb) {
-                    // Mark the entity with the hurtbox as colliding
-                    commands.entity(hurtbox_entity).insert(Colliding(1));
-                    continue;
-                } else {
-                    commands.entity(hurtbox_entity).insert(Colliding(0));
-                }
-            }
-        }
-    }
+    //             // Check for overlap
+    //             if aabbs_overlap(hurtbox_aabb, hitbox_aabb) {
+    //                 // Mark the entity with the hurtbox as colliding
+    //                 commands.entity(hurtbox_entity).insert(Colliding(1));
+    //                 continue;
+    //             } else {
+    //                 commands.entity(hurtbox_entity).insert(Colliding(0));
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 // update hitbox lifetimes
@@ -47,31 +47,21 @@ pub fn update_hitbox_lifetimes(
         }
     }
 }
-
+// Color::srgba(1., 0., 0., 0.5)
 // System to draw debug visualizations for hitboxes and hurtboxes
 pub fn draw_debug_boxes(
     mut gizmos: Gizmos,
     hitbox_query: Query<(&Transform, &Hitbox)>,
     hurtbox_query: Query<(&Transform, &Hurtbox)>,
 ) {
-    // Draw red box for hitboxes
     for (transform, hitbox) in hitbox_query.iter() {
-        draw_aabb(
-            &mut gizmos,
-            hitbox.aabb,
-            transform,
-            Color::srgba(1., 0., 0., 0.5),
-        );
+        let pos = transform.translation.truncate() + hitbox.offset;
+        gizmos.rect_2d(pos, 0.0, hitbox.size, Color::srgba(1., 0., 0., 0.5));
     }
 
-    // Draw green box for hurtboxes
     for (transform, hurtbox) in hurtbox_query.iter() {
-        draw_aabb(
-            &mut gizmos,
-            hurtbox.aabb,
-            transform,
-            Color::srgba(0., 1., 0., 0.5),
-        );
+        let pos = transform.translation.truncate() + hurtbox.offset;
+        gizmos.rect_2d(pos, 0.0, hurtbox.size, Color::srgba(0., 1., 0., 0.5));
     }
 }
 
@@ -103,7 +93,6 @@ fn aabbs_overlap(a: Aabb2d, b: Aabb2d) -> bool {
     a.min.x < b.max.x && a.max.x > b.min.x && a.min.y < b.max.y && a.max.y > b.min.y
 }
 
-// Function to create a hitbox for an entity
 pub fn create_hitbox(
     commands: &mut Commands,
     entity: Entity,
@@ -111,28 +100,17 @@ pub fn create_hitbox(
     offset: Vec2,
     lifetime: Option<f32>,
 ) {
-    let half_size = size / 2.0;
-    let aabb = Aabb2d::new(offset - half_size, offset + half_size);
     let lifetime_timer = lifetime.map(|duration| Timer::from_seconds(duration, TimerMode::Once));
-    commands.entity(entity).insert(Hitbox {
-        aabb,
-        lifetime: lifetime_timer,
-    });
+    commands.entity(entity).insert(Hitbox { size, offset, lifetime: lifetime_timer });
 }
 
-// Function to create a hurtbox for an entity
-pub fn create_hurtbox(commands: &mut Commands, entity: Entity, size: Vec2, offset: Vec2) {
-    let half_size = size / 2.0;
-    let aabb = Aabb2d::new(offset - half_size, offset + half_size);
-
-    // CHANGE: hurtbox is now a child of entity
-    commands.entity(entity)
-        .with_children(|parent| {
-            parent.spawn(
-                Hurtbox {
-                    aabb,
-            });
-        });
+pub fn create_hurtbox(
+    commands: &mut Commands,
+    entity: Entity,
+    size: Vec2,
+    offset: Vec2,
+) {
+    commands.entity(entity).insert(Hurtbox { size, offset });
 }
 
 pub fn get_aabb(size: Vec2, offset: Vec2) -> Aabb2d {
