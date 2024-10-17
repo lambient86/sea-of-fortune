@@ -124,7 +124,7 @@ pub fn boat_attack(
 }
 
 /*   MOVE_CANNONBALL FUNCTION   */
-/// Updates the locations of bat projectiles
+/// Updates the locations of boat projectiles
 /// Things to add:
 /// * Collision handling, dealing damage on collision
 pub fn move_cannonball(
@@ -133,7 +133,7 @@ pub fn move_cannonball(
 ) {
     for (mut transform, velocity) in proj_query.iter_mut() {
         // Calculates/moves the projectile
-        transform.translation += velocity.v * time.delta_seconds();
+        //transform.translation += velocity.v * time.delta_seconds();
     }
 }
 
