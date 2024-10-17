@@ -72,6 +72,9 @@ pub fn spawn_boat(
             movement_speed: 250.0,
             rotation_speed: f32::to_radians(180.0),
         },
+        AttackCooldown {
+            remaining: Timer::from_seconds(1.5, TimerMode::Once),
+        },
     ));
 }
 
@@ -87,7 +90,8 @@ pub fn boat_attack(
 ) {
     for (boat_transform, mut cooldown) in boat_query.iter_mut() {
         // Attacks only when cooldown is over
-        if !cooldown.remaining.just_finished() {
+        if !cooldown.remaining.finished() {
+            println!("timer ticked");
             cooldown.remaining.tick(time.delta());
             break;
         }
@@ -95,13 +99,12 @@ pub fn boat_attack(
         if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {    
             println!("Boat attacked");
             cooldown.remaining = Timer::from_seconds(1.5, TimerMode::Once);
-
             
             //getting cannonball sprite
             let cannonball_handler = asset_server.load("s_cannonball.png");
 
             //getting angle to fire at
-            let firing_angle = Vec2::new(boat_transform.rotation.x, boat_transform.rotation.y);
+            let firing_angle = Vec3::new(boat_transform.rotation.x, boat_transform.rotation.y, 0.0).normalize();
 
             //getting start position to fire from
             let projectile_start_position = boat_transform.translation.xyz();
@@ -110,14 +113,18 @@ pub fn boat_attack(
             commands.spawn((
                 SpriteBundle {
                     texture: cannonball_handler,
-                    transform: Transform::from_translation(projectile_start_position),
+                    transform: Transform {
+                        translation: projectile_start_position,
+                        scale: Vec3::splat(1.5),
+                        ..default()
+                    },
                     ..default()
                 },
                 Cannonball,
-                Lifetime,
-                Velocity {
+                Lifetime(CANNONBALL_LIFETIME),
+                /*Velocity {
                     v: firing_angle * CANNONBALL_SPEED, /* (direction * speed of projectile) */
-                },
+                },*/
             ));
         }
     }
@@ -125,15 +132,13 @@ pub fn boat_attack(
 
 /*   MOVE_CANNONBALL FUNCTION   */
 /// Updates the locations of boat projectiles
-/// Things to add:
-/// * Collision handling, dealing damage on collision
 pub fn move_cannonball(
     mut proj_query: Query<(&mut Transform, &mut Velocity), With<Cannonball>>,
     time: Res<Time>,
 ) {
     for (mut transform, velocity) in proj_query.iter_mut() {
         // Calculates/moves the projectile
-        //transform.translation += velocity.v * time.delta_seconds();
+        transform.translation += velocity.v * time.delta_seconds();
     }
 }
 
@@ -143,6 +148,18 @@ pub fn move_cannonball(
 pub fn despawn_boat(
     mut commands: Commands,
     query: Query<Entity, With<Boat>>,
+) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
+    }
+}
+
+/*   DESPAWN_CANNONBALLS FUNCTION   */
+/// Despawns cannonballs
+/// DEBUG: Will despawn any and all cannonballs
+pub fn despawn_cannonballs(
+    mut commands: Commands,
+    query: Query<Entity, With<Cannonball>>,
 ) {
     for entity in query.iter() {
         commands.entity(entity).despawn();
