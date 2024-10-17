@@ -230,14 +230,6 @@ pub fn move_weapon(
     
 }
 
-/* MOVE_HURTBOX FUNCTION */
-/// moves the hurtbox with the player
-pub fn move_hurtbox(
-    mut player_query: Query<(Entity, &Transform, &Velocity), With<Player>>
-) {
-
-}
-
 /*   PLAYER_ATTACK FUNCTION   */
 /// Creates an attacking hitbox that will deal damage to enemy entities
 pub fn player_attack(

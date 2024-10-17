@@ -198,16 +198,21 @@ pub fn bat_attack(
         let original_direction = (player_translation - bat_translation).normalize();
         let angle = original_direction.y.atan2(original_direction.x);
         let angle_direction = Vec3::new(angle.cos(), angle.sin(), 0.0).normalize();
+
         let projectile_start_position = bat_translation + angle_direction * 10.0; //bat_pos + direction * offset wanted
 
         //Sets the projectile texture
-        let bat_projectile_handle = asset_server.load("s_cutlass.png");
+        let bat_projectile_handle = asset_server.load("s_sonic_boom.png");
 
         //Creates Projectile
         commands.spawn((
             SpriteBundle {
                 texture: bat_projectile_handle,
-                transform: Transform::from_translation(projectile_start_position), //Spawns at the bat's location
+                transform: Transform {
+                    translation: projectile_start_position,
+                    scale: Vec3::splat(2.0),
+                    ..default()
+                },
                 ..default()
             },
             BatProjectile,

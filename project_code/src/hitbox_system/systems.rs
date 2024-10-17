@@ -3,6 +3,7 @@ use bevy::math::bounding::Aabb2d;
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
 
+
 // System to check collisions between hitboxes and hurtboxes
 pub fn check_hitbox_hurtbox_collisions(
     hitbox_query: Query<(Entity, &Transform, &Hitbox)>,
