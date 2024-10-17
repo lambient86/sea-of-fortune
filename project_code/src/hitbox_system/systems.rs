@@ -10,26 +10,25 @@ pub fn check_hitbox_hurtbox_collisions(
     mut commands: Commands,
 ) {
     // // Iterate through all entities with hurtboxes
-    // for (hurtbox_entity, hurtbox_transform, hurtbox) in hurtbox_query.iter_mut() {
-    //     let hurtbox_aabb = transform_aabb(hurtbox.aabb, hurtbox_transform);
+    for (hurtbox_entity, hurtbox_transform, hurtbox) in hurtbox_query.iter() {
+        let hurtbox_pos = hurtbox_transform.translation.truncate() + hurtbox.offset;
+        let hurtbox_min = hurtbox_pos - hurtbox.size / 2.0;
+        let hurtbox_max = hurtbox_pos + hurtbox.size / 2.0;
 
-    //     // Check against all hitboxes
-    //     for (hitbox_entity, hitbox_transform, hitbox) in hitbox_query.iter() {
-    //         // Avoid self-collision
-    //         if hurtbox_entity != hitbox_entity {
-    //             let hitbox_aabb = transform_aabb(hitbox.aabb, hitbox_transform);
+        for (hitbox_entity, hitbox_transform, hitbox) in hitbox_query.iter() {
+            if hurtbox_entity != hitbox_entity {
+                let hitbox_pos = hitbox_transform.translation.truncate() + hitbox.offset;
+                let hitbox_min = hitbox_pos - hitbox.size / 2.0;
+                let hitbox_max = hitbox_pos + hitbox.size / 2.0;
 
-    //             // Check for overlap
-    //             if aabbs_overlap(hurtbox_aabb, hitbox_aabb) {
-    //                 // Mark the entity with the hurtbox as colliding
-    //                 commands.entity(hurtbox_entity).insert(Colliding(1));
-    //                 continue;
-    //             } else {
-    //                 commands.entity(hurtbox_entity).insert(Colliding(0));
-    //             }
-    //         }
-    //     }
-    // }
+                if hitbox_min.x < hurtbox_max.x && hitbox_max.x > hurtbox_min.x &&
+                   hitbox_min.y < hurtbox_max.y && hitbox_max.y > hurtbox_min.y {
+                    commands.entity(hurtbox_entity).insert(Colliding(0));
+                    break;
+                }
+            }
+        }
+    }
 }
 
 // update hitbox lifetimes
