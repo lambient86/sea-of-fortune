@@ -138,7 +138,7 @@ pub fn move_cannonball(
 ) {
     for (mut transform, velocity) in proj_query.iter_mut() {
         // Calculates/moves the projectile
-        transform.translation += velocity.v * time.delta_seconds();
+        //transform.translation += velocity.v * time.delta_seconds();
     }
 }
 
