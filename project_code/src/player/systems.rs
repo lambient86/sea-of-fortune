@@ -176,7 +176,8 @@ pub fn spawn_player(
         },
         TestTimer::new(Timer::from_seconds(1., TimerMode::Repeating)),
         Hurtbox {
-            aabb:get_aabb(size,offset),
+            size,
+            offset,
         }
     ));
 
@@ -260,7 +261,7 @@ pub fn player_attack(
             let player_position = transform.translation.truncate();
 
             // Deciding side of player to put hitbox
-            let hitbox_offset = Vec2::new(0., 0.);
+            let hitbox_offset = Vec2::new(-25.0, -50.);
             /*if cursor_position.x > player_position.x {
                 hitbox_offset = Vec2::new(10., 16.);
             } else {
