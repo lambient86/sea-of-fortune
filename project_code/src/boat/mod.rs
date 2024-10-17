@@ -17,9 +17,13 @@ impl Plugin for BoatPlugin {
                 .add_systems(Update,(
                     move_boat,
                     boat_attack,
+                    move_cannonball,
                 )
                 .run_if(in_state(GameworldState::Ocean))
                 .run_if(in_state(GameState::Running)))
-            .add_systems(OnExit(GameworldState::Ocean), despawn_boat);
+            .add_systems(OnExit(GameworldState::Ocean), (
+                despawn_boat,
+                despawn_cannonballs,
+            ));
     }
 }
