@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+pub const CANNONBALL_SPEED: f32 = 500.;
+
 /// Struct to represent the boat entity that players will be represented as
 /// in the ocean world
 #[derive(Component)]
@@ -7,6 +9,15 @@ pub struct Boat {
     pub movement_speed: f32,
     pub rotation_speed: f32,
 }
+
+/// Struct to represent the cannon ball being shot by the player controlled
+/// boat
+#[derive(Component)]
+pub struct Cannonball;
+
+/// Struct representation for cannonball projectile lifetime
+#[derive(Component)]
+pub struct Lifetime;
 
 /// Struct to maintain last boat position for out of transition spawning
 pub struct BoatLastPosition {

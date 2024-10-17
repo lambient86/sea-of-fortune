@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use crate::controls::*;
 use crate::boat::components::*;
 use crate::data::gameworld_data::*;
+use crate::player::components::AttackCooldown;
 
 /*   MOVE_BOAT FUNCTION   */
 /// Moves and updates the boats position
@@ -72,6 +73,68 @@ pub fn spawn_boat(
             rotation_speed: f32::to_radians(180.0),
         },
     ));
+}
+
+/*   BOAT_ATTACK FUNCTION   */
+/// Function that fires the cannonball from the boat as an attack
+pub fn boat_attack(
+    mut commands: Commands,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mouse_input: Res<ButtonInput<MouseButton>>,
+    time: Res<Time>,
+    mut boat_query: Query<(&Transform, &mut AttackCooldown), With<Boat>>,
+    asset_server: Res<AssetServer>,
+) {
+    for (boat_transform, mut cooldown) in boat_query.iter_mut() {
+        // Attacks only when cooldown is over
+        if !cooldown.remaining.just_finished() {
+            cooldown.remaining.tick(time.delta());
+            break;
+        }
+
+        if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {    
+            println!("Boat attacked");
+            cooldown.remaining = Timer::from_seconds(1.5, TimerMode::Once);
+
+            
+            //getting cannonball sprite
+            let cannonball_handler = asset_server.load("s_cannonball.png");
+
+            //getting angle to fire at
+            let firing_angle = Vec2::new(boat_transform.rotation.x, boat_transform.rotation.y);
+
+            //getting start position to fire from
+            let projectile_start_position = boat_transform.translation.xyz();
+
+            //spawning cannonball
+            commands.spawn((
+                SpriteBundle {
+                    texture: cannonball_handler,
+                    transform: Transform::from_translation(projectile_start_position),
+                    ..default()
+                },
+                Cannonball,
+                Lifetime,
+                Velocity {
+                    v: firing_angle * CANNONBALL_SPEED, /* (direction * speed of projectile) */
+                },
+            ));
+        }
+    }
+}
+
+/*   MOVE_CANNONBALL FUNCTION   */
+/// Updates the locations of bat projectiles
+/// Things to add:
+/// * Collision handling, dealing damage on collision
+pub fn move_cannonball(
+    mut proj_query: Query<(&mut Transform, &mut Velocity), With<Cannonball>>,
+    time: Res<Time>,
+) {
+    for (mut transform, velocity) in proj_query.iter_mut() {
+        // Calculates/moves the projectile
+        transform.translation += velocity.v * time.delta_seconds();
+    }
 }
 
 /*   DESPAWN_BOAT FUNCTION   */
