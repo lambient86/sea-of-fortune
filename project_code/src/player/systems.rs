@@ -238,9 +238,9 @@ pub fn player_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     mut cursor: EventReader<CursorMoved>,
     mut commands: Commands,
-    mut player_query: Query<(Entity, &Transform, &mut AttackCooldown), With<Player>>,
+    mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown), With<Player>>,
 ) {
-    for (entity, transform, mut cooldown) in player_query.iter_mut() {
+    for (entity, transform, velocity, mut cooldown) in player_query.iter_mut() {
         //If the cooldown is not finished, tick and break because you can't attack anyway
         if !cooldown.remaining.finished() {
             cooldown.remaining.tick(time.delta());
@@ -260,26 +260,27 @@ pub fn player_attack(
             // Player position
             let player_position = transform.translation.truncate();
 
-            // Deciding side of player to put hitbox
-            let hitbox_offset = Vec2::new(-25.0, -50.);
-            /*if cursor_position.x > player_position.x {
-                hitbox_offset = Vec2::new(10., 16.);
+            // Calculate hitbox offset based on player velocity
+            let hitbox_offset = if velocity.v.length() > 0. {
+                // Normalize the velocity to get the direction and scale it
+                velocity.v.normalize() * 50.0 
             } else {
-                hitbox_offset = Vec2::new(-10., 16.);
-            }*/
+                // Default offset if not moving (attack directly in front)
+                Vec2::new(0.0, -50.0) 
+            };
 
             // Define the size of the hitbox
             let hitbox_size = Vec2::new(50.0, 50.0); // Example size
 
             // Create the hitbox
-            create_hitbox(&mut commands, entity, hitbox_size, hitbox_offset, Some(3.0));
+            create_hitbox(&mut commands, entity, hitbox_size, hitbox_offset, Some(0.2));
         }
     }
 }
 
 /*   CHECK_PLAYER_HEALTH FUNCTION   */
-/// Function checks the current state of the player's health
-/// if current health == 0 --> panic and close program
+// Function checks the current state of the player's health
+// if current health == 0 --> panic and close program
 pub fn check_player_health(
     time: Res<Time>,
     mut player_query: Query<(&mut Player, &mut TestTimer), With<Player>>,
