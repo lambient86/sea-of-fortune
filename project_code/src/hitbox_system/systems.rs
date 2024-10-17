@@ -3,12 +3,14 @@ use bevy::math::bounding::Aabb2d;
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
 
+
 // System to check collisions between hitboxes and hurtboxes
 pub fn check_hitbox_hurtbox_collisions(
     hitbox_query: Query<(Entity, &Transform, &Hitbox)>,
     mut hurtbox_query: Query<(Entity, &Transform, &Hurtbox)>,
     mut commands: Commands,
 ) {
+    /*
     // Iterate through all entities with hurtboxes
     for (hurtbox_entity, hurtbox_transform, hurtbox) in hurtbox_query.iter_mut() {
         let hurtbox_aabb = transform_aabb(hurtbox.aabb, hurtbox_transform);
@@ -29,7 +31,7 @@ pub fn check_hitbox_hurtbox_collisions(
                 }
             }
         }
-    }
+    }*/
 }
 
 // update hitbox lifetimes
