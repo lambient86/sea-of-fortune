@@ -222,6 +222,30 @@ pub fn spawn_weapon(
 
 }
 
+/*   MOVE_WEAPON FUNCITON   */
+/// Move the weapon with the player (reflects when player is facing left)
+pub fn move_weapon(
+    mut weapon_query: Query<(&mut Transform, &mut Sprite), With<Sword>>,
+    mut player_query: Query<(&mut Player), With<Player>>     // want to get the player with children
+) { 
+
+    for player in player_query.iter_mut() {
+        for (mut transform, mut sprite) in weapon_query.iter_mut() {
+
+            let player_direction = player.animation_state;
+
+
+            if player_direction == SpriteState::LeftRun || player_direction == SpriteState::BackwardRun{
+                transform.translation= Vec3::new(-32., 0., 0.);
+                sprite.flip_x = true;
+            } else if player_direction == SpriteState::RightRun || player_direction == SpriteState::ForwardRun {
+                transform.translation= Vec3::new(32., 0., 0.);
+                sprite.flip_x = false;
+            }
+        }
+    }
+}   
+
 /*   PLAYER_ATTACK FUNCTION   */
 /// Creates an attacking hitbox that will deal damage to enemy entities
 pub fn player_attack(
