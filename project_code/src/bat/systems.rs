@@ -191,12 +191,9 @@ pub fn bat_attack(
             continue;
         }
 
-        /* Debug */
-        //println!("Bat can attack player! :O");
-
         //Gets direction projectile will be going
         let original_direction = (player_translation - bat_translation).normalize();
-        let angle = original_direction.y.atan2(original_direction.x);
+        let angle = original_direction.x.atan2(original_direction.y);
         let angle_direction = Vec3::new(angle.cos(), angle.sin(), 0.0).normalize();
 
         let projectile_start_position = bat_translation + angle_direction * 10.0; //bat_pos + direction * offset wanted
