@@ -166,7 +166,7 @@ pub fn spawn_player(
         AnimationFrameCount::new(master_layout_length),
         Velocity::new(),
         AttackCooldown {
-            remaining: Timer::from_seconds(1.5, TimerMode::Once),
+            remaining: Timer::from_seconds(0.75, TimerMode::Once),
         },
         Player {
             animation_state: SpriteState::Idle,
@@ -252,7 +252,7 @@ pub fn player_attack(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mouse_input: Res<ButtonInput<MouseButton>>,
-    mut cursor: EventReader<CursorMoved>,
+    curr_mouse_pos: ResMut<CurrMousePos>,
     mut commands: Commands,
     mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown), With<Player>>,
 ) {
@@ -271,7 +271,9 @@ pub fn player_attack(
         // Checks if the left mouse button is pressed
         if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {
             println!("Player attacked!");
-            cooldown.remaining = Timer::from_seconds(1.5, TimerMode::Once);
+            let mouse_pos = curr_mouse_pos.0;
+            println!("World coords {} {}", mouse_pos.x, mouse_pos.y);
+            cooldown.remaining = Timer::from_seconds(0.75, TimerMode::Once);
 
             // Player position
             let player_position = transform.translation.truncate();
@@ -286,10 +288,10 @@ pub fn player_attack(
             };
 
             // Define the size of the hitbox
-            let hitbox_size = Vec2::new(50.0, 50.0); // Example size
+            let hitbox_size = Vec2::new(40.0, 60.0); // Example size
 
             // Create the hitbox
-            create_hitbox(&mut commands, entity, hitbox_size, hitbox_offset, Some(0.2));
+            create_hitbox(&mut commands, entity, hitbox_size, hitbox_offset, Some(0.1));
         }
     }
 }
