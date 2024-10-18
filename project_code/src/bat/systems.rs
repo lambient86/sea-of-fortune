@@ -84,9 +84,6 @@ pub fn spawn_bat(
     let bat_layout_len = 3;
     let bat_layout_handle = texture_atlases.add(bat_layout.clone());
 
-    let size = Vec2::new(28., 28.);
-    let offset = Vec2::new(16., 16.);
-
     //spawning bat and setting bat information
     commands.spawn((
         SpriteBundle {
@@ -115,6 +112,10 @@ pub fn spawn_bat(
         )),
         AnimationFrameCount::new(bat_layout_len),
         Velocity::new(),
+        Hurtbox {
+            size: Vec2::splat(25.),
+            offset: Vec2::splat(0.),
+        },
     ));
 }
 
@@ -216,6 +217,11 @@ pub fn bat_attack(
             Lifetime(BAT_PROJECTILE_LIFETIME),
             Velocity {
                 v: angle_direction * BAT_PROJECTILE_SPEED, /* (direction * speed of projectile) */
+            },
+            Hitbox {
+                size: Vec2::splat(16.),
+                offset: Vec2::splat(0.),
+                lifetime: Some(Timer::from_seconds(3., TimerMode::Once)),
             },
         ));
     }
