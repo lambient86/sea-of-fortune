@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-pub const CANNONBALL_SPEED: f32 = 500.;
+pub const CANNONBALL_SPEED: f32 = 800.;
 pub const CANNONBALL_LIFETIME: f32 = 6.;
 
 /// Struct to represent the boat entity that players will be represented as
@@ -25,18 +25,8 @@ pub struct BoatLastPosition {
     pub last_pos: Vec2,
 }
 
-/// Velocity struct
+/// Cannonball velocity struct
 #[derive(Component)]
-pub struct Velocity {
-    pub v: Vec2,
-}
-
-/// Velocity implementation
-impl Velocity {
-    pub fn new() -> Self {
-        Self {
-            //sets x and y velocity dsto 0
-            v: Vec2::splat(0.),
-        }
-    }
+pub struct CannonballVelocity {
+    pub v: Vec3,
 }

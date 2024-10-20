@@ -84,9 +84,6 @@ pub fn spawn_bat(
     let bat_layout_len = 3;
     let bat_layout_handle = texture_atlases.add(bat_layout.clone());
 
-    let size = Vec2::new(28., 28.);
-    let offset = Vec2::new(16., 16.);
-
     //spawning bat and setting bat information
     commands.spawn((
         SpriteBundle {
@@ -115,6 +112,10 @@ pub fn spawn_bat(
         )),
         AnimationFrameCount::new(bat_layout_len),
         Velocity::new(),
+        Hurtbox {
+            size: Vec2::splat(25.),
+            offset: Vec2::splat(0.),
+        },
     ));
 }
 
@@ -191,13 +192,10 @@ pub fn bat_attack(
             continue;
         }
 
-        /* Debug */
-        //println!("Bat can attack player! :O");
-
         //Gets direction projectile will be going
         let original_direction = (player_translation - bat_translation).normalize();
-        let angle = original_direction.y.atan2(original_direction.x);
-        let angle_direction = Vec3::new(angle.cos(), angle.sin(), 0.0).normalize();
+        let angle = original_direction.x.atan2(original_direction.y);
+        let angle_direction = Vec3::new(angle.sin(), angle.cos(), 0.0).normalize();
 
         let projectile_start_position = bat_translation + angle_direction * 10.0; //bat_pos + direction * offset wanted
 
@@ -219,6 +217,11 @@ pub fn bat_attack(
             Lifetime(BAT_PROJECTILE_LIFETIME),
             Velocity {
                 v: angle_direction * BAT_PROJECTILE_SPEED, /* (direction * speed of projectile) */
+            },
+            Hitbox {
+                size: Vec2::splat(16.),
+                offset: Vec2::splat(0.),
+                lifetime: Some(Timer::from_seconds(3., TimerMode::Once)),
             },
         ));
     }
