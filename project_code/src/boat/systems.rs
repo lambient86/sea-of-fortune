@@ -55,6 +55,10 @@ pub fn spawn_boat(
     let boat_layout = TextureAtlasLayout::from_grid(UVec2::splat(100), 2, 2, None, None);
     let boat_layout_handle = texture_atlases.add(boat_layout);
 
+    //getting hurtbox information
+    let hurtbox_size = Vec2::new(50., 50.);
+    let hurtbox_offset = Vec2::new(0., 0.);
+
     //spawning boat
     commands.spawn((
         SpriteBundle {
@@ -76,6 +80,10 @@ pub fn spawn_boat(
         AttackCooldown {
             remaining: Timer::from_seconds(1.5, TimerMode::Once),
         },
+        Hurtbox {
+            size: hurtbox_size,
+            offset: hurtbox_offset,
+        }
     ));
 }
 
@@ -110,6 +118,10 @@ pub fn boat_attack(
             //getting start position to fire from
             let projectile_start_position = boat_transform.translation.xyz();
 
+            //getting hitbox info
+            let hitbox_size = Vec2::new(32., 32.);
+            let offset = Vec2::new(0., 0.);
+
             //spawning cannonball
             commands.spawn((
                 SpriteBundle {
@@ -126,14 +138,12 @@ pub fn boat_attack(
                 CannonballVelocity {
                         v: firing_angle * CANNONBALL_SPEED, /* (direction * speed of projectile) */
                 },
+                Hitbox {
+                    size: hitbox_size,
+                    offset: offset,
+                    lifetime: Some(Timer::from_seconds(CANNONBALL_LIFETIME, TimerMode::Once)),
+                }
             ));
-
-            //creating hitbox
-            let hitbox_size = Vec2::new(96., 96.);
-            let offset = Vec2::new(0., 0.);
-            for entity in cannonball_query.iter_mut() {
-                create_hitbox(&mut commands, entity, hitbox_size, offset, Some(CANNONBALL_LIFETIME));
-            }
         }
     }
 }
