@@ -145,8 +145,8 @@ pub fn spawn_player(
     let master_layout_handle = texture_atlases.add(master_layout);
 
     //creating hurtbox for player
-    let size = Vec2::new(28., 28.);
-    let offset = Vec2::new(16., 16.);
+    let size = Vec2::new(40., 60.);
+    let offset = Vec2::new(0., 0.);
 
     //setting up player for spawning
     commands.spawn((
@@ -175,12 +175,8 @@ pub fn spawn_player(
             max_health: PLAYER_MAX_HP,
         },
         TestTimer::new(Timer::from_seconds(1., TimerMode::Repeating)),
-        Hurtbox {
-            size,
-            offset,
-        }
+        Hurtbox { size, offset },
     ));
-
 }
 
 /*   SPAWN_WEAPON FUNCTION   */
@@ -190,7 +186,7 @@ pub fn spawn_weapon(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     player_query: Query<Entity, With<Player>>,
-){  
+) {
     //getting sprite info
     let master_handle: Handle<Image> = asset_server.load("s_cutlass.png");
     let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
@@ -199,52 +195,52 @@ pub fn spawn_weapon(
 
     // get player + set weapon as child
     let player = player_query.single();
-    commands.entity(player)
-        .with_children(|parent| {
-            parent.spawn((
-                SpriteBundle {
-                    texture: master_handle,
-                    transform: Transform {
-                        scale: Vec3::splat(2.),
-                        translation: Vec3::new(32., 0.0, 0.0),
-                        ..default()
-                    },
+    commands.entity(player).with_children(|parent| {
+        parent.spawn((
+            SpriteBundle {
+                texture: master_handle,
+                transform: Transform {
+                    scale: Vec3::splat(2.),
+                    translation: Vec3::new(32., 0.0, 0.0),
                     ..default()
                 },
-                TextureAtlas {
-                    layout: master_layout_handle,
-                    index: 0,
-                },
-                Sword{ ..Default::default() },
-            ));
-        });
-
-
+                ..default()
+            },
+            TextureAtlas {
+                layout: master_layout_handle,
+                index: 0,
+            },
+            Sword {
+                ..Default::default()
+            },
+        ));
+    });
 }
 
 /*   MOVE_WEAPON FUNCITON   */
 /// Move the weapon with the player (reflects when player is facing left)
 pub fn move_weapon(
     mut weapon_query: Query<(&mut Transform, &mut Sprite), With<Sword>>,
-    mut player_query: Query<(&mut Player), With<Player>>     // want to get the player with children
-) { 
-
+    mut player_query: Query<(&mut Player), With<Player>>, // want to get the player with children
+) {
     for player in player_query.iter_mut() {
         for (mut transform, mut sprite) in weapon_query.iter_mut() {
-
             let player_direction = player.animation_state;
 
-
-            if player_direction == SpriteState::LeftRun || player_direction == SpriteState::BackwardRun{
-                transform.translation= Vec3::new(-32., 0., 0.);
+            if player_direction == SpriteState::LeftRun
+                || player_direction == SpriteState::BackwardRun
+            {
+                transform.translation = Vec3::new(-32., 0., 0.);
                 sprite.flip_x = true;
-            } else if player_direction == SpriteState::RightRun || player_direction == SpriteState::ForwardRun {
-                transform.translation= Vec3::new(32., 0., 0.);
+            } else if player_direction == SpriteState::RightRun
+                || player_direction == SpriteState::ForwardRun
+            {
+                transform.translation = Vec3::new(32., 0., 0.);
                 sprite.flip_x = false;
             }
         }
     }
-}   
+}
 
 /*   PLAYER_ATTACK FUNCTION   */
 /// Creates an attacking hitbox that will deal damage to enemy entities
@@ -281,10 +277,10 @@ pub fn player_attack(
             // Calculate hitbox offset based on player velocity
             let hitbox_offset = if velocity.v.length() > 0. {
                 // Normalize the velocity to get the direction and scale it
-                velocity.v.normalize() * 50.0 
+                velocity.v.normalize() * 50.0
             } else {
                 // Default offset if not moving (attack directly in front)
-                Vec2::new(0.0, -50.0) 
+                Vec2::new(0.0, -50.0)
             };
 
             // Define the size of the hitbox
@@ -329,10 +325,7 @@ pub fn check_player_health(
 /*   DESPAWN_PLAYER FUNCTION   */
 /// Despawns the player entity
 /// DEBUG: Will despawn any and all players
-pub fn despawn_player(
-    mut commands: Commands,
-    query: Query<Entity, With<Player>>,
-) {
+pub fn despawn_player(mut commands: Commands, query: Query<Entity, With<Player>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn();
     }
