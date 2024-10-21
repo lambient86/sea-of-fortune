@@ -36,7 +36,7 @@ pub fn check_hitbox_hurtbox_collisions(
                 {
                     hurtbox.colliding = true;
                     println!("{} collided with {}", hurtbox.entity, hitbox.entity);
-                    hurtbox.iframe = Timer::from_seconds(1., TimerMode::Once);
+                    hurtbox.iframe = Timer::from_seconds(0.75, TimerMode::Once);
                     break;
                 }
             }

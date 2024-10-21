@@ -116,7 +116,7 @@ pub fn spawn_bat(
             offset: Vec2::splat(0.),
             colliding: false,
             entity: BAT,
-            iframe: Timer::from_seconds(1., TimerMode::Once),
+            iframe: Timer::from_seconds(0.75, TimerMode::Once),
         },
     ));
 }
