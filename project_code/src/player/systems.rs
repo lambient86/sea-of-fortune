@@ -2,6 +2,7 @@ use crate::controls::*;
 use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
+use crate::shop::components::Inventory;
 use bevy::input::mouse::{self, MouseButtonInput};
 use bevy::prelude::*;
 
@@ -173,6 +174,7 @@ pub fn spawn_player(
             timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
             health: PLAYER_MAX_HP,
             max_health: PLAYER_MAX_HP,
+            inventory: Inventory::new(1000),
         },
         TestTimer::new(Timer::from_seconds(1., TimerMode::Repeating)),
         Hurtbox {

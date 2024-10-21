@@ -7,6 +7,7 @@ mod components;
 mod hitbox_system;
 mod controls;
 mod transition_box;
+mod shop;
 use components::GameworldState;
 use components::GameState;
 use data::gameworld_data::*;
@@ -18,6 +19,7 @@ use bat::BatPlugin;
 use systems::*;
 use player::systems::move_player;
 use boat::systems::move_boat;
+use shop::ShopPlugin;
 
 
 fn main() {
@@ -36,6 +38,7 @@ fn main() {
         .add_plugins(BoatPlugin)
         .add_plugins(BatPlugin)
         .add_plugins(HitboxPlugin)
+        .add_plugins(ShopPlugin)
         .add_systems(Update, move_player_camera.after(move_player)
                 .run_if(in_state(GameworldState::Island)))
         .add_systems(Update, move_boat_camera.after(move_boat)
