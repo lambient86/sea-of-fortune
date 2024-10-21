@@ -6,11 +6,11 @@ use bevy::sprite::MaterialMesh2dBundle;
 // System to check collisions between hitboxes and hurtboxes
 pub fn check_hitbox_hurtbox_collisions(
     hitbox_query: Query<(Entity, &Transform, &Hitbox)>,
-    mut hurtbox_query: Query<(Entity, &Transform, &Hurtbox)>,
+    mut hurtbox_query: Query<(Entity, &Transform, &mut Hurtbox)>,
     mut commands: Commands,
 ) {
     // // Iterate through all entities with hurtboxes
-    for (hurtbox_entity, hurtbox_transform, hurtbox) in hurtbox_query.iter() {
+    for (hurtbox_entity, hurtbox_transform, mut hurtbox) in hurtbox_query.iter_mut() {
         let hurtbox_pos = hurtbox_transform.translation.truncate() + hurtbox.offset;
         let hurtbox_min = hurtbox_pos - hurtbox.size / 2.0;
         let hurtbox_max = hurtbox_pos + hurtbox.size / 2.0;
@@ -26,7 +26,7 @@ pub fn check_hitbox_hurtbox_collisions(
                     && hitbox_min.y < hurtbox_max.y
                     && hitbox_max.y > hurtbox_min.y
                 {
-                    commands.entity(hurtbox_entity).insert(Colliding(0));
+                    hurtbox.colliding = true;
                     println!("{} collided with {}", hurtbox.entity, hitbox.entity);
                     break;
                 }
@@ -124,6 +124,7 @@ pub fn create_hurtbox(
         size,
         offset,
         entity: entity_type,
+        colliding: false,
     });
 }
 

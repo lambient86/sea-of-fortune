@@ -114,9 +114,9 @@ pub fn spawn_bat(
         Hurtbox {
             size: Vec2::splat(25.),
             offset: Vec2::splat(0.),
+            colliding: false,
             entity: BAT,
         },
-        Colliding(0),
     ));
 }
 
@@ -125,10 +125,10 @@ pub fn spawn_bat(
 // player weapon/attack collision) and then takes 1 damage (dies)
 pub fn bat_damaged(
     mut commands: Commands,
-    mut bat_query: Query<(&mut Bat, Entity, &mut Colliding), With<Bat>>,
+    mut bat_query: Query<(&mut Bat, Entity, &mut Hurtbox), With<Bat>>,
 ) {
-    for (mut bat, entity, mut collision) in bat_query.iter_mut() {
-        if collision.0 == 0 {
+    for (mut bat, entity, mut hurtbox) in bat_query.iter_mut() {
+        if !hurtbox.colliding {
             continue;
         }
 
@@ -141,7 +141,7 @@ pub fn bat_damaged(
             println!("Bat was attacked by player");
         }
 
-        collision.0 = 0;
+        hurtbox.colliding = false;
     }
 }
 

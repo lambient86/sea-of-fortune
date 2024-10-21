@@ -23,10 +23,7 @@ pub struct Hitbox {
 pub struct Hurtbox {
     pub size: Vec2,
     pub offset: Vec2,
+    pub colliding: bool,
 
     pub entity: i32,
 }
-
-// Colliding component: Added to entities when a collision is detected
-#[derive(Component)]
-pub struct Colliding(pub i32);

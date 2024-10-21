@@ -96,6 +96,7 @@ pub fn spawn_boat(
             size: hurtbox_size,
             offset: hurtbox_offset,
             entity: BOAT,
+            colliding: false,
         },
     ));
 }

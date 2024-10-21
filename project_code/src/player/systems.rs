@@ -170,6 +170,7 @@ pub fn spawn_player(
         Hurtbox {
             size,
             offset,
+            colliding: false,
             entity: PLAYER,
         },
     ));
