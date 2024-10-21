@@ -7,8 +7,6 @@ mod components;
 mod hitbox_system;
 mod controls;
 mod transition_box;
-
-use controls::*;
 use components::GameworldState;
 use components::GameState;
 use data::gameworld_data::*;
@@ -33,7 +31,6 @@ fn main() {
             }),
             ..default()
         }))
-        .init_resource::<CurrMousePos>()
         .add_systems(Startup, setup_gameworld)
         .add_plugins(PlayerPlugin)
         .add_plugins(BoatPlugin)
@@ -45,7 +42,6 @@ fn main() {
                 .run_if(in_state(GameworldState::Ocean)))
         .add_systems(Update, change_gameworld_state)
         .add_systems(Update, change_game_state)
-        .add_systems(Update, update_mouse_pos)
         .insert_state(GameworldState::MainMenu)
         .insert_state(GameState::Running)
         .run();

@@ -166,7 +166,7 @@ pub fn spawn_player(
         AnimationFrameCount::new(master_layout_length),
         Velocity::new(),
         AttackCooldown {
-            remaining: Timer::from_seconds(0.75, TimerMode::Once),
+            remaining: Timer::from_seconds(1.5, TimerMode::Once),
         },
         Player {
             animation_state: SpriteState::Idle,
@@ -223,28 +223,12 @@ pub fn spawn_weapon(
 }
 
 /*   MOVE_WEAPON FUNCITON   */
-/// Move the weapon with the player (reflects when player is facing left)
+/// Move the weapon with the player
 pub fn move_weapon(
-    mut weapon_query: Query<(&mut Transform, &mut Sprite), With<Sword>>,
-    mut player_query: Query<(&mut Player), With<Player>>     // want to get the player with children
+    mut weapon: Query<&mut Transform, Without<Sword>>,
 ) { 
-
-    for player in player_query.iter_mut() {
-        for (mut transform, mut sprite) in weapon_query.iter_mut() {
-
-            let player_direction = player.animation_state;
-
-
-            if player_direction == SpriteState::LeftRun || player_direction == SpriteState::BackwardRun{
-                transform.translation= Vec3::new(-32., 0., 0.);
-                sprite.flip_x = true;
-            } else if player_direction == SpriteState::RightRun || player_direction == SpriteState::ForwardRun {
-                transform.translation= Vec3::new(32., 0., 0.);
-                sprite.flip_x = false;
-            }
-        }
-    }
-}   
+    
+}
 
 /*   PLAYER_ATTACK FUNCTION   */
 /// Creates an attacking hitbox that will deal damage to enemy entities
@@ -252,11 +236,11 @@ pub fn player_attack(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mouse_input: Res<ButtonInput<MouseButton>>,
-    curr_mouse_pos: ResMut<CurrMousePos>,
+    mut cursor: EventReader<CursorMoved>,
     mut commands: Commands,
-    mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown), With<Player>>,
+    mut player_query: Query<(Entity, &Transform, &mut AttackCooldown), With<Player>>,
 ) {
-    for (entity, transform, velocity, mut cooldown) in player_query.iter_mut() {
+    for (entity, transform, mut cooldown) in player_query.iter_mut() {
         //If the cooldown is not finished, tick and break because you can't attack anyway
         if !cooldown.remaining.finished() {
             cooldown.remaining.tick(time.delta());
@@ -271,34 +255,31 @@ pub fn player_attack(
         // Checks if the left mouse button is pressed
         if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {
             println!("Player attacked!");
-            let mouse_pos = curr_mouse_pos.0;
-            println!("World coords {} {}", mouse_pos.x, mouse_pos.y);
-            cooldown.remaining = Timer::from_seconds(0.75, TimerMode::Once);
+            cooldown.remaining = Timer::from_seconds(1.5, TimerMode::Once);
 
             // Player position
             let player_position = transform.translation.truncate();
 
-            // Calculate hitbox offset based on player velocity
-            let hitbox_offset = if velocity.v.length() > 0. {
-                // Normalize the velocity to get the direction and scale it
-                velocity.v.normalize() * 50.0 
+            // Deciding side of player to put hitbox
+            let hitbox_offset = Vec2::new(-25.0, -50.);
+            /*if cursor_position.x > player_position.x {
+                hitbox_offset = Vec2::new(10., 16.);
             } else {
-                // Default offset if not moving (attack directly in front)
-                Vec2::new(0.0, -50.0) 
-            };
+                hitbox_offset = Vec2::new(-10., 16.);
+            }*/
 
             // Define the size of the hitbox
-            let hitbox_size = Vec2::new(40.0, 60.0); // Example size
+            let hitbox_size = Vec2::new(50.0, 50.0); // Example size
 
             // Create the hitbox
-            create_hitbox(&mut commands, entity, hitbox_size, hitbox_offset, Some(0.1));
+            create_hitbox(&mut commands, entity, hitbox_size, hitbox_offset, Some(3.0));
         }
     }
 }
 
 /*   CHECK_PLAYER_HEALTH FUNCTION   */
-// Function checks the current state of the player's health
-// if current health == 0 --> panic and close program
+/// Function checks the current state of the player's health
+/// if current health == 0 --> panic and close program
 pub fn check_player_health(
     time: Res<Time>,
     mut player_query: Query<(&mut Player, &mut TestTimer), With<Player>>,

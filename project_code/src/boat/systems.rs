@@ -3,7 +3,6 @@ use crate::controls::*;
 use crate::boat::components::*;
 use crate::data::gameworld_data::*;
 use crate::player::components::AttackCooldown;
-use crate::hitbox_system::*;
 
 /*   MOVE_BOAT FUNCTION   */
 /// Moves and updates the boats position
@@ -87,12 +86,12 @@ pub fn boat_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     time: Res<Time>,
     mut boat_query: Query<(&Transform, &mut AttackCooldown), With<Boat>>,
-    mut cannonball_query: Query<Entity, (With<Cannonball>, Without<Boat>)>,
     asset_server: Res<AssetServer>,
 ) {
     for (boat_transform, mut cooldown) in boat_query.iter_mut() {
         // Attacks only when cooldown is over
         if !cooldown.remaining.finished() {
+            println!("timer ticked");
             cooldown.remaining.tick(time.delta());
             break;
         }
@@ -105,7 +104,7 @@ pub fn boat_attack(
             let cannonball_handler = asset_server.load("s_cannonball.png");
 
             //getting angle to fire at
-            let firing_angle = boat_transform.rotation * Vec3::Y;
+            let firing_angle = Vec3::new(boat_transform.rotation.x, boat_transform.rotation.y, 0.0).normalize();
 
             //getting start position to fire from
             let projectile_start_position = boat_transform.translation.xyz();
@@ -123,17 +122,10 @@ pub fn boat_attack(
                 },
                 Cannonball,
                 Lifetime(CANNONBALL_LIFETIME),
-                CannonballVelocity {
-                        v: firing_angle * CANNONBALL_SPEED, /* (direction * speed of projectile) */
-                },
+                /*Velocity {
+                    v: firing_angle * CANNONBALL_SPEED, /* (direction * speed of projectile) */
+                },*/
             ));
-
-            //creating hitbox
-            let hitbox_size = Vec2::new(96., 96.);
-            let offset = Vec2::new(0., 0.);
-            for entity in cannonball_query.iter_mut() {
-                create_hitbox(&mut commands, entity, hitbox_size, offset, Some(CANNONBALL_LIFETIME));
-            }
         }
     }
 }
@@ -141,30 +133,12 @@ pub fn boat_attack(
 /*   MOVE_CANNONBALL FUNCTION   */
 /// Updates the locations of boat projectiles
 pub fn move_cannonball(
-    mut proj_query: Query<(&mut Transform, &mut CannonballVelocity), With<Cannonball>>,
+    mut proj_query: Query<(&mut Transform, &mut Velocity), With<Cannonball>>,
     time: Res<Time>,
 ) {
     for (mut transform, velocity) in proj_query.iter_mut() {
         // Calculates/moves the projectile
-        transform.translation += velocity.v * time.delta_seconds();
-    }
-}
-
-/*   CANNONBALL_LIFETIME_CHECK FUNCTION   */
-/// Checks the lifetime of a cannonball
-pub fn cannonball_lifetime_check(
-    time: Res<Time>,
-    mut commands: Commands,
-    mut proj_query: Query<(Entity, &mut Lifetime)>,
-) {
-    for (entity, mut lifetime) in proj_query.iter_mut() {
-        lifetime.0 -= time.delta_seconds();
-        if lifetime.0 <= 0.0 {
-            commands.entity(entity).despawn();
-
-            /* Debug */
-            println!("Cannonball despawned");
-        }
+        //transform.translation += velocity.v * time.delta_seconds();
     }
 }
 
