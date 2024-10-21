@@ -6,10 +6,10 @@ use bevy::input::mouse::{self, MouseButtonInput};
 use bevy::prelude::*;
 
 /// The speed at which the player accelerates
-pub const ACCELERATION: f32 = 5000.;
-pub const SPEED: f32 = 500.;
-pub const SIZE: f32 = 32.;
-pub const ANIMATION_TIME: f32 = 0.1;
+pub const PLAYER_ACCELERATION: f32 = 5000.;
+pub const PLAYER_SPEED: f32 = 500.;
+pub const PLAYER_SIZE: f32 = 32.;
+pub const PLAYER_ANIMATION_TIME: f32 = 0.1;
 
 // Base player stats
 pub const PLAYER_MAX_HP: f32 = 3.;
@@ -39,11 +39,11 @@ pub fn move_player(
 
     //getting acceleration
     let delta_t = time.delta_seconds();
-    let acc = ACCELERATION * delta_t;
+    let acc = PLAYER_ACCELERATION * delta_t;
 
     //deciding player velocity
     player_velocity.v = if deltav.length() > 0. {
-        (player_velocity.v + (deltav.normalize_or_zero() * acc)).clamp_length_max(SPEED)
+        (player_velocity.v + (deltav.normalize_or_zero() * acc)).clamp_length_max(PLAYER_SPEED)
     } else if player_velocity.v.length() > acc {
         player_velocity.v + (player_velocity.v.normalize_or_zero() * -acc)
     } else {
@@ -75,19 +75,9 @@ pub fn move_player(
 /// the player
 pub fn player_animation(
     time: Res<Time>,
-    mut player_query: Query<
-        (
-            &Velocity,
-            &mut TextureAtlas,
-            &mut AnimationTimer,
-            &AnimationFrameCount,
-            &mut Player,
-        ),
-        With<Player>,
-    >,
+    mut player_query: Query<(&Velocity, &mut TextureAtlas, &mut Player), With<Player>>,
 ) {
-    let (velocity, mut texture_atlas, mut timer, frame_count, mut player) =
-        player_query.single_mut();
+    let (velocity, mut texture_atlas, mut player) = player_query.single_mut();
     //deciding what animation to use
     let new_state = if velocity.v.cmpeq(Vec2::ZERO).all() {
         SpriteState::Idle
@@ -136,7 +126,6 @@ pub fn spawn_player(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-    mut player_query: Query<(Entity, &Transform, &mut AttackCooldown), With<Player>>,
 ) {
     //getting sprite info
     let master_handle: Handle<Image> = asset_server.load("s_pirate.png");
@@ -145,8 +134,8 @@ pub fn spawn_player(
     let master_layout_handle = texture_atlases.add(master_layout);
 
     //creating hurtbox for player
-    let size = Vec2::new(28., 28.);
-    let offset = Vec2::new(16., 16.);
+    let size = Vec2::new(40., 60.);
+    let offset = Vec2::new(0., 0.);
 
     //setting up player for spawning
     commands.spawn((
@@ -162,7 +151,10 @@ pub fn spawn_player(
             layout: master_layout_handle,
             index: 0,
         },
-        AnimationTimer::new(Timer::from_seconds(ANIMATION_TIME, TimerMode::Repeating)),
+        AnimationTimer::new(Timer::from_seconds(
+            PLAYER_ANIMATION_TIME,
+            TimerMode::Repeating,
+        )),
         AnimationFrameCount::new(master_layout_length),
         Velocity::new(),
         AttackCooldown {
@@ -178,9 +170,11 @@ pub fn spawn_player(
         Hurtbox {
             size,
             offset,
-        }
+            colliding: false,
+            entity: PLAYER,
+            iframe: Timer::from_seconds(0.75, TimerMode::Once),
+        },
     ));
-
 }
 
 /*   SPAWN_WEAPON FUNCTION   */
@@ -190,61 +184,60 @@ pub fn spawn_weapon(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     player_query: Query<Entity, With<Player>>,
-){  
+) {
     //getting sprite info
     let master_handle: Handle<Image> = asset_server.load("s_cutlass.png");
     let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
-    let master_layout_length = master_layout.textures.len();
     let master_layout_handle = texture_atlases.add(master_layout);
 
     // get player + set weapon as child
     let player = player_query.single();
-    commands.entity(player)
-        .with_children(|parent| {
-            parent.spawn((
-                SpriteBundle {
-                    texture: master_handle,
-                    transform: Transform {
-                        scale: Vec3::splat(2.),
-                        translation: Vec3::new(32., 0.0, 0.0),
-                        ..default()
-                    },
+    commands.entity(player).with_children(|parent| {
+        parent.spawn((
+            SpriteBundle {
+                texture: master_handle,
+                transform: Transform {
+                    scale: Vec3::splat(2.),
+                    translation: Vec3::new(32., 0.0, 0.0),
                     ..default()
                 },
-                TextureAtlas {
-                    layout: master_layout_handle,
-                    index: 0,
-                },
-                Sword{ ..Default::default() },
-            ));
-        });
-
-
+                ..default()
+            },
+            TextureAtlas {
+                layout: master_layout_handle,
+                index: 0,
+            },
+            Sword {
+                ..Default::default()
+            },
+        ));
+    });
 }
 
 /*   MOVE_WEAPON FUNCITON   */
 /// Move the weapon with the player (reflects when player is facing left)
 pub fn move_weapon(
     mut weapon_query: Query<(&mut Transform, &mut Sprite), With<Sword>>,
-    mut player_query: Query<(&mut Player), With<Player>>     // want to get the player with children
-) { 
-
+    mut player_query: Query<(&mut Player), With<Player>>, // want to get the player with children
+) {
     for player in player_query.iter_mut() {
         for (mut transform, mut sprite) in weapon_query.iter_mut() {
-
             let player_direction = player.animation_state;
 
-
-            if player_direction == SpriteState::LeftRun || player_direction == SpriteState::BackwardRun{
-                transform.translation= Vec3::new(-32., 0., 0.);
+            if player_direction == SpriteState::LeftRun
+                || player_direction == SpriteState::BackwardRun
+            {
+                transform.translation = Vec3::new(-32., 0., 0.);
                 sprite.flip_x = true;
-            } else if player_direction == SpriteState::RightRun || player_direction == SpriteState::ForwardRun {
-                transform.translation= Vec3::new(32., 0., 0.);
+            } else if player_direction == SpriteState::RightRun
+                || player_direction == SpriteState::ForwardRun
+            {
+                transform.translation = Vec3::new(32., 0., 0.);
                 sprite.flip_x = false;
             }
         }
     }
-}   
+}
 
 /*   PLAYER_ATTACK FUNCTION   */
 /// Creates an attacking hitbox that will deal damage to enemy entities
@@ -254,9 +247,9 @@ pub fn player_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     curr_mouse_pos: ResMut<CurrMousePos>,
     mut commands: Commands,
-    mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown), With<Player>>,
+    mut player_query: Query<(Entity, &Velocity, &mut AttackCooldown), With<Player>>,
 ) {
-    for (entity, transform, velocity, mut cooldown) in player_query.iter_mut() {
+    for (entity, velocity, mut cooldown) in player_query.iter_mut() {
         //If the cooldown is not finished, tick and break because you can't attack anyway
         if !cooldown.remaining.finished() {
             cooldown.remaining.tick(time.delta());
@@ -275,23 +268,27 @@ pub fn player_attack(
             println!("World coords {} {}", mouse_pos.x, mouse_pos.y);
             cooldown.remaining = Timer::from_seconds(0.75, TimerMode::Once);
 
-            // Player position
-            let player_position = transform.translation.truncate();
-
             // Calculate hitbox offset based on player velocity
             let hitbox_offset = if velocity.v.length() > 0. {
                 // Normalize the velocity to get the direction and scale it
-                velocity.v.normalize() * 50.0 
+                velocity.v.normalize() * 50.0
             } else {
                 // Default offset if not moving (attack directly in front)
-                Vec2::new(0.0, -50.0) 
+                Vec2::new(0.0, -50.0)
             };
 
             // Define the size of the hitbox
             let hitbox_size = Vec2::new(40.0, 60.0); // Example size
 
             // Create the hitbox
-            create_hitbox(&mut commands, entity, hitbox_size, hitbox_offset, Some(0.1));
+            create_hitbox(
+                &mut commands,
+                entity,
+                hitbox_size,
+                hitbox_offset,
+                Some(0.1),
+                PLAYER,
+            );
         }
     }
 }
@@ -299,40 +296,18 @@ pub fn player_attack(
 /*   CHECK_PLAYER_HEALTH FUNCTION   */
 // Function checks the current state of the player's health
 // if current health == 0 --> panic and close program
-pub fn check_player_health(
-    time: Res<Time>,
-    mut player_query: Query<(&mut Player, &mut TestTimer), With<Player>>,
-) {
-    for (mut player, mut timer) in player_query.iter_mut() {
+pub fn check_player_health(player_query: Query<&Player>) {
+    for player in player_query.iter() {
         if player.health <= 0. {
             panic!("Health reached {}...You died :(", player.health);
         }
-
-        /* Debug */
-
-        //UNCOMMENT ONLY IF YOU NEED TO RE-IMPLEMENT THE TESTTIMER DEATH
-
-        /*timer.tick(time.delta());
-
-        if timer.just_finished() {
-            player.health -= 1.;
-
-            /* Debug */
-            /*println!(
-                "Damage taken! Current HP: {}/{}",
-                player.health, player.max_health
-            );*/
-        }*/
     }
 }
 
 /*   DESPAWN_PLAYER FUNCTION   */
 /// Despawns the player entity
 /// DEBUG: Will despawn any and all players
-pub fn despawn_player(
-    mut commands: Commands,
-    query: Query<Entity, With<Player>>,
-) {
+pub fn despawn_player(mut commands: Commands, query: Query<Entity, With<Player>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn();
     }
