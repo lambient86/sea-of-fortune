@@ -172,6 +172,7 @@ pub fn spawn_player(
             offset,
             colliding: false,
             entity: PLAYER,
+            iframe: Timer::from_seconds(1., TimerMode::Once),
         },
     ));
 }

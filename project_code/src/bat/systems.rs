@@ -116,6 +116,7 @@ pub fn spawn_bat(
             offset: Vec2::splat(0.),
             colliding: false,
             entity: BAT,
+            iframe: Timer::from_seconds(1., TimerMode::Once),
         },
     ));
 }
@@ -258,7 +259,7 @@ pub fn bat_proj_lifetime_check(
             commands.entity(entity).despawn();
 
             /* Debug */
-            println!("Projectile despawned");
+            //println!("Projectile despawned");
         }
     }
 }

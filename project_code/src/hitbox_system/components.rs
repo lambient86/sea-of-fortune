@@ -25,5 +25,6 @@ pub struct Hurtbox {
     pub offset: Vec2,
     pub colliding: bool,
 
+    pub iframe: Timer,
     pub entity: i32,
 }

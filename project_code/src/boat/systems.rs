@@ -97,6 +97,7 @@ pub fn spawn_boat(
             offset: hurtbox_offset,
             entity: BOAT,
             colliding: false,
+            iframe: Timer::from_seconds(1., TimerMode::Once),
         },
     ));
 }
