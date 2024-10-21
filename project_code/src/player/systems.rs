@@ -167,7 +167,11 @@ pub fn spawn_player(
             max_health: PLAYER_MAX_HP,
         },
         TestTimer::new(Timer::from_seconds(1., TimerMode::Repeating)),
-        Hurtbox { size, offset },
+        Hurtbox {
+            size,
+            offset,
+            entity: PLAYER,
+        },
     ));
 }
 
@@ -275,7 +279,14 @@ pub fn player_attack(
             let hitbox_size = Vec2::new(40.0, 60.0); // Example size
 
             // Create the hitbox
-            create_hitbox(&mut commands, entity, hitbox_size, hitbox_offset, Some(0.1));
+            create_hitbox(
+                &mut commands,
+                entity,
+                hitbox_size,
+                hitbox_offset,
+                Some(0.1),
+                PLAYER,
+            );
         }
     }
 }

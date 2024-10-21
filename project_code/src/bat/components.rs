@@ -18,7 +18,6 @@ pub struct Bat {
     pub rotation_speed: f32,
     pub current_hp: f32,
     pub max_hp: f32,
-    pub velocity: Velocity,
 }
 
 #[derive(Component)]

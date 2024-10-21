@@ -1,9 +1,9 @@
-use bevy::prelude::*;
-use crate::controls::*;
 use crate::boat::components::*;
+use crate::controls::*;
 use crate::data::gameworld_data::*;
-use crate::player::components::AttackCooldown;
 use crate::hitbox_system::*;
+use crate::player::components::AttackCooldown;
+use bevy::prelude::*;
 
 /*   MOVE_BOAT FUNCTION   */
 /// Moves and updates the boats position
@@ -23,7 +23,8 @@ pub fn move_boat(
     //e.g if left pressed and right no : 1 - 0 = 1
     //will accout for both left and right being pressed in one check
     //e.g 1 - 1 = 0
-    rotation_factor += get_player_input(PlayerControl::Left, &keyboard_input, &mouse_input) - get_player_input(PlayerControl::Right, &keyboard_input, &mouse_input); 
+    rotation_factor += get_player_input(PlayerControl::Left, &keyboard_input, &mouse_input)
+        - get_player_input(PlayerControl::Right, &keyboard_input, &mouse_input);
 
     //checking if player is pressing up
     movement_factor = get_player_input(PlayerControl::Up, &keyboard_input, &mouse_input);
@@ -42,7 +43,8 @@ pub fn move_boat(
 
     //getting movement information
     let movement_dir = transform.rotation * Vec3::Y;
-    let movement_dis = movement_factor * (ship.movement_speed * time.delta_seconds()) + (0.5*ship.acceleration*time.delta_seconds());
+    let movement_dis = movement_factor * (ship.movement_speed * time.delta_seconds())
+        + (0.5 * ship.acceleration * time.delta_seconds());
     let translation_delta = movement_dir * movement_dis;
 
     //moving the boat
@@ -82,7 +84,7 @@ pub fn spawn_boat(
             layout: boat_layout_handle.clone(),
             index: 0,
         },
-        Boat{
+        Boat {
             movement_speed: 150.,
             rotation_speed: f32::to_radians(100.0),
             acceleration: 0.,
@@ -93,7 +95,8 @@ pub fn spawn_boat(
         Hurtbox {
             size: hurtbox_size,
             offset: hurtbox_offset,
-        }
+            entity: BOAT,
+        },
     ));
 }
 
@@ -116,15 +119,16 @@ pub fn boat_attack(
         }
 
         /***   ATTACK   ***/
-        if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {    
+        if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {
             cooldown.remaining = Timer::from_seconds(1.5, TimerMode::Once);
-            
+
             //getting cannonball sprite
             let cannonball_handler = asset_server.load("s_cannonball.png");
 
             //getting angle to fire at
             let pos2 = curr_mouse_pos.0;
-            let original_direction = (Vec3::new(pos2.x, pos2.y, 0.) - boat_transform.translation).normalize();
+            let original_direction =
+                (Vec3::new(pos2.x, pos2.y, 0.) - boat_transform.translation).normalize();
             let angle = original_direction.x.atan2(original_direction.y);
             let firing_angle = Vec3::new(angle.sin(), angle.cos(), 0.0).normalize();
 
@@ -149,13 +153,14 @@ pub fn boat_attack(
                 Cannonball,
                 Lifetime(CANNONBALL_LIFETIME),
                 CannonballVelocity {
-                        v: firing_angle * CANNONBALL_SPEED, /* (direction * speed of projectile) */
+                    v: firing_angle * CANNONBALL_SPEED, /* (direction * speed of projectile) */
                 },
                 Hitbox {
                     size: hitbox_size,
                     offset: offset,
                     lifetime: Some(Timer::from_seconds(CANNONBALL_LIFETIME, TimerMode::Once)),
-                }
+                    entity: BOAT,
+                },
             ));
         }
     }
@@ -194,10 +199,7 @@ pub fn cannonball_lifetime_check(
 /*   DESPAWN_BOAT FUNCTION   */
 /// Despawns the boat
 /// DEBUG: Will despawn any and all boats
-pub fn despawn_boat(
-    mut commands: Commands,
-    query: Query<Entity, With<Boat>>,
-) {
+pub fn despawn_boat(mut commands: Commands, query: Query<Entity, With<Boat>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn();
     }
@@ -206,10 +208,7 @@ pub fn despawn_boat(
 /*   DESPAWN_CANNONBALLS FUNCTION   */
 /// Despawns cannonballs
 /// DEBUG: Will despawn any and all cannonballs
-pub fn despawn_cannonballs(
-    mut commands: Commands,
-    query: Query<Entity, With<Cannonball>>,
-) {
+pub fn despawn_cannonballs(mut commands: Commands, query: Query<Entity, With<Cannonball>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn();
     }

@@ -97,7 +97,6 @@ pub fn spawn_bat(
             rotation_speed: f32::to_radians(90.0),
             current_hp: BAT_MAX_HP,
             max_hp: BAT_MAX_HP,
-            velocity: Velocity { v: Vec3::splat(0.) },
         },
         TextureAtlas {
             layout: bat_layout_handle,
@@ -115,7 +114,9 @@ pub fn spawn_bat(
         Hurtbox {
             size: Vec2::splat(25.),
             offset: Vec2::splat(0.),
+            entity: BAT,
         },
+        Colliding(0),
     ));
 }
 
@@ -124,10 +125,9 @@ pub fn spawn_bat(
 // player weapon/attack collision) and then takes 1 damage (dies)
 pub fn bat_damaged(
     mut commands: Commands,
-    mut bat_query: Query<(&mut Bat, Entity, &Colliding), With<Bat>>,
-    player_query: Query<&Transform, With<Player>>,
+    mut bat_query: Query<(&mut Bat, Entity, &mut Colliding), With<Bat>>,
 ) {
-    for (mut bat, entity, collision) in bat_query.iter_mut() {
+    for (mut bat, entity, mut collision) in bat_query.iter_mut() {
         if collision.0 == 0 {
             continue;
         }
@@ -140,6 +140,8 @@ pub fn bat_damaged(
         } else {
             println!("Bat was attacked by player");
         }
+
+        collision.0 = 0;
     }
 }
 
@@ -222,6 +224,7 @@ pub fn bat_attack(
                 size: Vec2::splat(16.),
                 offset: Vec2::splat(0.),
                 lifetime: Some(Timer::from_seconds(3., TimerMode::Once)),
+                entity: BAT,
             },
         ));
     }

@@ -3,7 +3,6 @@ use bevy::math::bounding::Aabb2d;
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
 
-
 // System to check collisions between hitboxes and hurtboxes
 pub fn check_hitbox_hurtbox_collisions(
     hitbox_query: Query<(Entity, &Transform, &Hitbox)>,
@@ -17,14 +16,18 @@ pub fn check_hitbox_hurtbox_collisions(
         let hurtbox_max = hurtbox_pos + hurtbox.size / 2.0;
 
         for (hitbox_entity, hitbox_transform, hitbox) in hitbox_query.iter() {
-            if hurtbox_entity != hitbox_entity {
+            if hurtbox.entity != hitbox.entity {
                 let hitbox_pos = hitbox_transform.translation.truncate() + hitbox.offset;
                 let hitbox_min = hitbox_pos - hitbox.size / 2.0;
                 let hitbox_max = hitbox_pos + hitbox.size / 2.0;
 
-                if hitbox_min.x < hurtbox_max.x && hitbox_max.x > hurtbox_min.x &&
-                   hitbox_min.y < hurtbox_max.y && hitbox_max.y > hurtbox_min.y {
+                if hitbox_min.x < hurtbox_max.x
+                    && hitbox_max.x > hurtbox_min.x
+                    && hitbox_min.y < hurtbox_max.y
+                    && hitbox_max.y > hurtbox_min.y
+                {
                     commands.entity(hurtbox_entity).insert(Colliding(0));
+                    println!("{} collided with {}", hurtbox.entity, hitbox.entity);
                     break;
                 }
             }
@@ -99,9 +102,15 @@ pub fn create_hitbox(
     size: Vec2,
     offset: Vec2,
     lifetime: Option<f32>,
+    entity_type: i32,
 ) {
     let lifetime_timer = lifetime.map(|duration| Timer::from_seconds(duration, TimerMode::Once));
-    commands.entity(entity).insert(Hitbox { size, offset, lifetime: lifetime_timer });
+    commands.entity(entity).insert(Hitbox {
+        size,
+        offset,
+        lifetime: lifetime_timer,
+        entity: entity_type,
+    });
 }
 
 pub fn create_hurtbox(
@@ -109,8 +118,13 @@ pub fn create_hurtbox(
     entity: Entity,
     size: Vec2,
     offset: Vec2,
+    entity_type: i32,
 ) {
-    commands.entity(entity).insert(Hurtbox { size, offset });
+    commands.entity(entity).insert(Hurtbox {
+        size,
+        offset,
+        entity: entity_type,
+    });
 }
 
 pub fn get_aabb(size: Vec2, offset: Vec2) -> Aabb2d {
