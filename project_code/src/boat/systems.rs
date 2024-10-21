@@ -11,9 +11,9 @@ pub fn move_boat(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mouse_input: Res<ButtonInput<MouseButton>>,
-    mut query: Query<(&Boat, &mut Transform)>,
+    mut query: Query<(&mut Boat, &mut Transform)>,
 ) {
-    let (ship, mut transform) = query.single_mut();
+    let (mut ship, mut transform) = query.single_mut();
 
     //initializing rotation and movement variables
     let mut rotation_factor = 0.0;
@@ -28,12 +28,21 @@ pub fn move_boat(
     //checking if player is pressing up
     movement_factor = get_player_input(PlayerControl::Up, &keyboard_input, &mouse_input);
 
+    //increasing acceleration if needed
+    if ship.acceleration <= MAX_ACCEL && movement_factor == 1. {
+        ship.acceleration += 3.;
+    } else if ship.acceleration > 0. {
+        ship.acceleration -= 7.;
+    } else if ship.acceleration < 0. {
+        ship.acceleration = 0.;
+    }
+
     //transforming the players rotation
     transform.rotate_z(rotation_factor * ship.rotation_speed * time.delta_seconds());
 
     //getting movement information
     let movement_dir = transform.rotation * Vec3::Y;
-    let movement_dis = movement_factor * ship.movement_speed * time.delta_seconds();
+    let movement_dis = movement_factor * (ship.movement_speed * time.delta_seconds()) + (0.5*ship.acceleration*time.delta_seconds());
     let translation_delta = movement_dir * movement_dis;
 
     //moving the boat
@@ -74,8 +83,9 @@ pub fn spawn_boat(
             index: 0,
         },
         Boat{
-            movement_speed: 250.0,
-            rotation_speed: f32::to_radians(180.0),
+            movement_speed: 150.,
+            rotation_speed: f32::to_radians(100.0),
+            acceleration: 0.,
         },
         AttackCooldown {
             remaining: Timer::from_seconds(1.5, TimerMode::Once),
@@ -93,27 +103,30 @@ pub fn boat_attack(
     mut commands: Commands,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mouse_input: Res<ButtonInput<MouseButton>>,
+    curr_mouse_pos: ResMut<CurrMousePos>,
     time: Res<Time>,
     mut boat_query: Query<(&Transform, &mut AttackCooldown), With<Boat>>,
-    mut cannonball_query: Query<Entity, (With<Cannonball>, Without<Boat>)>,
     asset_server: Res<AssetServer>,
 ) {
     for (boat_transform, mut cooldown) in boat_query.iter_mut() {
-        // Attacks only when cooldown is over
+        // checking cooldown
         if !cooldown.remaining.finished() {
             cooldown.remaining.tick(time.delta());
             break;
         }
 
+        /***   ATTACK   ***/
         if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {    
-            println!("Boat attacked");
             cooldown.remaining = Timer::from_seconds(1.5, TimerMode::Once);
             
             //getting cannonball sprite
             let cannonball_handler = asset_server.load("s_cannonball.png");
 
             //getting angle to fire at
-            let firing_angle = boat_transform.rotation * Vec3::Y;
+            let pos2 = curr_mouse_pos.0;
+            let original_direction = (Vec3::new(pos2.x, pos2.y, 0.) - boat_transform.translation).normalize();
+            let angle = original_direction.x.atan2(original_direction.y);
+            let firing_angle = Vec3::new(angle.sin(), angle.cos(), 0.0).normalize();
 
             //getting start position to fire from
             let projectile_start_position = boat_transform.translation.xyz();
