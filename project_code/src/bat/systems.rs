@@ -226,6 +226,7 @@ pub fn bat_attack(
                 offset: Vec2::splat(0.),
                 lifetime: Some(Timer::from_seconds(3., TimerMode::Once)),
                 entity: BAT,
+                projectile: true,
             },
         ));
     }

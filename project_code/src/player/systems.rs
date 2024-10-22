@@ -168,7 +168,6 @@ pub fn spawn_player(
             max_health: PLAYER_MAX_HP,
             spawn_position,
         },
-        TestTimer::new(Timer::from_seconds(1., TimerMode::Repeating)),
         Hurtbox {
             size,
             offset,
@@ -273,16 +272,24 @@ pub fn player_attack(
             // Player position
             let player_position = transform.translation.truncate();
 
-             // Calculate direction from player position to mouse position
-             let direction = (mouse_pos - player_position).normalize();
-             // Calculate hitbox offset based on direction
-             let hitbox_offset = direction * 50.0; // Distance from the player to the hitbox
+            // Calculate direction from player position to mouse position
+            let direction = (mouse_pos - player_position).normalize();
+            // Calculate hitbox offset based on direction
+            let hitbox_offset = direction * 50.0; // Distance from the player to the hitbox
 
             // Define the size of the hitbox
-            let hitbox_size = Vec2::new(40.0, 60.0); 
+            let hitbox_size = Vec2::new(40.0, 60.0);
 
             // Create the hitbox
-            create_hitbox(&mut commands, entity, hitbox_size, hitbox_offset, Some(0.1), PLAYER);
+            create_hitbox(
+                &mut commands,
+                entity,
+                hitbox_size,
+                hitbox_offset,
+                Some(0.1),
+                PLAYER,
+                false,
+            );
         }
     }
 }
@@ -291,7 +298,6 @@ pub fn player_attack(
 // Function checks the current state of the player's health
 // if current health == 0 --> panic and close program
 pub fn check_player_health(
-    mut commands: Commands,
     mut player_query: Query<(&mut Player, Entity, &mut Hurtbox, &mut Transform), With<Player>>,
 ) {
     for (mut player, entity, mut hurtbox, mut transform) in player_query.iter_mut() {
@@ -302,11 +308,10 @@ pub fn check_player_health(
         player.health -= 1.;
 
         if player.health <= 0. {
-            println!("Player died to a bat...yikes!");
+            println!("Player died... yikes!");
             player.health = player.max_health;
             transform.translation = player.spawn_position;
             println!("Player respawned!");
-
         } else {
             println!("Ouch! Player was hit.");
         }
