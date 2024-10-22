@@ -132,6 +132,7 @@ pub fn spawn_player(
     let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(64), 8, 5, None, None);
     let master_layout_length = master_layout.textures.len();
     let master_layout_handle = texture_atlases.add(master_layout);
+    let spawn_position = Vec3::new(0.0, 0.0, 0.0);
 
     //creating hurtbox for player
     let size = Vec2::new(40., 60.);
@@ -165,6 +166,7 @@ pub fn spawn_player(
             timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
             health: PLAYER_MAX_HP,
             max_health: PLAYER_MAX_HP,
+            spawn_position,
         },
         TestTimer::new(Timer::from_seconds(1., TimerMode::Repeating)),
         Hurtbox {
@@ -247,9 +249,9 @@ pub fn player_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     curr_mouse_pos: ResMut<CurrMousePos>,
     mut commands: Commands,
-    mut player_query: Query<(Entity, &Velocity, &mut AttackCooldown), With<Player>>,
+    mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown), With<Player>>,
 ) {
-    for (entity, velocity, mut cooldown) in player_query.iter_mut() {
+    for (entity, transform, velocity, mut cooldown) in player_query.iter_mut() {
         //If the cooldown is not finished, tick and break because you can't attack anyway
         if !cooldown.remaining.finished() {
             cooldown.remaining.tick(time.delta());
@@ -268,27 +270,19 @@ pub fn player_attack(
             println!("World coords {} {}", mouse_pos.x, mouse_pos.y);
             cooldown.remaining = Timer::from_seconds(0.75, TimerMode::Once);
 
-            // Calculate hitbox offset based on player velocity
-            let hitbox_offset = if velocity.v.length() > 0. {
-                // Normalize the velocity to get the direction and scale it
-                velocity.v.normalize() * 50.0
-            } else {
-                // Default offset if not moving (attack directly in front)
-                Vec2::new(0.0, -50.0)
-            };
+            // Player position
+            let player_position = transform.translation.truncate();
+
+             // Calculate direction from player position to mouse position
+             let direction = (mouse_pos - player_position).normalize();
+             // Calculate hitbox offset based on direction
+             let hitbox_offset = direction * 50.0; // Distance from the player to the hitbox
 
             // Define the size of the hitbox
-            let hitbox_size = Vec2::new(40.0, 60.0); // Example size
+            let hitbox_size = Vec2::new(40.0, 60.0); 
 
             // Create the hitbox
-            create_hitbox(
-                &mut commands,
-                entity,
-                hitbox_size,
-                hitbox_offset,
-                Some(0.1),
-                PLAYER,
-            );
+            create_hitbox(&mut commands, entity, hitbox_size, hitbox_offset, Some(0.1), PLAYER);
         }
     }
 }
@@ -296,11 +290,28 @@ pub fn player_attack(
 /*   CHECK_PLAYER_HEALTH FUNCTION   */
 // Function checks the current state of the player's health
 // if current health == 0 --> panic and close program
-pub fn check_player_health(player_query: Query<&Player>) {
-    for player in player_query.iter() {
-        if player.health <= 0. {
-            panic!("Health reached {}...You died :(", player.health);
+pub fn check_player_health(
+    mut commands: Commands,
+    mut player_query: Query<(&mut Player, Entity, &mut Hurtbox, &mut Transform), With<Player>>,
+) {
+    for (mut player, entity, mut hurtbox, mut transform) in player_query.iter_mut() {
+        if !hurtbox.colliding {
+            continue;
         }
+
+        player.health -= 1.;
+
+        if player.health <= 0. {
+            println!("Player died to a bat...yikes!");
+            player.health = player.max_health;
+            transform.translation = player.spawn_position;
+            println!("Player respawned!");
+
+        } else {
+            println!("Ouch! Player was hit.");
+        }
+
+        hurtbox.colliding = false;
     }
 }
 
