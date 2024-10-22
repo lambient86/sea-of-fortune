@@ -13,12 +13,12 @@ pub fn load_level(
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     // load ocean tile sheet
-    let bg_ocean_texture_handle: Handle<Image> = asset_server.load("bg_ocean_tiles_1.png");
+    let bg_ocean_texture_handle: Handle<Image> = asset_server.load("ts_ocean.png");
     let ocean_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
     let ocean_layout_handle = texture_atlases.add(ocean_layout);
 
     // load island sand tile sheet
-    let bg_sand_texture_handle: Handle<Image> = asset_server.load("bg_sand_tiles.png");
+    let bg_sand_texture_handle: Handle<Image> = asset_server.load("ts_sand.png");
     let sand_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
     let sand_layout_handle = texture_atlases.add(sand_layout);
 
