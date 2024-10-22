@@ -7,6 +7,7 @@ mod components;
 mod hitbox_system;
 mod controls;
 mod transition_box;
+mod level;
 
 use controls::*;
 use components::GameworldState;
@@ -17,6 +18,7 @@ use player::PlayerPlugin;
 use boat::BoatPlugin;
 use hitbox_system::HitboxPlugin;
 use bat::BatPlugin;
+use level::LevelPlugin;
 use systems::*;
 use player::systems::move_player;
 use boat::systems::move_boat;

@@ -146,7 +146,7 @@ pub fn spawn_player(
 
     //creating hurtbox for player
     let size = Vec2::new(28., 28.);
-    let offset = Vec2::new(16., 16.);
+    let offset = Vec2::new(0., 0.);
 
     //setting up player for spawning
     commands.spawn((
