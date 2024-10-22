@@ -83,17 +83,19 @@ pub fn change_gameworld_state(
         next_state.set(GameworldState::Island);
 
     } else if keyboard_input.just_pressed(KeyCode::KeyO) {   //OCEAN
-        //getting background texture
-        let bg_texture_handle = asset_server.load("bg_ocean_demo.png");
 
-        //spawning background sprite
-        commands
-            .spawn(SpriteBundle {
-                texture: bg_texture_handle.clone(),
-                transform: Transform::from_xyz(0., 0., -1.),
-                ..default()
-            })
-        .insert(Background);
+        //* DEBUG: commented out to test ocean tiling !! */
+        //getting background texture
+        // let bg_texture_handle = asset_server.load("bg_ocean_demo.png");
+
+        // //spawning background sprite
+        // commands
+        //     .spawn(SpriteBundle {
+        //         texture: bg_texture_handle.clone(),
+        //         transform: Transform::from_xyz(0., 0., -1.),
+        //         ..default()
+        //     })
+        // .insert(Background);
 
         //switching state to ocean
         next_state.set(GameworldState::Ocean);
