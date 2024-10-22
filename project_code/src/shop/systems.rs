@@ -266,3 +266,8 @@ pub fn handle_shop_events(
         }
     }
 }
+
+pub fn generate_loot_item() -> Item {
+    // temporary
+    Item::new(ItemType::Loot, "Bat Wing".to_string(), 50)
+}

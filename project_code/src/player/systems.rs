@@ -2,7 +2,8 @@ use crate::controls::*;
 use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
-use crate::shop::components::Inventory;
+use crate::shop::components::{Inventory, ItemType};
+use crate::shop::systems::generate_loot_item;
 use bevy::input::mouse::{self, MouseButtonInput};
 use bevy::prelude::*;
 
@@ -149,6 +150,10 @@ pub fn spawn_player(
     let size = Vec2::new(28., 28.);
     let offset = Vec2::new(16., 16.);
 
+    let mut initial_inventory = Inventory::new(1000);
+
+    initial_inventory.add_item(generate_loot_item());
+
     //setting up player for spawning
     commands.spawn((
         SpriteBundle {
@@ -174,7 +179,7 @@ pub fn spawn_player(
             timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
             health: PLAYER_MAX_HP,
             max_health: PLAYER_MAX_HP,
-            inventory: Inventory::new(1000),
+            inventory: initial_inventory,
         },
         TestTimer::new(Timer::from_seconds(1., TimerMode::Repeating)),
         Hurtbox {
