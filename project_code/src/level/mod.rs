@@ -20,12 +20,18 @@ impl Plugin for LevelPlugin {
                 OnExit(GameworldState::Ocean),
                 despawn_with::<OceanTile>,
             )
-            .add_systems(OnEnter(GameworldState::Island), setup_level)
+            .add_systems(
+                OnEnter(GameworldState::Island), 
+                (setup_level, despawn_with::<Background>,)
+            )
             .add_systems(
                 OnExit(GameworldState::Island),
                 despawn_with::<SandTile>,
             )
-            .add_systems(OnEnter(GameworldState::Dungeon), setup_level)
+            .add_systems(OnEnter(
+                GameworldState::Dungeon), 
+                (setup_level, despawn_with::<Background>, despawn_with::<Sword>)
+            )
             .add_systems(
                 OnExit(GameworldState::Dungeon),
                 despawn_with::<DungeonTile>,

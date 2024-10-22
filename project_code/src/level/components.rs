@@ -14,3 +14,7 @@ pub struct OceanTileSheet(pub Handle<Image>, pub Handle<TextureAtlasLayout>);
 
 #[derive(Resource)]
 pub struct SandTileSheet(pub Handle<Image>, pub Handle<TextureAtlasLayout>);
+
+#[derive(Resource)]
+pub struct DungeonTileSheet(pub Handle<Image>, pub Handle<TextureAtlasLayout>);
+
