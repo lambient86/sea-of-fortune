@@ -134,11 +134,7 @@ pub fn spawn_player(
     let master_layout_handle = texture_atlases.add(master_layout);
 
     //creating hurtbox for player
-<<<<<<< HEAD
-    let size = Vec2::new(28., 28.);
-=======
     let size = Vec2::new(40., 60.);
->>>>>>> 67cee87d8d71eb61b8ac0d19d7f2ea5afc660a11
     let offset = Vec2::new(0., 0.);
 
     //setting up player for spawning

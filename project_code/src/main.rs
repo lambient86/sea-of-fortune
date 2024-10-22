@@ -41,6 +41,7 @@ fn main() {
         .add_plugins(BoatPlugin)
         .add_plugins(BatPlugin)
         .add_plugins(HitboxPlugin)
+        .add_plugins(LevelPlugin)
         .add_systems(Update, move_player_camera.after(move_player)
                 .run_if(in_state(GameworldState::Island)))
         .add_systems(Update, move_boat_camera.after(move_boat)

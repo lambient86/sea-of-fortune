@@ -1,10 +1,16 @@
 use bevy::prelude::*;
 
 #[derive(Component)]
-pub struct BGTile;
+pub struct OceanTile;
 
 #[derive(Component)]
-pub struct Background;
+pub struct SandTile;
+
+#[derive(Component)]
+pub struct DungeonTile;
 
 #[derive(Resource)]
-pub struct BGTileSheet(pub Handle<Image>, pub Handle<TextureAtlasLayout>);
+pub struct OceanTileSheet(pub Handle<Image>, pub Handle<TextureAtlasLayout>);
+
+#[derive(Resource)]
+pub struct SandTileSheet(pub Handle<Image>, pub Handle<TextureAtlasLayout>);
