@@ -69,7 +69,7 @@ The goal is player-specific—whether you wish to:
 ## Advanced Topics
 
 ### Networked Multiplayer
-**Sea of Fortune** will feature fully functional networked multiplayer, supporting up to 4 players in one world. Players can interact through in game and explore the vast oceans and islands the world has to offer. Players will communicate to one another through Peer-to-Peer (P2P) networking, forgoing the need for a central server.
+**Sea of Fortune** will feature fully functional networked multiplayer, supporting up to 4 players in one world. Players can interact through in game and explore the vast oceans and islands the world has to offer. Players will communicate to one another through Client-Server networking.
 #### Team
 - Mark Zarroli
 - Theo Zervos

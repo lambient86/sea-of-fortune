@@ -16,7 +16,7 @@ impl Plugin for BoatPlugin {
             app.add_systems(OnEnter(GameworldState::Ocean),spawn_boat.after(despawn_player))
                 .add_systems(Update,(
                     move_boat,
-                    boat_attack,
+                    boat_attack.after(move_boat),
                     move_cannonball,
                     cannonball_lifetime_check,
                 )
