@@ -2,6 +2,7 @@ use crate::controls::*;
 use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
+use crate::shop::components::Inventory;
 use bevy::input::mouse::{self, MouseButtonInput};
 use bevy::prelude::*;
 
@@ -159,13 +160,14 @@ pub fn spawn_player(
         AnimationFrameCount::new(master_layout_length),
         Velocity::new(),
         AttackCooldown {
-            remaining: Timer::from_seconds(0.75, TimerMode::Once),
+            remaining: Timer::from_seconds(1.5, TimerMode::Once),
         },
         Player {
             animation_state: SpriteState::Idle,
             timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
             health: PLAYER_MAX_HP,
             max_health: PLAYER_MAX_HP,
+            inventory: Inventory::new(1000),
             spawn_position,
         },
         TestTimer::new(Timer::from_seconds(1., TimerMode::Repeating)),
@@ -217,7 +219,7 @@ pub fn spawn_weapon(
 }
 
 /*   MOVE_WEAPON FUNCITON   */
-/// Move the weapon with the player (reflects when player is facing left)
+/// Move the weapon with the player
 pub fn move_weapon(
     mut weapon_query: Query<(&mut Transform, &mut Sprite), With<Sword>>,
     mut player_query: Query<(&mut Player), With<Player>>, // want to get the player with children
@@ -247,11 +249,11 @@ pub fn player_attack(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mouse_input: Res<ButtonInput<MouseButton>>,
-    curr_mouse_pos: ResMut<CurrMousePos>,
+    mut cursor: EventReader<CursorMoved>,
     mut commands: Commands,
-    mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown), With<Player>>,
+    mut player_query: Query<(Entity, &Transform, &mut AttackCooldown), With<Player>>,
 ) {
-    for (entity, transform, velocity, mut cooldown) in player_query.iter_mut() {
+    for (entity, transform, mut cooldown) in player_query.iter_mut() {
         //If the cooldown is not finished, tick and break because you can't attack anyway
         if !cooldown.remaining.finished() {
             cooldown.remaining.tick(time.delta());
@@ -266,17 +268,15 @@ pub fn player_attack(
         // Checks if the left mouse button is pressed
         if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {
             println!("Player attacked!");
-            let mouse_pos = curr_mouse_pos.0;
-            println!("World coords {} {}", mouse_pos.x, mouse_pos.y);
-            cooldown.remaining = Timer::from_seconds(0.75, TimerMode::Once);
+            cooldown.remaining = Timer::from_seconds(1.5, TimerMode::Once);
 
             // Player position
             let player_position = transform.translation.truncate();
 
-             // Calculate direction from player position to mouse position
-             let direction = (mouse_pos - player_position).normalize();
-             // Calculate hitbox offset based on direction
-             let hitbox_offset = direction * 50.0; // Distance from the player to the hitbox
+            // Calculate direction from player position to mouse position
+            let direction = (mouse_pos - player_position).normalize();
+            // Calculate hitbox offset based on direction
+            let hitbox_offset = direction * 50.0; // Distance from the player to the hitbox
 
             // Define the size of the hitbox
             let hitbox_size = Vec2::new(40.0, 60.0); 
@@ -288,8 +288,8 @@ pub fn player_attack(
 }
 
 /*   CHECK_PLAYER_HEALTH FUNCTION   */
-// Function checks the current state of the player's health
-// if current health == 0 --> panic and close program
+/// Function checks the current state of the player's health
+/// if current health == 0 --> panic and close program
 pub fn check_player_health(
     mut commands: Commands,
     mut player_query: Query<(&mut Player, Entity, &mut Hurtbox, &mut Transform), With<Player>>,

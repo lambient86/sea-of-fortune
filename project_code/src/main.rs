@@ -8,6 +8,7 @@ mod components;
 mod hitbox_system;
 mod controls;
 mod transition_box;
+mod shop;
 mod level;
 
 use controls::*;
@@ -24,6 +25,7 @@ use level::LevelPlugin;
 use systems::*;
 use player::systems::move_player;
 use boat::systems::move_boat;
+use shop::ShopPlugin;
 
 
 fn main() {
@@ -37,13 +39,13 @@ fn main() {
             }),
             ..default()
         }))
-        .init_resource::<CurrMousePos>()
         .add_systems(Startup, setup_gameworld)
         .add_plugins(PlayerPlugin)
         .add_plugins(BoatPlugin)
         .add_plugins(BatPlugin)
         .add_plugins(KrakenPlugin)
         .add_plugins(HitboxPlugin)
+        .add_plugins(ShopPlugin)
         .add_plugins(LevelPlugin)
         .add_systems(Update, move_player_camera.after(move_player)
                 .run_if(in_state(GameworldState::Island)))
@@ -51,7 +53,6 @@ fn main() {
                 .run_if(in_state(GameworldState::Ocean)))
         .add_systems(Update, change_gameworld_state)
         .add_systems(Update, change_game_state)
-        .add_systems(Update, update_mouse_pos)
         .insert_state(GameworldState::MainMenu)
         .insert_state(GameState::Running)
         .run();

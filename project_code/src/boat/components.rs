@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-pub const CANNONBALL_SPEED: f32 = 800.;
+pub const CANNONBALL_SPEED: f32 = 500.;
 pub const CANNONBALL_LIFETIME: f32 = 6.;
 pub const MAX_ACCEL: f32 = 800.;
 
@@ -27,8 +27,18 @@ pub struct BoatLastPosition {
     pub last_pos: Vec2,
 }
 
-/// Cannonball velocity struct
+/// Velocity struct
 #[derive(Component)]
-pub struct CannonballVelocity {
-    pub v: Vec3,
+pub struct Velocity {
+    pub v: Vec2,
+}
+
+/// Velocity implementation
+impl Velocity {
+    pub fn new() -> Self {
+        Self {
+            //sets x and y velocity dsto 0
+            v: Vec2::splat(0.),
+        }
+    }
 }
