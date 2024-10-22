@@ -6,7 +6,7 @@ pub const BAT_PROJECTILE_LIFETIME: f32 = 3.;
 pub const BAT_PROJECTILE_SPEED: f32 = 500.;
 
 //Bat base stats
-pub const BAT_MAX_HP: f32 = 3.;
+pub const BAT_MAX_HP: f32 = 2.;
 pub const BAT_ATTACK_DIST: f32 = 500.;
 pub const BAT_MOVEMENT_SPEED: f32 = 200.;
 pub const BAT_AGRO_STOP: f32 = 150.;
