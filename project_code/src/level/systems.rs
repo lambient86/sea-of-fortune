@@ -1,7 +1,6 @@
-use bevy::ecs::query;
+
 use bevy::prelude::*;
-use bevy::scene::ron::de::Position;
-use crate::components::GameworldState;
+use crate::components::{GameworldState, Background};
 use crate::level::components::*;
 
 use crate::data::gameworld_data::*;
@@ -14,7 +13,7 @@ pub fn load_level(
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     // load ocean tile sheet
-    let bg_ocean_texture_handle: Handle<Image> = asset_server.load("bg_ocean_tiles.png");
+    let bg_ocean_texture_handle: Handle<Image> = asset_server.load("bg_ocean_tiles_1.png");
     let ocean_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
     let ocean_layout_handle = texture_atlases.add(ocean_layout);
 
@@ -74,12 +73,12 @@ pub fn setup_level(
                     ));
     
                 w += 1;
-                t += Vec3::new(TILE_SIZE as f32, 0., 0.);
+                t += Vec3::new((TILE_SIZE * 2) as f32, 0., 0.);
             }
 
             w = 0;
-            t += Vec3::new(0., TILE_SIZE as f32, 0.);
-            t.x = -OCEAN_W_CENTER + TILE_SIZE as f32/2.0;
+            t += Vec3::new(0., (TILE_SIZE * 2) as f32, 0.);
+            t.x = -OCEAN_W_CENTER + (TILE_SIZE * 2) as f32/2.0;
             h+=1;
         }
 
