@@ -8,6 +8,7 @@ pub struct Player {
     pub timer: Timer,
     pub health: f32,
     pub max_health: f32,
+    pub spawn_position: Vec3,
 }
 
 /// Struct representing the sword weapon for the player
