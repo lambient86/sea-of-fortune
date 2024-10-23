@@ -2,9 +2,10 @@ use crate::controls::*;
 use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
-use crate::shop::components::Inventory;
 use bevy::input::mouse::{self, MouseButtonInput};
 use bevy::prelude::*;
+use crate::shop::components::{Inventory, ItemType};
+use crate::shop::systems::generate_loot_item;
 
 /// The speed at which the player accelerates
 pub const PLAYER_ACCELERATION: f32 = 5000.;
@@ -139,6 +140,10 @@ pub fn spawn_player(
     let size = Vec2::new(40., 60.);
     let offset = Vec2::new(0., 0.);
 
+    let mut initial_inventory = Inventory::new(1000);
+
+    initial_inventory.add_item(generate_loot_item());
+    
     //setting up player for spawning
     commands.spawn((
         SpriteBundle {
@@ -167,7 +172,7 @@ pub fn spawn_player(
             timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
             health: PLAYER_MAX_HP,
             max_health: PLAYER_MAX_HP,
-            inventory: Inventory::new(1000),
+            inventory: initial_inventory,
             spawn_position,
         },
         TestTimer::new(Timer::from_seconds(1., TimerMode::Repeating)),
@@ -179,6 +184,7 @@ pub fn spawn_player(
             iframe: Timer::from_seconds(0.75, TimerMode::Once),
         },
     ));
+
 }
 
 /*   SPAWN_WEAPON FUNCTION   */

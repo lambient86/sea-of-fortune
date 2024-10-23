@@ -266,3 +266,10 @@ pub fn handle_shop_events(
         }
     }
 }
+
+/*   GENERATE_LOOT_ITEM FUNCTION   */
+/// Generates a loor item for debug
+pub fn generate_loot_item() -> Item {
+    // temporary
+    Item::new(ItemType::Loot, "Bat Wing".to_string(), 50)
+}
