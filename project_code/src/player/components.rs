@@ -10,7 +10,7 @@ pub struct Player {
     pub health: f32,
     pub max_health: f32,
     pub inventory: Inventory,
-    
+    pub spawn_position: Vec3,
 }
 
 /// Struct representing the sword weapon for the player

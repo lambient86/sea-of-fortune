@@ -3,28 +3,40 @@ use bevy::math::bounding::Aabb2d;
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
 
-
 // System to check collisions between hitboxes and hurtboxes
 pub fn check_hitbox_hurtbox_collisions(
+    time: Res<Time>,
     hitbox_query: Query<(Entity, &Transform, &Hitbox)>,
-    mut hurtbox_query: Query<(Entity, &Transform, &Hurtbox)>,
+    mut hurtbox_query: Query<(Entity, &Transform, &mut Hurtbox)>,
     mut commands: Commands,
 ) {
     // // Iterate through all entities with hurtboxes
-    for (hurtbox_entity, hurtbox_transform, hurtbox) in hurtbox_query.iter() {
+    for (hurtbox_entity, hurtbox_transform, mut hurtbox) in hurtbox_query.iter_mut() {
+        if !hurtbox.iframe.finished() {
+            hurtbox.iframe.tick(time.delta());
+            //println!("Timer left: {}", hurtbox.iframe.remaining_secs());
+
+            continue;
+        }
+
         let hurtbox_pos = hurtbox_transform.translation.truncate() + hurtbox.offset;
         let hurtbox_min = hurtbox_pos - hurtbox.size / 2.0;
         let hurtbox_max = hurtbox_pos + hurtbox.size / 2.0;
 
         for (hitbox_entity, hitbox_transform, hitbox) in hitbox_query.iter() {
-            if hurtbox_entity != hitbox_entity {
+            if hurtbox.entity != hitbox.entity {
                 let hitbox_pos = hitbox_transform.translation.truncate() + hitbox.offset;
                 let hitbox_min = hitbox_pos - hitbox.size / 2.0;
                 let hitbox_max = hitbox_pos + hitbox.size / 2.0;
 
-                if hitbox_min.x < hurtbox_max.x && hitbox_max.x > hurtbox_min.x &&
-                   hitbox_min.y < hurtbox_max.y && hitbox_max.y > hurtbox_min.y {
-                    commands.entity(hurtbox_entity).insert(Colliding(0));
+                if hitbox_min.x < hurtbox_max.x
+                    && hitbox_max.x > hurtbox_min.x
+                    && hitbox_min.y < hurtbox_max.y
+                    && hitbox_max.y > hurtbox_min.y
+                {
+                    hurtbox.colliding = true;
+                    println!("{} collided with {}", hurtbox.entity, hitbox.entity);
+                    hurtbox.iframe = Timer::from_seconds(0.75, TimerMode::Once);
                     break;
                 }
             }
@@ -99,9 +111,15 @@ pub fn create_hitbox(
     size: Vec2,
     offset: Vec2,
     lifetime: Option<f32>,
+    entity_type: i32,
 ) {
     let lifetime_timer = lifetime.map(|duration| Timer::from_seconds(duration, TimerMode::Once));
-    commands.entity(entity).insert(Hitbox { size, offset, lifetime: lifetime_timer });
+    commands.entity(entity).insert(Hitbox {
+        size,
+        offset,
+        lifetime: lifetime_timer,
+        entity: entity_type,
+    });
 }
 
 pub fn create_hurtbox(
@@ -109,8 +127,15 @@ pub fn create_hurtbox(
     entity: Entity,
     size: Vec2,
     offset: Vec2,
+    entity_type: i32,
 ) {
-    commands.entity(entity).insert(Hurtbox { size, offset });
+    commands.entity(entity).insert(Hurtbox {
+        size,
+        offset,
+        entity: entity_type,
+        colliding: false,
+        iframe: Timer::from_seconds(1., TimerMode::Once),
+    });
 }
 
 pub fn get_aabb(size: Vec2, offset: Vec2) -> Aabb2d {

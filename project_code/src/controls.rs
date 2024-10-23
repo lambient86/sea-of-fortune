@@ -9,7 +9,7 @@ pub enum PlayerControl {
     Right,      //D
     Interact,  //E 
     Attack,     //Left Mouse Button
-    //Charge, //subject to change, for range (right click)
+    Secondary,  //Right Mouse Button
 }
 
 /// Player control implementation
@@ -38,6 +38,9 @@ impl PlayerControl {
             }
             PlayerControl::Attack => {
                 mouse_input.pressed(MouseButton::Left)
+            }
+            PlayerControl::Secondary => {
+                mouse_input.pressed(MouseButton::Right)
             }
         }
     }
