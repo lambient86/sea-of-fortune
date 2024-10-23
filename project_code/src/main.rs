@@ -39,6 +39,7 @@ fn main() {
             }),
             ..default()
         }))
+        .init_resource::<CurrMousePos>()
         .add_systems(Startup, setup_gameworld)
         .add_plugins(PlayerPlugin)
         .add_plugins(BoatPlugin)
@@ -48,11 +49,12 @@ fn main() {
         .add_plugins(ShopPlugin)
         .add_plugins(LevelPlugin)
         .add_systems(Update, move_player_camera.after(move_player)
-                .run_if(in_state(GameworldState::Island)))
+                .run_if(in_state(GameworldState::Island).or_else(in_state(GameworldState::Dungeon))))
         .add_systems(Update, move_boat_camera.after(move_boat)
                 .run_if(in_state(GameworldState::Ocean)))
         .add_systems(Update, change_gameworld_state)
         .add_systems(Update, change_game_state)
+        .add_systems(Update, update_mouse_pos)
         .insert_state(GameworldState::MainMenu)
         .insert_state(GameState::Running)
         .run();

@@ -3,12 +3,12 @@ use bevy::prelude::*;
 //constants
 pub const KRAKEN_ANIMATION_TIME: f32 = 0.25;
 pub const KRAKEN_PROJECTILE_LIFETIME: f32 = 5.;
-pub const KRAKEN_PROJECTILE_SPEED: f32 = 300.;
+pub const KRAKEN_PROJECTILE_SPEED: f32 = 175.;
 
 //Bat base stats
-pub const KRAKEN_MAX_HP: f32 = 20.;
+pub const KRAKEN_MAX_HP: f32 = 2.;
 pub const KRAKEN_ATTACK_DIST: f32 = 800.;
-pub const KRAKEN_MOVEMENT_SPEED: f32 = 100.;
+pub const KRAKEN_MOVEMENT_SPEED: f32 = 150.;
 pub const KRAKEN_AGRO_STOP: f32 = 300.;
 pub const KRAKEN_AGRO_RANGE: f32 = 1000.;
 

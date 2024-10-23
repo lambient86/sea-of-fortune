@@ -12,7 +12,7 @@ pub struct BatPlugin;
 impl Plugin for BatPlugin {
     /// Builds the bat plugin
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameworldState::Island), spawn_bat)
+        app.add_systems(OnEnter(GameworldState::Dungeon), spawn_bat)
             .add_systems(
                 Update,
                 (
@@ -24,10 +24,10 @@ impl Plugin for BatPlugin {
                     bat_proj_lifetime_check,
                     move_bat,
                 )
-                    .run_if(in_state(GameworldState::Island))
+                    .run_if(in_state(GameworldState::Dungeon))
                     .run_if(in_state(GameState::Running)),
             )
-            .add_systems(OnExit(GameworldState::Island), (
+            .add_systems(OnExit(GameworldState::Dungeon), (
                 despawn_all_bats,
                 despawn_all_bat_proj,
             ));

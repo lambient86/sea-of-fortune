@@ -116,7 +116,6 @@ pub fn boat_attack(
     for (boat_transform, mut cooldown) in boat_query.iter_mut() {
         // checking cooldown
         if !cooldown.remaining.finished() {
-            println!("timer ticked");
             cooldown.remaining.tick(time.delta());
             break;
         }
@@ -172,12 +171,11 @@ pub fn boat_attack(
 /*   MOVE_CANNONBALL FUNCTION   */
 /// Updates the locations of boat projectiles
 pub fn move_cannonball(
-    mut proj_query: Query<(&mut Transform, &mut Velocity), With<Cannonball>>,
-    time: Res<Time>,
+    mut proj_query: Query<(&mut Transform, &mut CannonballVelocity), With<Cannonball>>,    time: Res<Time>,
 ) {
     for (mut transform, velocity) in proj_query.iter_mut() {
         // Calculates/moves the projectile
-        //transform.translation += velocity.v * time.delta_seconds();
+        transform.translation += velocity.v * time.delta_seconds();
     }
 }
 
@@ -187,6 +185,24 @@ pub fn move_cannonball(
 pub fn despawn_boat(mut commands: Commands, query: Query<Entity, With<Boat>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn();
+    }
+}
+
+/*   CANNONBALL_LIFETIME_CHECK FUNCTION   */
+/// Checks the lifetime of a cannonball
+pub fn cannonball_lifetime_check(
+    time: Res<Time>,
+    mut commands: Commands,
+    mut proj_query: Query<(Entity, &mut Lifetime)>,
+) {
+    for (entity, mut lifetime) in proj_query.iter_mut() {
+        lifetime.0 -= time.delta_seconds();
+        if lifetime.0 <= 0.0 {
+            commands.entity(entity).despawn();
+
+            /* Debug */
+            println!("Cannonball despawned");
+        }
     }
 }
 
