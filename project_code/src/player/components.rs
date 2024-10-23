@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use crate::hitbox_system::Hurtbox;
 use crate::shop::components::Inventory;
 
 /// Struct representing the player
