@@ -2,10 +2,13 @@ use crate::controls::*;
 use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
-use bevy::input::mouse::{self, MouseButtonInput};
-use bevy::prelude::*;
+
 use crate::shop::components::{Inventory, ItemType};
 use crate::shop::systems::generate_loot_item;
+
+use bevy::input::mouse::{self, MouseButtonInput};
+use bevy::prelude::*;
+
 
 /// The speed at which the player accelerates
 pub const PLAYER_ACCELERATION: f32 = 5000.;
