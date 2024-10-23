@@ -2,8 +2,13 @@ use crate::controls::*;
 use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
+
+use crate::shop::components::{Inventory, ItemType};
+use crate::shop::systems::generate_loot_item;
+
 use bevy::input::mouse::{self, MouseButtonInput};
 use bevy::prelude::*;
+
 
 /// The speed at which the player accelerates
 pub const PLAYER_ACCELERATION: f32 = 5000.;
@@ -138,6 +143,10 @@ pub fn spawn_player(
     let size = Vec2::new(40., 60.);
     let offset = Vec2::new(0., 0.);
 
+    let mut initial_inventory = Inventory::new(1000);
+
+    initial_inventory.add_item(generate_loot_item());
+    
     //setting up player for spawning
     commands.spawn((
         SpriteBundle {
@@ -166,6 +175,7 @@ pub fn spawn_player(
             timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
             health: PLAYER_MAX_HP,
             max_health: PLAYER_MAX_HP,
+            inventory: initial_inventory,
             spawn_position,
         },
         Hurtbox {
@@ -176,6 +186,7 @@ pub fn spawn_player(
             iframe: Timer::from_seconds(0.75, TimerMode::Once),
         },
     ));
+
 }
 
 /*   SPAWN_WEAPON FUNCTION   */
@@ -216,7 +227,7 @@ pub fn spawn_weapon(
 }
 
 /*   MOVE_WEAPON FUNCITON   */
-/// Move the weapon with the player (reflects when player is facing left)
+/// Move the weapon with the player (reflects where player is facing)
 pub fn move_weapon(
     mut weapon_query: Query<(&mut Transform, &mut Sprite), With<Sword>>,
     mut player_query: Query<(&mut Player), With<Player>>, // want to get the player with children
@@ -248,8 +259,7 @@ pub fn player_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     curr_mouse_pos: ResMut<CurrMousePos>,
     mut commands: Commands,
-    mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown), With<Player>>,
-) {
+mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown), With<Player>>,) {
     for (entity, transform, velocity, mut cooldown) in player_query.iter_mut() {
         //If the cooldown is not finished, tick and break because you can't attack anyway
         if !cooldown.remaining.finished() {
@@ -259,14 +269,11 @@ pub fn player_attack(
 
         //Only gets here after cooldown has elapsed
 
-        /* Debug */
-        //println!("You can attack!");
-
         // Checks if the left mouse button is pressed
         if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {
             println!("Player attacked!");
             let mouse_pos = curr_mouse_pos.0;
-            println!("World coords {} {}", mouse_pos.x, mouse_pos.y);
+            println!("Mouse world coords {} {}", mouse_pos.x, mouse_pos.y);
             cooldown.remaining = Timer::from_seconds(0.75, TimerMode::Once);
 
             // Player position
@@ -295,8 +302,8 @@ pub fn player_attack(
 }
 
 /*   CHECK_PLAYER_HEALTH FUNCTION   */
-// Function checks the current state of the player's health
-// if current health == 0 --> panic and close program
+/// Function checks the current state of the player's health
+/// if current health == 0 --> respawn player
 pub fn check_player_health(
     mut player_query: Query<(&mut Player, Entity, &mut Hurtbox, &mut Transform), With<Player>>,
 ) {
@@ -317,6 +324,15 @@ pub fn check_player_health(
         }
 
         hurtbox.colliding = false;
+    }
+}
+
+/*   DESPAWN_WEAPON FUNCTION   */
+/// Despawns the weapon entity
+/// DEBUG: Will despawn any and all weapons
+pub fn despawn_weapon(mut commands: Commands, query: Query<Entity, With<Sword>>) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
     }
 }
 

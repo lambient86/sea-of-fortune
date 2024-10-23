@@ -7,7 +7,6 @@ pub enum PlayerControl {
     Down,       //S
     Left,       //A
     Right,      //D
-    Interact,   //E 
     Attack,     //Left Mouse Button
     Secondary,  //Right Mouse Button
 }
@@ -36,9 +35,6 @@ impl PlayerControl {
             }
             PlayerControl::Right => {
                 keyboard_input.pressed(KeyCode::KeyD)
-            }
-            PlayerControl::Interact => {
-                keyboard_input.pressed(KeyCode::KeyE)
             }
             PlayerControl::Attack => {
                 mouse_input.pressed(MouseButton::Left)
@@ -75,7 +71,6 @@ pub fn get_player_input(
 }
 
 /*  UPDATE_MOUSE_POS FUNCTION   */
-// Gets the current (x, y) position of the mouse cursor and returns it
 pub fn update_mouse_pos(
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,

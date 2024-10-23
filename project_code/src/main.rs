@@ -1,5 +1,6 @@
 mod player;
 mod bat;
+mod kraken;
 mod boat;
 mod data;
 mod systems;
@@ -7,6 +8,7 @@ mod components;
 mod hitbox_system;
 mod controls;
 mod transition_box;
+mod shop;
 mod level;
 
 use controls::*;
@@ -18,10 +20,12 @@ use player::PlayerPlugin;
 use boat::BoatPlugin;
 use hitbox_system::HitboxPlugin;
 use bat::BatPlugin;
+use kraken::KrakenPlugin;
 use level::LevelPlugin;
 use systems::*;
 use player::systems::move_player;
 use boat::systems::move_boat;
+use shop::ShopPlugin;
 
 
 fn main() {
@@ -40,10 +44,12 @@ fn main() {
         .add_plugins(PlayerPlugin)
         .add_plugins(BoatPlugin)
         .add_plugins(BatPlugin)
+        .add_plugins(KrakenPlugin)
         .add_plugins(HitboxPlugin)
+        .add_plugins(ShopPlugin)
         .add_plugins(LevelPlugin)
         .add_systems(Update, move_player_camera.after(move_player)
-                .run_if(in_state(GameworldState::Island)))
+                .run_if(in_state(GameworldState::Island).or_else(in_state(GameworldState::Dungeon))))
         .add_systems(Update, move_boat_camera.after(move_boat)
                 .run_if(in_state(GameworldState::Ocean)))
         .add_systems(Update, change_gameworld_state)

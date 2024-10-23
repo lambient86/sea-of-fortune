@@ -4,7 +4,7 @@ use bevy::{prelude::*, window::PresentMode};
 use crate::data::gameworld_data::*;
 use crate::components::*;
 
-/*   MOVE_CAMERA_ FUNCTIONS  */
+/*   MOVE_CAMERA FUNCTIONS  */
 /// Updates the cameras position to center the current player
 /// and tracks the player wherever they go
 pub fn move_player_camera(
@@ -60,25 +60,10 @@ pub fn setup_gameworld(mut commands: Commands, asset_server: Res<AssetServer>) {
 /// * O - Ocean
 /// * U - Dungeon
 pub fn change_gameworld_state(
-    state: Res<State<GameworldState>>,
     mut next_state: ResMut<NextState<GameworldState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut commands: Commands, 
-    asset_server: Res<AssetServer>,
 ) {
     if keyboard_input.just_pressed(KeyCode::KeyI) {   //ISLAND
-        //getting background texture
-        let bg_texture_handle = asset_server.load("bg_sand_demo.png");
-
-        //spawning background sprite
-        commands
-            .spawn(SpriteBundle {
-                texture: bg_texture_handle.clone(),
-                transform: Transform::from_xyz(0., 0., -1.),
-                ..default()
-            })
-        .insert(Background);
-        
         //switching states to island
         next_state.set(GameworldState::Island);
 
@@ -97,13 +82,14 @@ pub fn change_gameworld_state(
 /// DEBUG: On keypress, the game state will switch
 /// * E - if Running, to InShop, if InShop, to Running
 pub fn change_game_state (
-    state: Res<State<GameState>>,
+    game_state: Res<State<GameState>>,
+    gameworld_state: Res<State<GameworldState>>,
     mut next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
-    if *state.get() == GameState::Running && keyboard_input.just_pressed(KeyCode::KeyE) {
+    if *game_state.get() == GameState::Running && (*gameworld_state.get() == GameworldState::Island || *gameworld_state.get() == GameworldState::Dungeon) && keyboard_input.just_pressed(KeyCode::KeyE) {
         next_state.set(GameState::InShop)
-    } else if *state.get() == GameState::InShop && keyboard_input.just_pressed(KeyCode::KeyE) {
+    } else if *game_state.get() == GameState::InShop && keyboard_input.just_pressed(KeyCode::KeyE) {
         next_state.set(GameState::Running)
     }
 }

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::hitbox_system::Hurtbox;
+use crate::shop::components::Inventory;
 
 /// Struct representing the player
 #[derive(Component)]
@@ -8,6 +8,7 @@ pub struct Player {
     pub timer: Timer,
     pub health: f32,
     pub max_health: f32,
+    pub inventory: Inventory,
     pub spawn_position: Vec3,
 }
 

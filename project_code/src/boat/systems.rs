@@ -172,12 +172,20 @@ pub fn boat_attack(
 /*   MOVE_CANNONBALL FUNCTION   */
 /// Updates the locations of boat projectiles
 pub fn move_cannonball(
-    mut proj_query: Query<(&mut Transform, &mut CannonballVelocity), With<Cannonball>>,
-    time: Res<Time>,
+    mut proj_query: Query<(&mut Transform, &mut CannonballVelocity), With<Cannonball>>,    time: Res<Time>,
 ) {
     for (mut transform, velocity) in proj_query.iter_mut() {
         // Calculates/moves the projectile
         transform.translation += velocity.v * time.delta_seconds();
+    }
+}
+
+/*   DESPAWN_BOAT FUNCTION   */
+/// Despawns the boat
+/// DEBUG: Will despawn any and all boats
+pub fn despawn_boat(mut commands: Commands, query: Query<Entity, With<Boat>>) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
     }
 }
 
@@ -196,15 +204,6 @@ pub fn cannonball_lifetime_check(
             /* Debug */
             println!("Cannonball despawned");
         }
-    }
-}
-
-/*   DESPAWN_BOAT FUNCTION   */
-/// Despawns the boat
-/// DEBUG: Will despawn any and all boats
-pub fn despawn_boat(mut commands: Commands, query: Query<Entity, With<Boat>>) {
-    for entity in query.iter() {
-        commands.entity(entity).despawn();
     }
 }
 

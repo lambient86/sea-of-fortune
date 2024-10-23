@@ -84,11 +84,52 @@ pub fn spawn_bat(
     let bat_layout_len = 3;
     let bat_layout_handle = texture_atlases.add(bat_layout.clone());
 
-    //spawning bat and setting bat information
+    //spawning bat 1 and setting bat information
     commands.spawn((
         SpriteBundle {
             texture: bat_sheet_handle,
             transform: Transform::from_xyz(0., -(WIN_H / 2.) + ((TILE_SIZE as f32) * 1.5), 900.)
+                .with_scale(Vec3::splat(2.0)),
+            ..default()
+        },
+        Bat {
+            //Setting default stats
+            rotation_speed: f32::to_radians(90.0),
+            current_hp: BAT_MAX_HP,
+            max_hp: BAT_MAX_HP,
+        },
+        TextureAtlas {
+            layout: bat_layout_handle,
+            index: 0,
+        },
+        AttackCooldown {
+            remaining: Timer::from_seconds(1.5, TimerMode::Once),
+        },
+        AnimationTimer::new(Timer::from_seconds(
+            BAT_ANIMATION_TIME,
+            TimerMode::Repeating,
+        )),
+        AnimationFrameCount::new(bat_layout_len),
+        Velocity::new(),
+        Hurtbox {
+            size: Vec2::splat(25.),
+            offset: Vec2::splat(0.),
+            colliding: false,
+            entity: BAT,
+            iframe: Timer::from_seconds(0.75, TimerMode::Once),
+        },
+    ));
+
+    let bat_sheet_handle = asset_server.load("s_bat.png");
+    let bat_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 3, 1, None, None);
+    let bat_layout_len = 3;
+    let bat_layout_handle = texture_atlases.add(bat_layout.clone());
+    
+    //spawning bat 2 and setting bat information
+    commands.spawn((
+        SpriteBundle {
+            texture: bat_sheet_handle,
+            transform: Transform::from_xyz(200., -(WIN_H / 2.) + ((TILE_SIZE as f32) * 1.5), 900.)
                 .with_scale(Vec3::splat(2.0)),
             ..default()
         },
@@ -199,7 +240,6 @@ pub fn bat_attack(
         let original_direction = (player_translation - bat_translation).normalize();
         let angle = original_direction.x.atan2(original_direction.y);
         let angle_direction = Vec3::new(angle.sin(), angle.cos(), 0.0).normalize();
-
         let projectile_start_position = bat_translation + angle_direction * 10.0; //bat_pos + direction * offset wanted
 
         //Sets the projectile texture
