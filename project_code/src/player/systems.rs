@@ -160,7 +160,7 @@ pub fn spawn_player(
         AnimationFrameCount::new(master_layout_length),
         Velocity::new(),
         AttackCooldown {
-            remaining: Timer::from_seconds(1.5, TimerMode::Once),
+            remaining: Timer::from_seconds(0.75, TimerMode::Once),
         },
         Player {
             animation_state: SpriteState::Idle,
@@ -219,7 +219,7 @@ pub fn spawn_weapon(
 }
 
 /*   MOVE_WEAPON FUNCITON   */
-/// Move the weapon with the player
+/// Move the weapon with the player (reflects where player is facing)
 pub fn move_weapon(
     mut weapon_query: Query<(&mut Transform, &mut Sprite), With<Sword>>,
     mut player_query: Query<(&mut Player), With<Player>>, // want to get the player with children
@@ -249,11 +249,10 @@ pub fn player_attack(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mouse_input: Res<ButtonInput<MouseButton>>,
-    mut cursor: EventReader<CursorMoved>,
+    curr_mouse_pos: ResMut<CurrMousePos>,
     mut commands: Commands,
-    mut player_query: Query<(Entity, &Transform, &mut AttackCooldown), With<Player>>,
-) {
-    for (entity, transform, mut cooldown) in player_query.iter_mut() {
+mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown), With<Player>>,) {
+    for (entity, transform, velocity, mut cooldown) in player_query.iter_mut() {
         //If the cooldown is not finished, tick and break because you can't attack anyway
         if !cooldown.remaining.finished() {
             cooldown.remaining.tick(time.delta());
@@ -262,13 +261,12 @@ pub fn player_attack(
 
         //Only gets here after cooldown has elapsed
 
-        /* Debug */
-        //println!("You can attack!");
-
         // Checks if the left mouse button is pressed
         if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {
             println!("Player attacked!");
-            cooldown.remaining = Timer::from_seconds(1.5, TimerMode::Once);
+            let mouse_pos = curr_mouse_pos.0;
+            println!("Mouse world coords {} {}", mouse_pos.x, mouse_pos.y);
+            cooldown.remaining = Timer::from_seconds(0.75, TimerMode::Once);
 
             // Player position
             let player_position = transform.translation.truncate();
@@ -289,7 +287,7 @@ pub fn player_attack(
 
 /*   CHECK_PLAYER_HEALTH FUNCTION   */
 /// Function checks the current state of the player's health
-/// if current health == 0 --> panic and close program
+/// if current health == 0 --> respawn player
 pub fn check_player_health(
     mut commands: Commands,
     mut player_query: Query<(&mut Player, Entity, &mut Hurtbox, &mut Transform), With<Player>>,
@@ -312,6 +310,15 @@ pub fn check_player_health(
         }
 
         hurtbox.colliding = false;
+    }
+}
+
+/*   DESPAWN_WEAPON FUNCTION   */
+/// Despawns the weapon entity
+/// DEBUG: Will despawn any and all weapons
+pub fn despawn_weapon(mut commands: Commands, query: Query<Entity, With<Player>>) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
     }
 }
 
