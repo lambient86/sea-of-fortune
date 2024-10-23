@@ -322,7 +322,7 @@ pub fn check_player_health(
 /*   DESPAWN_WEAPON FUNCTION   */
 /// Despawns the weapon entity
 /// DEBUG: Will despawn any and all weapons
-pub fn despawn_weapon(mut commands: Commands, query: Query<Entity, With<Player>>) {
+pub fn despawn_weapon(mut commands: Commands, query: Query<Entity, With<Sword>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn();
     }
