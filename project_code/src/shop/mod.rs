@@ -7,6 +7,7 @@ use bevy::prelude::*;
 use systems::*;
 use components::*;
 use crate::components::GameState;
+use crate::components::GameworldState; //FOR DEBUG DEMO PURPOSES
 
 pub struct ShopPlugin;
 
@@ -22,6 +23,7 @@ impl Plugin for ShopPlugin {
                 handle_button_interactions,
             ).run_if(in_state(GameState::InShop)))
             .add_systems(OnEnter(GameState::InShop), setup_shop_ui)
+            .add_systems(OnEnter(GameworldState::Ocean), cleanup_shop_ui) //FOR DEBUG DEMO PURPOSES
             .add_systems(OnExit(GameState::InShop), cleanup_shop_ui);
     }
 }

@@ -5,10 +5,8 @@ use crate::kraken::components::*;
 use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
 use crate::player::components::AttackCooldown;
-use crate::player::components::Player;
 use crate::boat::components::Boat;
 
-use bevy::math::bounding::Aabb2d;
 
 /*   ROTATE_KRAKEN FUNCTION   */
 /// This should be changed to a function called "track_player", which will
@@ -71,7 +69,7 @@ pub fn spawn_kraken(
     commands.spawn((
         SpriteBundle {
             texture: kraken_texture_handle,
-            transform: Transform::from_xyz(0., -(WIN_H / 2.) + ((TILE_SIZE as f32) * 1.5), 900.)
+            transform: Transform::from_xyz(0., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.)
                 .with_scale(Vec3::splat(2.0)),
             ..default()
         },
@@ -85,7 +83,7 @@ pub fn spawn_kraken(
             remaining: Timer::from_seconds(1.5, TimerMode::Once),
         },
         Hurtbox {
-            size: Vec2::splat(50.),
+            size: Vec2::new(160., 90.),
             offset: Vec2::splat(0.),
             colliding: false,
             entity: KRAKEN,
@@ -151,7 +149,7 @@ pub fn kraken_attack(
             continue;
         }
 
-        cooldown.remaining = Timer::from_seconds(1.5, TimerMode::Once);
+        cooldown.remaining = Timer::from_seconds(2.5, TimerMode::Once);
 
         //Gets positions (Vec3) of the entities
         let kraken_translation = kraken_transform.translation;
@@ -195,9 +193,9 @@ pub fn kraken_attack(
                 v: angle_direction * KRAKEN_PROJECTILE_SPEED, /* (direction * speed of projectile) */
             },
             Hitbox {
-                size: Vec2::splat(16.),
+                size: Vec2::splat(60.),
                 offset: Vec2::splat(0.),
-                lifetime: Some(Timer::from_seconds(3., TimerMode::Once)),
+                lifetime: Some(Timer::from_seconds(5., TimerMode::Once)),
                 entity: KRAKEN,
             },
         ));

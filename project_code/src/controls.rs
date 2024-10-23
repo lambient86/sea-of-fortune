@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy::input::mouse::MouseButtonInput;
+use bevy::window::PrimaryWindow;
 
 /// enum for different types of player input
 pub enum PlayerControl {
@@ -7,10 +7,13 @@ pub enum PlayerControl {
     Down,       //S
     Left,       //A
     Right,      //D
-    Interact,  //E 
     Attack,     //Left Mouse Button
     Secondary,  //Right Mouse Button
 }
+
+/// Struct to represent current mouse position
+#[derive(Resource, Default)]
+pub struct CurrMousePos(pub Vec2);
 
 /// Player control implementation
 impl PlayerControl {
@@ -32,9 +35,6 @@ impl PlayerControl {
             }
             PlayerControl::Right => {
                 keyboard_input.pressed(KeyCode::KeyD)
-            }
-            PlayerControl::Interact => {
-                keyboard_input.pressed(KeyCode::KeyE)
             }
             PlayerControl::Attack => {
                 mouse_input.pressed(MouseButton::Left)
@@ -70,5 +70,23 @@ pub fn get_player_input(
     }
 }
 
-/*  GET_MOUSE_POSITION FUNCTION   */
-// Gets the current (x, y) position of the mouse cursor and returns it
+/*  UPDATE_MOUSE_POS FUNCTION   */
+pub fn update_mouse_pos(
+    q_window: Query<&Window, With<PrimaryWindow>>,
+    q_camera: Query<(&Camera, &GlobalTransform)>,
+    mut mouse_pos: ResMut<CurrMousePos>,
+) {
+    //getting camera info and transform (works assuming one main camera and main entity)
+    let (camera, camera_transform) = q_camera.single();
+
+    //getting window information (works assuming one main window)
+    let window = q_window.single();
+
+    //checking that cursor is in window and getting it's position
+    if let Some(world_position) = window.cursor_position()
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+        .map(|ray| ray.origin.truncate())
+        {
+            mouse_pos.0 = world_position;
+        }
+}
