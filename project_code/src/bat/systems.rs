@@ -1,13 +1,11 @@
-use bevy::math::vec2;
 use bevy::prelude::*;
+use bevy::render::texture;
 
 use crate::bat::components::*;
 use crate::data::gameworld_data::*;
+use crate::enemies::*;
 use crate::hitbox_system::*;
-use crate::player::components::AttackCooldown;
-use crate::player::components::Player;
-
-use bevy::math::bounding::Aabb2d;
+use crate::player::components::*;
 
 /*   ROTATE_BAT FUNCTION   */
 /// This should be changed to a function called "track_player", which will
@@ -78,88 +76,28 @@ pub fn spawn_bat(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    //getting bat sprite information
-    let bat_sheet_handle = asset_server.load("s_bat.png");
-    let bat_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 3, 1, None, None);
-    let bat_layout_len = 3;
-    let bat_layout_handle = texture_atlases.add(bat_layout.clone());
+    let transform = Transform::from_xyz(0., -(WIN_H / 2.) + ((TILE_SIZE as f32) * 1.5), 900.)
+        .with_scale(Vec3::splat(2.0));
 
+    spawn_enemy(
+        &mut commands,
+        Enemy::Bat,
+        transform,
+        &asset_server,
+        &mut texture_atlases,
+    );
     //spawning bat 1 and setting bat information
-    commands.spawn((
-        SpriteBundle {
-            texture: bat_sheet_handle,
-            transform: Transform::from_xyz(0., -(WIN_H / 2.) + ((TILE_SIZE as f32) * 1.5), 900.)
-                .with_scale(Vec3::splat(2.0)),
-            ..default()
-        },
-        Bat {
-            //Setting default stats
-            rotation_speed: f32::to_radians(90.0),
-            current_hp: BAT_MAX_HP,
-            max_hp: BAT_MAX_HP,
-        },
-        TextureAtlas {
-            layout: bat_layout_handle,
-            index: 0,
-        },
-        AttackCooldown {
-            remaining: Timer::from_seconds(1.5, TimerMode::Once),
-        },
-        AnimationTimer::new(Timer::from_seconds(
-            BAT_ANIMATION_TIME,
-            TimerMode::Repeating,
-        )),
-        AnimationFrameCount::new(bat_layout_len),
-        Velocity::new(),
-        Hurtbox {
-            size: Vec2::splat(25.),
-            offset: Vec2::splat(0.),
-            colliding: false,
-            entity: BAT,
-            iframe: Timer::from_seconds(0.75, TimerMode::Once),
-        },
-    ));
 
-    let bat_sheet_handle = asset_server.load("s_bat.png");
-    let bat_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 3, 1, None, None);
-    let bat_layout_len = 3;
-    let bat_layout_handle = texture_atlases.add(bat_layout.clone());
-    
-    //spawning bat 2 and setting bat information
-    commands.spawn((
-        SpriteBundle {
-            texture: bat_sheet_handle,
-            transform: Transform::from_xyz(200., -(WIN_H / 2.) + ((TILE_SIZE as f32) * 1.5), 900.)
-                .with_scale(Vec3::splat(2.0)),
-            ..default()
-        },
-        Bat {
-            //Setting default stats
-            rotation_speed: f32::to_radians(90.0),
-            current_hp: BAT_MAX_HP,
-            max_hp: BAT_MAX_HP,
-        },
-        TextureAtlas {
-            layout: bat_layout_handle,
-            index: 0,
-        },
-        AttackCooldown {
-            remaining: Timer::from_seconds(1.5, TimerMode::Once),
-        },
-        AnimationTimer::new(Timer::from_seconds(
-            BAT_ANIMATION_TIME,
-            TimerMode::Repeating,
-        )),
-        AnimationFrameCount::new(bat_layout_len),
-        Velocity::new(),
-        Hurtbox {
-            size: Vec2::splat(25.),
-            offset: Vec2::splat(0.),
-            colliding: false,
-            entity: BAT,
-            iframe: Timer::from_seconds(0.75, TimerMode::Once),
-        },
-    ));
+    let transform = Transform::from_xyz(200., -(WIN_H / 2.) + ((TILE_SIZE as f32) * 1.5), 900.)
+        .with_scale(Vec3::splat(2.0));
+
+    spawn_enemy(
+        &mut commands,
+        Enemy::Bat,
+        transform,
+        &asset_server,
+        &mut texture_atlases,
+    );
 }
 
 /*   BAT_DAMAGED FUNCTION   */
@@ -259,7 +197,7 @@ pub fn bat_attack(
             BatProjectile,
             Lifetime(BAT_PROJECTILE_LIFETIME),
             Velocity {
-                v: angle_direction * BAT_PROJECTILE_SPEED, /* (direction * speed of projectile) */
+                v: angle_direction.truncate() * BAT_PROJECTILE_SPEED, /* (direction * speed of projectile) */
             },
             Hitbox {
                 size: Vec2::splat(16.),
@@ -282,7 +220,7 @@ pub fn move_bat_projectile(
 ) {
     for (mut transform, velocity) in proj_query.iter_mut() {
         // Calculates/moves the projectile
-        transform.translation += velocity.v * time.delta_seconds();
+        transform.translation += velocity.to_vec3(0.) * time.delta_seconds();
     }
 }
 

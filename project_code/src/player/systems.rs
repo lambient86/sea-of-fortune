@@ -9,16 +9,6 @@ use crate::shop::systems::generate_loot_item;
 use bevy::input::mouse::{self, MouseButtonInput};
 use bevy::prelude::*;
 
-
-/// The speed at which the player accelerates
-pub const PLAYER_ACCELERATION: f32 = 5000.;
-pub const PLAYER_SPEED: f32 = 500.;
-pub const PLAYER_SIZE: f32 = 32.;
-pub const PLAYER_ANIMATION_TIME: f32 = 0.1;
-
-// Base player stats
-pub const PLAYER_MAX_HP: f32 = 3.;
-
 /*   MOVE_PLAYER FUNCTION */
 /// Moves the player, updating its position depending on
 /// button pressed and players current velocity
@@ -146,7 +136,7 @@ pub fn spawn_player(
     let mut initial_inventory = Inventory::new(1000);
 
     initial_inventory.add_item(generate_loot_item());
-    
+
     //setting up player for spawning
     commands.spawn((
         SpriteBundle {
@@ -186,7 +176,6 @@ pub fn spawn_player(
             iframe: Timer::from_seconds(0.75, TimerMode::Once),
         },
     ));
-
 }
 
 /*   SPAWN_WEAPON FUNCTION   */
@@ -259,7 +248,8 @@ pub fn player_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     curr_mouse_pos: ResMut<CurrMousePos>,
     mut commands: Commands,
-mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown), With<Player>>,) {
+    mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown), With<Player>>,
+) {
     for (entity, transform, velocity, mut cooldown) in player_query.iter_mut() {
         //If the cooldown is not finished, tick and break because you can't attack anyway
         if !cooldown.remaining.finished() {

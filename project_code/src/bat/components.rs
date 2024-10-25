@@ -25,38 +25,3 @@ pub struct BatProjectile;
 
 #[derive(Component)]
 pub struct Lifetime(pub f32);
-
-/// Struct for the time between the bat's animation frames
-#[derive(Component, Deref, DerefMut)]
-pub struct AnimationTimer(Timer);
-
-impl AnimationTimer {
-    /// Initializes the animation timer
-    pub fn new(timer: Timer) -> AnimationTimer {
-        AnimationTimer(timer)
-    }
-}
-
-/// Struct for the count of frames in the bats animation
-#[derive(Component, Deref, DerefMut)]
-pub struct AnimationFrameCount(usize);
-
-impl AnimationFrameCount {
-    /// Initializes the animation frame count
-    pub fn new(size: usize) -> AnimationFrameCount {
-        AnimationFrameCount(size)
-    }
-}
-
-/// Struct to represent a bat entities velocity
-#[derive(Component)]
-pub struct Velocity {
-    pub v: Vec3,
-}
-
-impl Velocity {
-    /// Initializes a new velocity struct for a bat entity
-    pub fn new() -> Self {
-        Self { v: Vec3::splat(0.) }
-    }
-}

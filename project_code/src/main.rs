@@ -1,32 +1,33 @@
-mod player;
 mod bat;
-mod kraken;
 mod boat;
-mod data;
-mod systems;
 mod components;
-mod hitbox_system;
 mod controls;
-mod transition_box;
-mod shop;
+mod data;
+mod enemies;
+mod hitbox_system;
+mod kraken;
 mod level;
+mod player;
+mod shop;
+mod systems;
+mod transition_box;
 
-use controls::*;
-use components::GameworldState;
-use components::GameState;
-use data::gameworld_data::*;
-use bevy::{prelude::*, window::PresentMode};
-use player::PlayerPlugin;
-use boat::BoatPlugin;
-use hitbox_system::HitboxPlugin;
 use bat::BatPlugin;
+use bevy::{prelude::*, window::PresentMode};
+use boat::systems::move_boat;
+use boat::BoatPlugin;
+use components::GameState;
+use components::GameworldState;
+use controls::*;
+use data::gameworld_data::*;
+use enemies::*;
+use hitbox_system::HitboxPlugin;
 use kraken::KrakenPlugin;
 use level::LevelPlugin;
-use systems::*;
 use player::systems::move_player;
-use boat::systems::move_boat;
+use player::PlayerPlugin;
 use shop::ShopPlugin;
-
+use systems::*;
 
 fn main() {
     App::new()
@@ -48,10 +49,18 @@ fn main() {
         .add_plugins(HitboxPlugin)
         .add_plugins(ShopPlugin)
         .add_plugins(LevelPlugin)
-        .add_systems(Update, move_player_camera.after(move_player)
-                .run_if(in_state(GameworldState::Island).or_else(in_state(GameworldState::Dungeon))))
-        .add_systems(Update, move_boat_camera.after(move_boat)
-                .run_if(in_state(GameworldState::Ocean)))
+        .add_systems(
+            Update,
+            move_player_camera.after(move_player).run_if(
+                in_state(GameworldState::Island).or_else(in_state(GameworldState::Dungeon)),
+            ),
+        )
+        .add_systems(
+            Update,
+            move_boat_camera
+                .after(move_boat)
+                .run_if(in_state(GameworldState::Ocean)),
+        )
         .add_systems(Update, change_gameworld_state)
         .add_systems(Update, change_game_state)
         .add_systems(Update, update_mouse_pos)

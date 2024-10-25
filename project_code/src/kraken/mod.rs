@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-mod components;
+pub(crate) mod components;
 mod systems;
 
 use crate::GameState;
@@ -26,9 +26,9 @@ impl Plugin for KrakenPlugin {
                     .run_if(in_state(GameworldState::Ocean))
                     .run_if(in_state(GameState::Running)),
             )
-            .add_systems(OnExit(GameworldState::Ocean), (
-                despawn_all_krakens,
-                despawn_all_kraken_proj,
-            ));
+            .add_systems(
+                OnExit(GameworldState::Ocean),
+                (despawn_all_krakens, despawn_all_kraken_proj),
+            );
     }
 }
