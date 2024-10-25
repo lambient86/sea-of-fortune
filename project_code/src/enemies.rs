@@ -15,11 +15,11 @@ pub enum Enemy {
 }
 
 pub fn spawn_enemy(
-    mut commands: &mut Commands,
+    commands: &mut Commands,
     enemy: Enemy,
     transform: Transform,
     asset_server: &Res<AssetServer>,
-    mut texture_atlases: &mut ResMut<Assets<TextureAtlasLayout>>,
+    texture_atlases: &mut ResMut<Assets<TextureAtlasLayout>>,
 ) {
     match enemy {
         Enemy::Bat => {
