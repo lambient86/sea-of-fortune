@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-mod components;
+pub(crate) mod components;
 mod systems;
 
 use crate::GameState;
@@ -27,9 +27,9 @@ impl Plugin for BatPlugin {
                     .run_if(in_state(GameworldState::Dungeon))
                     .run_if(in_state(GameState::Running)),
             )
-            .add_systems(OnExit(GameworldState::Dungeon), (
-                despawn_all_bats,
-                despawn_all_bat_proj,
-            ));
+            .add_systems(
+                OnExit(GameworldState::Dungeon),
+                (despawn_all_bats, despawn_all_bat_proj),
+            );
     }
 }
