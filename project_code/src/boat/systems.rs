@@ -162,6 +162,7 @@ pub fn boat_attack(
                     offset: offset,
                     lifetime: Some(Timer::from_seconds(CANNONBALL_LIFETIME, TimerMode::Once)),
                     entity: BOAT,
+                    projectile: true,
                 },
             ));
         }
