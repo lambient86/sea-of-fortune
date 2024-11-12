@@ -9,16 +9,6 @@ use crate::shop::systems::generate_loot_item;
 use bevy::input::mouse::{self, MouseButtonInput};
 use bevy::prelude::*;
 
-
-/// The speed at which the player accelerates
-pub const PLAYER_ACCELERATION: f32 = 5000.;
-pub const PLAYER_SPEED: f32 = 500.;
-pub const PLAYER_SIZE: f32 = 32.;
-pub const PLAYER_ANIMATION_TIME: f32 = 0.1;
-
-// Base player stats
-pub const PLAYER_MAX_HP: f32 = 3.;
-
 /*   MOVE_PLAYER FUNCTION */
 /// Moves the player, updating its position depending on
 /// button pressed and players current velocity
@@ -146,7 +136,7 @@ pub fn spawn_player(
     let mut initial_inventory = Inventory::new(1000);
 
     initial_inventory.add_item(generate_loot_item());
-    
+
     //setting up player for spawning
     commands.spawn((
         SpriteBundle {
@@ -178,7 +168,6 @@ pub fn spawn_player(
             inventory: initial_inventory,
             spawn_position,
         },
-        TestTimer::new(Timer::from_seconds(1., TimerMode::Repeating)),
         Hurtbox {
             size,
             offset,
@@ -187,7 +176,6 @@ pub fn spawn_player(
             iframe: Timer::from_seconds(0.75, TimerMode::Once),
         },
     ));
-
 }
 
 /*   SPAWN_WEAPON FUNCTION   */
@@ -260,7 +248,8 @@ pub fn player_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     curr_mouse_pos: ResMut<CurrMousePos>,
     mut commands: Commands,
-mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown), With<Player>>,) {
+    mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown), With<Player>>,
+) {
     for (entity, transform, velocity, mut cooldown) in player_query.iter_mut() {
         //If the cooldown is not finished, tick and break because you can't attack anyway
         if !cooldown.remaining.finished() {
@@ -286,10 +275,18 @@ mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown), Wi
             let hitbox_offset = direction * 50.0; // Distance from the player to the hitbox
 
             // Define the size of the hitbox
-            let hitbox_size = Vec2::new(40.0, 60.0); 
+            let hitbox_size = Vec2::new(40.0, 60.0);
 
             // Create the hitbox
-            create_hitbox(&mut commands, entity, hitbox_size, hitbox_offset, Some(0.1), PLAYER);
+            create_hitbox(
+                &mut commands,
+                entity,
+                hitbox_size,
+                hitbox_offset,
+                Some(0.1),
+                PLAYER,
+                false,
+            );
         }
     }
 }
@@ -298,7 +295,6 @@ mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown), Wi
 /// Function checks the current state of the player's health
 /// if current health == 0 --> respawn player
 pub fn check_player_health(
-    mut commands: Commands,
     mut player_query: Query<(&mut Player, Entity, &mut Hurtbox, &mut Transform), With<Player>>,
 ) {
     for (mut player, entity, mut hurtbox, mut transform) in player_query.iter_mut() {
@@ -309,11 +305,10 @@ pub fn check_player_health(
         player.health -= 1.;
 
         if player.health <= 0. {
-            println!("Player died to a bat...yikes!");
+            println!("Player died... yikes!");
             player.health = player.max_health;
             transform.translation = player.spawn_position;
             println!("Player respawned!");
-
         } else {
             println!("Ouch! Player was hit.");
         }

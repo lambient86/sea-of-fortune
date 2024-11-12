@@ -1,12 +1,11 @@
-use bevy::math::vec2;
+use bevy::math::{vec2, NormedVectorSpace};
 use bevy::prelude::*;
 
-use crate::kraken::components::*;
+use crate::boat::components::Boat;
 use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
-use crate::player::components::AttackCooldown;
-use crate::boat::components::Boat;
-
+use crate::kraken::components::*;
+use crate::player::components::*;
 
 /*   ROTATE_KRAKEN FUNCTION   */
 /// This should be changed to a function called "track_player", which will
@@ -171,7 +170,7 @@ pub fn kraken_attack(
         let angle = original_direction.x.atan2(original_direction.y);
         let angle_direction = Vec3::new(angle.sin(), angle.cos(), 0.0).normalize();
 
-        let projectile_start_position = kraken_translation + angle_direction * 10.0; 
+        let projectile_start_position = kraken_translation + angle_direction * 10.0;
 
         //Sets the projectile texture
         let kraken_projectile_handle = asset_server.load("s_kraken_spit_1.png");
@@ -190,13 +189,14 @@ pub fn kraken_attack(
             KrakenProjectile,
             Lifetime(KRAKEN_PROJECTILE_LIFETIME),
             Velocity {
-                v: angle_direction * KRAKEN_PROJECTILE_SPEED, /* (direction * speed of projectile) */
+                v: angle_direction.truncate() * KRAKEN_PROJECTILE_SPEED, /* (direction * speed of projectile) */
             },
             Hitbox {
                 size: Vec2::splat(60.),
                 offset: Vec2::splat(0.),
                 lifetime: Some(Timer::from_seconds(5., TimerMode::Once)),
                 entity: KRAKEN,
+                projectile: true,
             },
         ));
     }
@@ -212,7 +212,8 @@ pub fn move_kraken_projectile(
 ) {
     for (mut transform, velocity) in proj_query.iter_mut() {
         // Calculates/moves the projectile
-        transform.translation += velocity.v * time.delta_seconds();
+
+        transform.translation += velocity.to_vec3(0.) * time.delta_seconds();
     }
 }
 

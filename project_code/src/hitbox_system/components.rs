@@ -14,6 +14,7 @@ pub struct Hitbox {
     pub size: Vec2,
     pub offset: Vec2,
     pub lifetime: Option<Timer>,
+    pub projectile: bool,
 
     pub entity: i32,
 }
