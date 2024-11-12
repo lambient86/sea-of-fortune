@@ -1,0 +1,8 @@
+[workspace]
+
+members = [
+    "project_code",
+    "server",
+]
+
+default-members = [ "project_code" ]
