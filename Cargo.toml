@@ -3,6 +3,7 @@
 members = [
     "project_code",
     "server",
+    "client",
 ]
 
 default-members = [ "project_code" ]
