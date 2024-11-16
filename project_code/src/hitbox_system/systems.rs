@@ -7,11 +7,11 @@ use bevy::sprite::MaterialMesh2dBundle;
 pub fn check_hitbox_hurtbox_collisions(
     time: Res<Time>,
     hitbox_query: Query<(Entity, &Transform, &Hitbox)>,
-    mut hurtbox_query: Query<(Entity, &Transform, &mut Hurtbox)>,
+    mut hurtbox_query: Query<(&Transform, &mut Hurtbox)>,
     mut commands: Commands,
 ) {
     // // Iterate through all entities with hurtboxes
-    for (hurtbox_entity, hurtbox_transform, mut hurtbox) in hurtbox_query.iter_mut() {
+    for (hurtbox_transform, mut hurtbox) in hurtbox_query.iter_mut() {
         if !hurtbox.iframe.finished() {
             hurtbox.iframe.tick(time.delta());
             //println!("Timer left: {}", hurtbox.iframe.remaining_secs());
@@ -37,6 +37,10 @@ pub fn check_hitbox_hurtbox_collisions(
                     hurtbox.colliding = true;
                     println!("{} collided with {}", hurtbox.entity, hitbox.entity);
                     hurtbox.iframe = Timer::from_seconds(0.75, TimerMode::Once);
+
+                    if hitbox.projectile {
+                        commands.entity(hitbox_entity).despawn();
+                    }
                     break;
                 }
             }
@@ -112,6 +116,7 @@ pub fn create_hitbox(
     offset: Vec2,
     lifetime: Option<f32>,
     entity_type: i32,
+    projectile: bool,
 ) {
     let lifetime_timer = lifetime.map(|duration| Timer::from_seconds(duration, TimerMode::Once));
     commands.entity(entity).insert(Hitbox {
@@ -119,6 +124,7 @@ pub fn create_hitbox(
         offset,
         lifetime: lifetime_timer,
         entity: entity_type,
+        projectile,
     });
 }
 

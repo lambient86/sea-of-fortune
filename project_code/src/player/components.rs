@@ -1,5 +1,14 @@
-use bevy::prelude::*;
 use crate::shop::components::Inventory;
+use bevy::prelude::*;
+
+/// The speed at which the player accelerates
+pub const PLAYER_ACCELERATION: f32 = 5000.;
+pub const PLAYER_SPEED: f32 = 500.;
+pub const PLAYER_SIZE: f32 = 32.;
+pub const PLAYER_ANIMATION_TIME: f32 = 0.1;
+
+// Base player stats
+pub const PLAYER_MAX_HP: f32 = 3.;
 
 /// Struct representing the player
 #[derive(Component)]
@@ -24,8 +33,8 @@ impl Default for Sword {
     /// Sets default values for the sword
     fn default() -> Sword {
         Sword {
-            damage: 1.,         //unupgraded damage
-            upgraded: false,    //upgraded damage
+            damage: 1.,      //unupgraded damage
+            upgraded: false, //upgraded damage
         }
     }
 }
@@ -48,6 +57,10 @@ impl Velocity {
             //sets x and y velocity to 0
             v: Vec2::splat(0.),
         }
+    }
+
+    pub fn to_vec3(&self, z: f32) -> Vec3 {
+        Vec3::new(self.v.x, self.v.y, z)
     }
 }
 
