@@ -11,6 +11,7 @@ mod player;
 mod shop;
 mod systems;
 mod transition_box;
+mod wfc;
 
 use bat::BatPlugin;
 use bevy::{prelude::*, window::PresentMode};
@@ -28,6 +29,7 @@ use player::systems::move_player;
 use player::PlayerPlugin;
 use shop::ShopPlugin;
 use systems::*;
+use wfc::WFCPlugin;
 
 fn main() {
     App::new()
@@ -49,6 +51,7 @@ fn main() {
         .add_plugins(HitboxPlugin)
         .add_plugins(ShopPlugin)
         .add_plugins(LevelPlugin)
+        .add_plugins(WFCPlugin)
         .add_systems(
             Update,
             move_player_camera.after(move_player).run_if(
