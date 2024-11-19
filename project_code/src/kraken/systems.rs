@@ -1,8 +1,10 @@
 use bevy::math::{vec2, NormedVectorSpace};
 use bevy::prelude::*;
+use bevy::render::texture;
 
 use crate::boat::components::Boat;
 use crate::data::gameworld_data::*;
+use crate::enemies::*;
 use crate::hitbox_system::*;
 use crate::kraken::components::*;
 use crate::player::components::*;
@@ -61,34 +63,16 @@ pub fn spawn_kraken(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    //getting kraken sprite information
-    let kraken_texture_handle = asset_server.load("s_kraken.png");
+    let transform = Transform::from_xyz(0., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.)
+        .with_scale(Vec3::splat(2.0));
 
-    //spawning kraken and setting kraken information
-    commands.spawn((
-        SpriteBundle {
-            texture: kraken_texture_handle,
-            transform: Transform::from_xyz(0., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.)
-                .with_scale(Vec3::splat(2.0)),
-            ..default()
-        },
-        Kraken {
-            //Setting default stats
-            rotation_speed: f32::to_radians(90.0),
-            current_hp: KRAKEN_MAX_HP,
-            max_hp: KRAKEN_MAX_HP,
-        },
-        AttackCooldown {
-            remaining: Timer::from_seconds(1.5, TimerMode::Once),
-        },
-        Hurtbox {
-            size: Vec2::new(160., 90.),
-            offset: Vec2::splat(0.),
-            colliding: false,
-            entity: KRAKEN,
-            iframe: Timer::from_seconds(0.75, TimerMode::Once),
-        },
-    ));
+    spawn_enemy(
+        &mut commands,
+        Enemy::Kraken,
+        transform,
+        &asset_server,
+        &mut texture_atlases,
+    );
 }
 
 /*   KRAKEN_DAMAGED FUNCTION   */
