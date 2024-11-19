@@ -7,6 +7,11 @@ pub const PLAYER_SPEED: f32 = 500.;
 pub const PLAYER_SIZE: f32 = 32.;
 pub const PLAYER_ANIMATION_TIME: f32 = 0.1;
 
+/// Musketball info
+pub const MUSKETBALL_SPEED: f32 = 500.;
+pub const MUSKETBALL_LIFETIME: f32 = 6.;
+pub const MAX_ACCEL: f32 = 800.;
+
 // Base player stats
 pub const PLAYER_MAX_HP: f32 = 3.;
 
@@ -19,6 +24,7 @@ pub struct Player {
     pub max_health: f32,
     pub inventory: Inventory,
     pub spawn_position: Vec3,
+    pub weapon: i8,
 }
 
 /// Struct representing the sword weapon for the player
@@ -26,6 +32,27 @@ pub struct Player {
 pub struct Sword {
     pub damage: f32,
     pub upgraded: bool,
+}
+
+/// Struct representing the musket weapon for the player
+#[derive(Component)]
+pub struct Musket {
+    pub damage: f32,
+    pub upgraded: bool,
+}
+
+/// Struct representing the musketball projectile fired by the musket weapon
+#[derive(Component)]
+pub struct Musketball;
+
+/// Struct representation for musketball projectile lifetime
+#[derive(Component)]
+pub struct MusketballLifetime(pub f32);
+
+/// Musketball velocity struct
+#[derive(Component)]
+pub struct MusketballVelocity {
+    pub v: Vec3,
 }
 
 //implementing sword
