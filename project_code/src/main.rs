@@ -4,6 +4,7 @@ mod components;
 mod controls;
 mod data;
 mod enemies;
+mod ghost_ship;
 mod hitbox_system;
 mod kraken;
 mod level;
@@ -22,6 +23,7 @@ use components::GameworldState;
 use controls::*;
 use data::gameworld_data::*;
 use enemies::*;
+use ghost_ship::GhostShipPlugin;
 use hitbox_system::HitboxPlugin;
 use kraken::KrakenPlugin;
 use level::LevelPlugin;
@@ -52,6 +54,7 @@ fn main() {
         .add_plugins(ShopPlugin)
         .add_plugins(LevelPlugin)
         .add_plugins(WFCPlugin)
+        .add_plugins(GhostShipPlugin)
         .add_systems(
             Update,
             move_player_camera.after(move_player).run_if(
