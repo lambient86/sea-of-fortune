@@ -7,6 +7,7 @@ pub enum PlayerControl {
     Down,       //S
     Left,       //A
     Right,      //D
+    SwapWeapon, //F
     Attack,     //Left Mouse Button
     Secondary,  //Right Mouse Button
 }
@@ -35,6 +36,9 @@ impl PlayerControl {
             }
             PlayerControl::Right => {
                 keyboard_input.pressed(KeyCode::KeyD)
+            }
+            PlayerControl::SwapWeapon => {
+                keyboard_input.just_pressed(KeyCode::KeyF)
             }
             PlayerControl::Attack => {
                 mouse_input.pressed(MouseButton::Left)
