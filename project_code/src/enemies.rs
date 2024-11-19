@@ -59,6 +59,7 @@ pub fn spawn_enemy(
                     colliding: false,
                     entity: BAT,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
+                    enemy: true,
                 },
             ));
         }
@@ -86,6 +87,7 @@ pub fn spawn_enemy(
                     colliding: false,
                     entity: KRAKEN,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
+                    enemy: true,
                 },
             ));
         }
@@ -113,6 +115,7 @@ pub fn spawn_enemy(
                     colliding: false,
                     entity: GHOSTSHIP,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
+                    enemy: true,
                 },
             ));
         }

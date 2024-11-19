@@ -98,6 +98,7 @@ pub fn spawn_boat(
             entity: BOAT,
             colliding: false,
             iframe: Timer::from_seconds(0.75, TimerMode::Once),
+            enemy: false,
         },
     ));
 }
@@ -163,6 +164,7 @@ pub fn boat_attack(
                     lifetime: Some(Timer::from_seconds(CANNONBALL_LIFETIME, TimerMode::Once)),
                     entity: BOAT,
                     projectile: true,
+                    enemy: false,
                 },
             ));
         }
@@ -172,7 +174,8 @@ pub fn boat_attack(
 /*   MOVE_CANNONBALL FUNCTION   */
 /// Updates the locations of boat projectiles
 pub fn move_cannonball(
-    mut proj_query: Query<(&mut Transform, &mut CannonballVelocity), With<Cannonball>>,    time: Res<Time>,
+    mut proj_query: Query<(&mut Transform, &mut CannonballVelocity), With<Cannonball>>,
+    time: Res<Time>,
 ) {
     for (mut transform, velocity) in proj_query.iter_mut() {
         // Calculates/moves the projectile

@@ -20,6 +20,7 @@ pub struct Hitbox {
     pub projectile: bool,
 
     pub entity: i32,
+    pub enemy: bool,
 }
 
 // Hurtbox component: Represents an area that can receive interactions
@@ -31,4 +32,5 @@ pub struct Hurtbox {
 
     pub iframe: Timer,
     pub entity: i32,
+    pub enemy: bool,
 }
