@@ -242,7 +242,7 @@ pub fn update_sword_damage(
                 if let Some(sword_item) = player.inventory.items.iter()
                     .find(|item| item.item_type == ItemType::Sword) 
                 {
-                    sword.upgrade(sword_item.level);
+                    sword.upgrade_sword(sword_item.level);
                 }
             }
         }
@@ -312,7 +312,7 @@ fn update_sword_for_player(
         // Find and update the sword entity
         for &child in children.iter() {
             if let Ok(mut sword) = sword_query.get_mut(child) {
-                sword.upgrade(sword_item.level);
+                sword.upgrade_sword(sword_item.level);
             }
         }
     }

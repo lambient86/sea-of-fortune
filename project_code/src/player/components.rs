@@ -85,7 +85,7 @@ impl Sword {
         self.get_base_damage() * Self::get_level_multiplier(level)
     }
 
-    pub fn upgrade(&mut self, level: u32) {
+    pub fn upgrade_sword(&mut self, level: u32) {
         self.damage = self.calculate_damage(level);
         self.upgraded = true;
     }
