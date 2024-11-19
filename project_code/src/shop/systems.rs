@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use super::components::*;
 use crate::player::components::Player;
+use crate::player::components::Sword;
 
 pub fn setup_shop_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
@@ -228,40 +229,90 @@ pub fn update_shop_ui(
     });
 }
 
-pub fn handle_shop_events(
-    mut shop_events: EventReader<ShopEvent>,
-    mut player_query: Query<&mut Player>,
-    mut shop: ResMut<Shop>,
+// Sword Damage and Upgrade Mechanics
+pub fn update_sword_damage(
+    mut player_query: Query<(&Player, &Children)>,
+    mut sword_query: Query<&mut Sword>,
 ) {
-    let mut player = player_query.single_mut();
-
-    for event in shop_events.read() {
-        match event {
-            ShopEvent::Buy(index) => {
-                if *index < shop.items.len() {
-                    let item = shop.items[*index].clone();
-                    if player.inventory.money >= item.price {
-                        player.inventory.money -= item.price;
-                        player.inventory.add_item(item);
-                    }
+    for (player, children) in player_query.iter_mut() {
+        // Find the sword in player's children
+        for &child in children.iter() {
+            if let Ok(mut sword) = sword_query.get_mut(child) {
+                // Find the sword item in inventory to get its level
+                if let Some(sword_item) = player.inventory.items.iter()
+                    .find(|item| item.item_type == ItemType::Sword) 
+                {
+                    sword.upgrade(sword_item.level);
                 }
             }
-            ShopEvent::Upgrade(index) => {
-                if *index < shop.items.len() {
-                    let shop_item = &shop.items[*index];
-                    let upgrade_cost = shop_item.price / 2;
-                    
-                    if player.inventory.money >= upgrade_cost {
-                        if player.inventory.find_and_upgrade_item(shop_item.item_type) {
-                            player.inventory.money -= upgrade_cost;
+        }
+    }
+}
+
+// Updated to include sword damage and upgrade mechanics
+pub fn handle_shop_events(
+    mut shop_events: EventReader<ShopEvent>,
+    mut player_query: Query<(&mut Player, &Children)>,
+    mut sword_query: Query<&mut Sword>,
+    mut shop: ResMut<Shop>,
+) {
+    for (mut player, children) in player_query.iter_mut() {
+        for event in shop_events.read() {
+            match event {
+                ShopEvent::Buy(index) => {
+                    if *index < shop.items.len() {
+                        let item = shop.items[*index].clone();
+                        if player.inventory.money >= item.price {
+                            player.inventory.money -= item.price;
+                            let item_type = item.item_type;
+                            player.inventory.add_item(item);
+                            
+                            // Update sword damage if buying a sword
+                            if item_type == ItemType::Sword {
+                                update_sword_for_player(&mut player, children, &mut sword_query);
+                            }
                         }
                     }
                 }
-            }
-            ShopEvent::Sell(index) => {
-                if let Some(item) = player.inventory.remove_item(*index) {
-                    player.inventory.money += item.price / 2;
+                ShopEvent::Upgrade(index) => {
+                    if *index < shop.items.len() {
+                        let shop_item = &shop.items[*index];
+                        let upgrade_cost = shop_item.price / 2;
+                        
+                        if player.inventory.money >= upgrade_cost {
+                            if player.inventory.find_and_upgrade_item(shop_item.item_type) {
+                                player.inventory.money -= upgrade_cost;
+                                
+                                // Update sword damage if upgrading a sword
+                                if shop_item.item_type == ItemType::Sword {
+                                    update_sword_for_player(&mut player, children, &mut sword_query);
+                                }
+                            }
+                        }
+                    }
                 }
+                ShopEvent::Sell(index) => {
+                    if let Some(item) = player.inventory.remove_item(*index) {
+                        player.inventory.money += item.price / 2;
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn update_sword_for_player(
+    player: &mut Player,
+    children: &Children,
+    sword_query: &mut Query<&mut Sword>,
+) {
+    if let Some(sword_item) = player.inventory.items.iter()
+        .find(|item| item.item_type == ItemType::Sword) 
+    {
+        // Find and update the sword entity
+        for &child in children.iter() {
+            if let Ok(mut sword) = sword_query.get_mut(child) {
+                sword.upgrade(sword_item.level);
             }
         }
     }

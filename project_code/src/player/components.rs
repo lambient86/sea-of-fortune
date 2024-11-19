@@ -66,6 +66,31 @@ impl Default for Sword {
     }
 }
 
+// Sword Damage and Upgrade Mechanics
+impl Sword {
+    pub fn get_base_damage(&self) -> f32 {
+        if self.upgraded {
+            2.0 // Base damage for upgraded sword
+        } else {
+            1.0 // Base damage for basic sword
+        }
+    }
+
+    pub fn get_level_multiplier(level: u32) -> f32 {
+        // Each level adds 25% more damage
+        1.0 + (level as f32 * 0.25)
+    }
+
+    pub fn calculate_damage(&self, level: u32) -> f32 {
+        self.get_base_damage() * Self::get_level_multiplier(level)
+    }
+
+    pub fn upgrade(&mut self, level: u32) {
+        self.damage = self.calculate_damage(level);
+        self.upgraded = true;
+    }
+}
+
 /// Velocity struct
 #[derive(Component)]
 pub struct Velocity {
