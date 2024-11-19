@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 
 //constants
-pub const GHOSTSHIP_ANIMATION_TIME: f32 = 0.25;
 pub const GHOSTSHIP_PROJECTILE_LIFETIME: f32 = 5.;
 pub const GHOSTSHIP_PROJECTILE_SPEED: f32 = 175.;
 
@@ -17,7 +16,6 @@ pub const GHOSTSHIP_AGRO_RANGE: f32 = 1000.;
 pub struct GhostShip {
     pub rotation_speed: f32,
     pub current_hp: f32,
-    pub max_hp: f32,
 }
 
 #[derive(Component)]

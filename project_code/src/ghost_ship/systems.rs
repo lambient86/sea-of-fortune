@@ -1,6 +1,4 @@
-use bevy::math::{vec2, NormedVectorSpace};
 use bevy::prelude::*;
-use bevy::render::texture;
 
 use crate::boat::components::Boat;
 use crate::data::gameworld_data::*;
@@ -73,8 +71,6 @@ pub fn spawn_ghostship(
         &asset_server,
         &mut texture_atlases,
     );
-
-    println!("This happened");
 }
 
 /*   KRAKEN_DAMAGED FUNCTION   */

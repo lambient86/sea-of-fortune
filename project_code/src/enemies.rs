@@ -90,11 +90,11 @@ pub fn spawn_enemy(
             ));
         }
         Enemy::GhostShip => {
-            let kraken_texture_handle = asset_server.load("s_basic_ship.png");
+            let ghostship_texture_handle = asset_server.load("s_ghost_ship.png");
 
             commands.spawn((
                 SpriteBundle {
-                    texture: kraken_texture_handle,
+                    texture: ghostship_texture_handle,
                     transform,
                     ..default()
                 },
