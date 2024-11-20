@@ -162,6 +162,7 @@ pub fn spawn_enemy(
                     colliding: false,
                     entity: SKELETON,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
+                    enemy: true,
                 }
             ));
         }

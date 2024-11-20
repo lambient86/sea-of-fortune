@@ -198,6 +198,7 @@ pub fn skeleton_attack(
                 lifetime: Some(Timer::from_seconds(3., TimerMode::Once)),
                 entity: SKELETON,
                 projectile: true,
+                enemy: true,
             },
             AnimationTimer::new(Timer::from_seconds(0.1, TimerMode::Repeating)),
         ));
