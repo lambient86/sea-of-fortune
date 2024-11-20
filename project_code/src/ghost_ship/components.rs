@@ -2,12 +2,12 @@ use bevy::prelude::*;
 
 //constants
 pub const GHOSTSHIP_PROJECTILE_LIFETIME: f32 = 5.;
-pub const GHOSTSHIP_PROJECTILE_SPEED: f32 = 175.;
+pub const GHOSTSHIP_PROJECTILE_SPEED: f32 = 350.;
 
 //Bat base stats
 pub const GHOSTSHIP_MAX_HP: f32 = 2.;
 pub const GHOSTSHIP_ATTACK_DIST: f32 = 800.;
-pub const GHOSTSHIP_MOVEMENT_SPEED: f32 = 150.;
+pub const GHOSTSHIP_MOVEMENT_SPEED: f32 = 215.;
 pub const GHOSTSHIP_AGRO_STOP: f32 = 300.;
 pub const GHOSTSHIP_AGRO_RANGE: f32 = 1000.;
 

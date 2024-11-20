@@ -100,11 +100,10 @@ pub fn spawn_enemy(
                     transform,
                     ..default()
                 },
-                Kraken {
+                GhostShip {
                     //Setting default stats
                     rotation_speed: f32::to_radians(90.0),
                     current_hp: GHOSTSHIP_MAX_HP,
-                    max_hp: GHOSTSHIP_MAX_HP,
                 },
                 AttackCooldown {
                     remaining: Timer::from_seconds(1.5, TimerMode::Once),
