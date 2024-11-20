@@ -155,7 +155,7 @@ pub fn ghostship_attack(
         let projectile_start_position = ghostship_translation + angle_direction * 10.0;
 
         //Sets the projectile texture
-        let ghostship_projectile_handle = asset_server.load("s_kraken_spit_1.png");
+        let ghostship_projectile_handle = asset_server.load("s_cannonball.png");
 
         //Creates Projectile
         commands.spawn((
@@ -179,6 +179,7 @@ pub fn ghostship_attack(
                 lifetime: Some(Timer::from_seconds(5., TimerMode::Once)),
                 entity: GHOSTSHIP,
                 projectile: true,
+                enemy: true,
             },
         ));
     }

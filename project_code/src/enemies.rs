@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::bat::components::*;
 use crate::skeleton::components::*;
 use crate::data::gameworld_data::*;
+use crate::ghost_ship::components::*;
 use crate::hitbox_system::components::*;
 use crate::kraken::components::*;
 use crate::player::components::*;
@@ -10,6 +11,7 @@ use crate::player::components::*;
 pub enum Enemy {
     Bat,
     Kraken,
+    GhostShip,
     Rock,
     Skeleton,
     Skel1,
@@ -59,6 +61,7 @@ pub fn spawn_enemy(
                     colliding: false,
                     entity: BAT,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
+                    enemy: true,
                 },
             ));
         }
@@ -86,6 +89,34 @@ pub fn spawn_enemy(
                     colliding: false,
                     entity: KRAKEN,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
+                    enemy: true,
+                },
+            ));
+        }
+        Enemy::GhostShip => {
+            let ghostship_texture_handle = asset_server.load("s_ghost_ship.png");
+
+            commands.spawn((
+                SpriteBundle {
+                    texture: ghostship_texture_handle,
+                    transform,
+                    ..default()
+                },
+                GhostShip {
+                    //Setting default stats
+                    rotation_speed: f32::to_radians(90.0),
+                    current_hp: GHOSTSHIP_MAX_HP,
+                },
+                AttackCooldown {
+                    remaining: Timer::from_seconds(1.5, TimerMode::Once),
+                },
+                Hurtbox {
+                    size: Vec2::new(160., 90.),
+                    offset: Vec2::splat(0.),
+                    colliding: false,
+                    entity: GHOSTSHIP,
+                    iframe: Timer::from_seconds(0.75, TimerMode::Once),
+                    enemy: true,
                 },
             ));
         }
