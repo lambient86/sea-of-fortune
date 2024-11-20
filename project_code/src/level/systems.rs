@@ -4,6 +4,8 @@ use crate::components::GameworldState;
 use crate::level::components::*;
 
 use crate::data::gameworld_data::*;
+use crate::wfc::components::*;
+use crate::wfc::systems::*;
 
 use rand::Rng;
 
@@ -22,22 +24,22 @@ pub fn load_level(
     let sand_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 3, 1, None, None);
     let sand_layout_handle = texture_atlases.add(sand_layout);
 
-    // load dungeon tile sheet
-    let bg_dungeon_texture_handle: Handle<Image> = asset_server.load("ts_dungeon_tiles.png");
-    let dungeon_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 2, 1, None, None);
-    let dungeon_layout_handle = texture_atlases.add(dungeon_layout);
+    // // load dungeon tiles
+    // let bg_dungeon_texture_handle: Handle<Image> = asset_server.load("ts_dungeon_tiles_1.png");
+    // let dungeon_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 4, 1, None, None);
+    // let dungeon_layout_handle = texture_atlases.add(dungeon_layout);
 
     // store tilesheets and handles
     commands.insert_resource(OceanTileSheet(bg_ocean_texture_handle, ocean_layout_handle));
     commands.insert_resource(SandTileSheet(bg_sand_texture_handle, sand_layout_handle));
-    commands.insert_resource(DungeonTileSheet(bg_dungeon_texture_handle, dungeon_layout_handle));
+    // commands.insert_resource(DungeonTileSheet(bg_dungeon_texture_handle, dungeon_layout_handle));
 }
 
 pub fn setup_level(
     mut commands: Commands,
     ocean_tile_sheet: Res<OceanTileSheet>,
     sand_tile_sheet: Res<SandTileSheet>,
-    dungeon_tile_sheet: Res<DungeonTileSheet>,
+    // dungeon_tile_sheet: Res<DungeonTileSheet>,
     game_world_state: Res<State<GameworldState>>,           // get the current gameworld state
 ) {
 
@@ -136,53 +138,16 @@ pub fn setup_level(
             t.x = -SAND_W_CENTER + (TILE_SIZE * 2) as f32/2.0;
             h+=1;
         }
-    }  else if *game_world_state.get() == GameworldState::Dungeon {     // current state --> dungeon
+//     }  else if *game_world_state.get() == GameworldState::Dungeon {     // current state --> dungeon
 
-        let mut w = 0;
-        let mut h = 0;
-        let mut t = Vec3::new(
-        -DUNGEON_W_CENTER + TILE_SIZE as f32 / 2.,
-        -DUNGEON_H_CENTER + TILE_SIZE as f32 / 2.,
-        -1.0,
-        );
-
-        while (h as f32) * (TILE_SIZE as f32) < DUNGEON_LEVEL_H {
-            while (w as f32) * (TILE_SIZE as f32) < DUNGEON_LEVEL_W {
-
-                // weigh it so that its mostly dark blue just for aesthetic reasons
-                let rand = rng.gen_range(0..=10);
-                if rand < 8 {tile_index = 0}
-                else {tile_index = 1}
-                
-                commands
-                    .spawn((
-                        SpriteBundle {
-                            texture: dungeon_tile_sheet.0.clone(),
-                            transform: Transform {
-                                translation: t,
-                                scale: Vec3::splat(2.),
-                                ..default()
-                            },
-                            ..default()
-                        },
-                        TextureAtlas {
-                            layout: dungeon_tile_sheet.1.clone(),
-                            index: tile_index,
-                        },
-                        DungeonTile,
-                    ))
-                    .insert(DungeonTile);
-    
-                w += 1;
-                t += Vec3::new((TILE_SIZE) as f32, 0., 0.);
-            }
-
-            w = 0;
-            t += Vec3::new(0., (TILE_SIZE) as f32, 0.);
-            t.x = -DUNGEON_W_CENTER + (TILE_SIZE) as f32/2.0;
-            h+=1;
-        }
-    }
+//         // let mut w = 0;
+//         // let mut h = 0;
+//         // let mut t = Vec3::new(
+//         // -DUNGEON_W_CENTER + TILE_SIZE as f32 / 2.,
+//         // -DUNGEON_H_CENTER + TILE_SIZE as f32 / 2.,
+//         // -1.0,
+//         // );
+}
 
 }
 
