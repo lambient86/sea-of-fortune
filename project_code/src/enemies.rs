@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
 use crate::bat::components::*;
+use crate::skeleton::components::*;
 use crate::data::gameworld_data::*;
-use crate::ghost_ship::components::*;
 use crate::hitbox_system::components::*;
 use crate::kraken::components::*;
 use crate::player::components::*;
@@ -10,8 +10,8 @@ use crate::player::components::*;
 pub enum Enemy {
     Bat,
     Kraken,
-    GhostShip,
     Rock,
+    Skeleton,
     Skel1,
     Skel2,
 }
@@ -89,31 +89,49 @@ pub fn spawn_enemy(
                 },
             ));
         }
-        Enemy::GhostShip => {
-            let ghostship_texture_handle = asset_server.load("s_ghost_ship.png");
+        Enemy::Skeleton => {
+            let skeleton_layout = TextureAtlasLayout::from_grid(
+                UVec2::new(31, 32), // SpriteSheet 1 pixel off, maybe fix later? it works like this though
+                6, // Columns
+                1, // Rows
+                None, // Padding
+                None  // Spacing
+            );
 
+            // Add the texture atlas to the resource
+
+            // Spawn the skeleton entity
             commands.spawn((
                 SpriteBundle {
-                    texture: ghostship_texture_handle,
+                    texture: asset_server.load("s_skeleton.png"), // This uses the TextureAtlas handle
                     transform,
                     ..default()
                 },
-                Kraken {
-                    //Setting default stats
-                    rotation_speed: f32::to_radians(90.0),
-                    current_hp: GHOSTSHIP_MAX_HP,
-                    max_hp: GHOSTSHIP_MAX_HP,
+                Skeleton {
+                    rotation_speed: 0.0,
+                    current_hp: SKELETON_MAX_HP,
+                    max_hp: SKELETON_MAX_HP,
+                },
+                TextureAtlas {
+                    layout: texture_atlases.add(skeleton_layout.clone()),
+                    index: 0,
                 },
                 AttackCooldown {
                     remaining: Timer::from_seconds(1.5, TimerMode::Once),
                 },
+                AnimationTimer::new(Timer::from_seconds(
+                    SKELETON_ANIMATION_TIME,
+                    TimerMode::Repeating,
+                )),
+                AnimationFrameCount::new(6),
+                Velocity::new(),
                 Hurtbox {
-                    size: Vec2::new(160., 90.),
-                    offset: Vec2::splat(0.),
+                    size: Vec2::new(32., 32.), // Adjust as needed
+                    offset: Vec2::ZERO,
                     colliding: false,
-                    entity: GHOSTSHIP,
+                    entity: SKELETON,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
-                },
+                }
             ));
         }
         Enemy::Rock => {}

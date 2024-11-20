@@ -13,6 +13,7 @@ mod shop;
 mod systems;
 mod transition_box;
 mod wfc;
+mod skeleton;
 
 use bat::BatPlugin;
 use bevy::{prelude::*, window::PresentMode};
@@ -26,6 +27,7 @@ use enemies::*;
 use ghost_ship::GhostShipPlugin;
 use hitbox_system::HitboxPlugin;
 use kraken::KrakenPlugin;
+use skeleton::SkeletonPlugin;
 use level::LevelPlugin;
 use player::systems::move_player;
 use player::PlayerPlugin;
@@ -50,6 +52,7 @@ fn main() {
         .add_plugins(BoatPlugin)
         .add_plugins(BatPlugin)
         .add_plugins(KrakenPlugin)
+        .add_plugins(SkeletonPlugin)
         .add_plugins(HitboxPlugin)
         .add_plugins(ShopPlugin)
         .add_plugins(LevelPlugin)
