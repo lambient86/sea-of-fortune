@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 
 use crate::bat::components::*;
-use crate::skeleton::components::*;
 use crate::data::gameworld_data::*;
 use crate::ghost_ship::components::*;
 use crate::hitbox_system::components::*;
 use crate::kraken::components::*;
 use crate::player::components::*;
+use crate::skeleton::components::*;
 
 pub enum Enemy {
     Bat,
@@ -14,7 +14,6 @@ pub enum Enemy {
     GhostShip,
     Rock,
     Skeleton,
-    Skel1,
     Skel2,
 }
 
@@ -123,10 +122,10 @@ pub fn spawn_enemy(
         Enemy::Skeleton => {
             let skeleton_layout = TextureAtlasLayout::from_grid(
                 UVec2::new(31, 32), // SpriteSheet 1 pixel off, maybe fix later? it works like this though
-                6, // Columns
-                1, // Rows
-                None, // Padding
-                None  // Spacing
+                6,                  // Columns
+                1,                  // Rows
+                None,               // Padding
+                None,               // Spacing
             );
 
             // Add the texture atlas to the resource
@@ -167,7 +166,7 @@ pub fn spawn_enemy(
             ));
         }
         Enemy::Rock => {}
-        Enemy::Skel1 => {}
+        Enemy::Skeleton => {}
         Enemy::Skel2 => {}
     }
 }

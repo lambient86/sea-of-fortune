@@ -8,7 +8,7 @@ pub const BAT: i32 = 2;
 pub const KRAKEN: i32 = 3;
 pub const GHOSTSHIP: i32 = 4;
 pub const ROCK: i32 = 5;
-pub const SKEL1: i32 = 6;
+pub const SKELETON: i32 = 6;
 pub const SKEL2: i32 = 7;
 pub const SKELETON: i32 = 8;
 
