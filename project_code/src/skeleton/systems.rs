@@ -2,11 +2,11 @@ use bevy::prelude::*;
 use bevy::render::texture;
 use bevy::sprite::TextureAtlas;
 
-use crate::skeleton::components::*;
 use crate::data::gameworld_data::*;
 use crate::enemies::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
+use crate::skeleton::components::*;
 
 /*   ROTATE_skeleton FUNCTION   */
 /// This should be changed to a function called "track_player", which will
@@ -91,8 +91,6 @@ pub fn spawn_skeleton(
     );
 }
 
-
-
 /*   Skeleton_DAMAGED FUNCTION   */
 /// Current functionality: Detects when a player is within player attack range (this will later be replaced with
 // player weapon/attack collision) and then takes 1 damage (dies)
@@ -142,6 +140,7 @@ pub fn skeleton_attack(
     mut skeleton_query: Query<(&Transform, &mut AttackCooldown), With<Skeleton>>,
     player_query: Query<&Transform, With<Player>>,
     asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     for (skeleton_transform, mut cooldown) in skeleton_query.iter_mut() {
         // Attacks only when cooldown is over
@@ -174,20 +173,32 @@ pub fn skeleton_attack(
         let projectile_start_position = skeleton_translation + angle_direction * 10.0; // skeleton_pos + direction * offset wanted
 
         // Sets the projectile texture
-        let bone_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 1, None, None);
+        let layout = texture_atlases.add(TextureAtlasLayout::from_grid(
+            UVec2::splat(64),
+            8,
+            1,
+            None,
+            None,
+        ));
 
         // Creates Projectile
         commands.spawn((
             SpriteBundle {
-                texture: asset_server.load("s_bone.png"),  // Use the texture directly
+                texture: asset_server.load("s_bone.png"), // Use the texture directly
                 transform: Transform {
                     translation: projectile_start_position,
-                    scale: Vec3::splat(2.0),
+                    scale: Vec3::splat(0.5),
                     ..default()
                 },
                 ..default()
             },
-            SkeletonProjectile,
+            TextureAtlas {
+                layout: layout,
+                index: 0,
+            },
+            SkeletonProjectile {
+                timer: Timer::from_seconds(0.2, TimerMode::Once),
+            },
             Lifetime(SKELETON_PROJECTILE_LIFETIME),
             Velocity {
                 v: angle_direction.truncate() * SKELETON_PROJECTILE_SPEED, // (direction * speed of projectile)
@@ -198,8 +209,9 @@ pub fn skeleton_attack(
                 lifetime: Some(Timer::from_seconds(3., TimerMode::Once)),
                 entity: SKELETON,
                 projectile: true,
+                enemy: true,
             },
-            AnimationTimer::new(Timer::from_seconds(0.1, TimerMode::Repeating)),
+            AnimationTimer::new(Timer::from_seconds(0.5, TimerMode::Repeating)),
         ));
     }
 }
@@ -208,13 +220,32 @@ pub fn skeleton_attack(
 /// Things to add:
 /// * Collision handling, dealing damage on collision
 pub fn move_skeleton_projectile(
-    mut proj_query: Query<(&mut Transform, &mut Velocity), With<SkeletonProjectile>>,
+    mut proj_query: Query<(
+        &mut Transform,
+        &mut Velocity,
+        &mut TextureAtlas,
+        &mut SkeletonProjectile,
+    )>,
     time: Res<Time>,
-    mut query: Query<(&mut AnimationTimer, &mut TextureAtlas, &AnimationFrameCount)>,
 ) {
-    for (mut transform, velocity) in proj_query.iter_mut() {
+    for (mut transform, velocity, mut texture_atlas, mut skeleton) in proj_query.iter_mut() {
         // Calculates/moves the projectile
         transform.translation += velocity.to_vec3(0.) * time.delta_seconds();
+
+        if !skeleton.timer.finished() {
+            skeleton.timer.tick(time.delta());
+            continue;
+        }
+
+        skeleton.timer = Timer::from_seconds(0.2, TimerMode::Once);
+
+        // Animates projectile
+
+        if texture_atlas.index < 8 {
+            texture_atlas.index += 1;
+        } else {
+            texture_atlas.index = 0;
+        };
     }
 }
 
