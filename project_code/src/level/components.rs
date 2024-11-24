@@ -6,8 +6,8 @@ pub struct OceanTile;
 #[derive(Component)]
 pub struct SandTile;
 
-#[derive(Component)]
-pub struct DungeonTile;
+// #[derive(Component)]
+// pub struct DungeonTile;
 
 #[derive(Resource)]
 pub struct OceanTileSheet(pub Handle<Image>, pub Handle<TextureAtlasLayout>);
@@ -15,6 +15,4 @@ pub struct OceanTileSheet(pub Handle<Image>, pub Handle<TextureAtlasLayout>);
 #[derive(Resource)]
 pub struct SandTileSheet(pub Handle<Image>, pub Handle<TextureAtlasLayout>);
 
-#[derive(Resource)]
-pub struct DungeonTileSheet(pub Handle<Image>, pub Handle<TextureAtlasLayout>);
 
