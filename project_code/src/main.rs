@@ -64,52 +64,7 @@ fn main() {
         .add_systems(Update, change_gameworld_state)
         .add_systems(Update, change_game_state)
         .add_systems(Update, update_mouse_pos)
-        .add_systems(Update, send_packets)
         .insert_state(GameworldState::MainMenu)
         .insert_state(GameState::Running)
         .run();
 }
-
-use std::net::*;
-
-fn send_packets() {
-    let socket = UdpSocket::bind("0.0.0.0:0").expect("Failed to bind to socket");
-
-    let target_ip = "127.0.0.1:4000";
-    let data = format!("Client -> Server");
-
-    // Send the packet
-    socket
-        .send_to(data.as_bytes(), target_ip)
-        .expect("Failed to send packet");
-
-    println!("Packet sent to {}", target_ip);
-}
-/*
-fn packet_listener() {
-    let socket = UdpSocket::bind("127.0.0.1:5000").expect("Failed to bind to socket");
-
-    //println!("Client listening on {}", socket.local_addr().unwrap());
-
-    let mut buffer = [0; 1024];
-
-    socket
-        .set_nonblocking(true)
-        .expect("Failed to set non-blocking mode");
-
-    let result = socket.recv_from(&mut buffer);
-
-    match result {
-        Ok((size, source)) => {
-            //println!("Received {} bytes from {}", size, source);
-            let request = String::from_utf8_lossy(&buffer[..size]);
-
-            println!("Received {} from {}", request, source);
-        }
-        Err(e) => {
-            eprintln!("Failed to receive data: {}", e);
-        }
-    }
-}
-
-*/

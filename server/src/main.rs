@@ -1,26 +1,35 @@
-use std::net::UdpSocket;
+mod level;
+mod data;
+mod network;
+
+use std::net::{UdpSocket, TcpListener, TcpStream};
+use bevy::prelude::*;
+use std::sync::{Arc, Mutex};
+
+use crate::level::systems::*;
+use crate::network::systems::*;
+use crate::network::components::*;
+
 
 fn main() {
     println!("Starting Server");
 
-    let socket = UdpSocket::bind("127.0.0.1:4000").unwrap();
+    // Creating UDP socket connecion
+    let udp_socket = UdpSocket::bind("127.0.0.1:4000").unwrap();
 
-    println!("Server listening on {}", socket.local_addr().unwrap());
+    // Creating ocean level
+    let ocean_map = build_ocean();
 
-    let mut buffer = [0; 1024];
-
-    loop {
-        let result = socket.recv_from(&mut buffer);
-        match result {
-            Ok((size, source)) => {
-                println!("Received {} bytes from {}", size, source);
-                let request = String::from_utf8_lossy(&buffer[..size]);
-
-                println!("Received {} from {}", request, source);
-            }
-            Err(e) => {
-                eprintln!("Failed to receive data: {}", e);
-            }
+    //creating a shared and thread safe TcpConnections resource
+    let connections = Arc::new(Mutex::new(
+        TcpConnections {
+            streams: Vec::new(),
         }
-    }
+    ));
+
+    //starting tcp server in seperate thread
+    start_tcp_server(connections.clone());
+
+    App::new()
+        .insert_resource(connections.clone());
 }
