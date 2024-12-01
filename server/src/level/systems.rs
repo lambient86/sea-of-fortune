@@ -3,8 +3,8 @@ use rand::Rng;
 use crate::data::gameworld_data::*;
 use crate::level::components::*;
 
-/*   BUILD_GAMEWORLD FUNCTION   */
-/// Builds the ocean level and stores it into a vec3
+/*   BUILD_OCEAN FUNCTION   */
+/// Builds the ocean level and stores it in a Vec
 pub fn build_ocean() -> Vec<OceanTile> {
     //initiating rng
     let mut rng = rand::thread_rng();
