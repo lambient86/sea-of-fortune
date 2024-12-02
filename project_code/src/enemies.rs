@@ -7,7 +7,6 @@ use crate::hitbox_system::components::*;
 use crate::kraken::components::*;
 use crate::player::components::*;
 use crate::skeleton::components::*;
-use crate::skeleton::components::*;
 
 pub enum Enemy {
     Bat,
@@ -123,10 +122,6 @@ pub fn spawn_enemy(
         Enemy::Skeleton => {
             let skeleton_layout = TextureAtlasLayout::from_grid(
                 UVec2::new(31, 32), // SpriteSheet 1 pixel off, maybe fix later? it works like this though
-                6,                  // Columns
-                1,                  // Rows
-                None,               // Padding
-                None,               // Spacing
                 6,                  // Columns
                 1,                  // Rows
                 None,               // Padding
