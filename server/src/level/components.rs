@@ -1,7 +1,8 @@
 use bevy::prelude::*;
+use serde::Serialize;
 
 //struct that holds all of the information for an ocean tile
-#[derive(Component)]
+#[derive(Component, Serialize)]
 pub struct OceanTile {
     translation: Vec3,
     tile_index: usize,

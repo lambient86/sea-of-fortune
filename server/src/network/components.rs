@@ -1,6 +1,7 @@
 use bevy::prelude::*;
-use std::net::{TcpListener, TcpStream};
+use serde::{Deserialize, Serialize};
 use std::io::*;
+use std::net::{TcpListener, TcpStream};
 
 /// Struct to represent the TCP connections
 #[derive(Resource)]
@@ -18,7 +19,7 @@ impl TcpConnections {
     pub fn handle_connections(&mut self) {
         // Iterates through all streams and checks for any new data
         for stream in self.streams.iter_mut() {
-            let mut buffer = [0u8; 1024];
+            let mut buffer = [0; 1024];
 
             match stream.read(&mut buffer) {
                 Ok(size) => {
@@ -44,3 +45,8 @@ pub enum PacketType {
     Unknown,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct Packet<T> {
+    pub message: String,
+    pub payload: T,
+}
