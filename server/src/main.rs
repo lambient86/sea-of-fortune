@@ -20,21 +20,18 @@ fn main() {
     // Creating ocean level
     let mut ocean_map = build_ocean();
 
-    /*
+    
     let tcpconnections = TcpConnections {
         streams: Vec::new(),
     };
 
-    //creating a shared and thread safe TcpConnections resource
-    let connections = Arc::new(Mutex::new(&tcpconnections));
-
     //starting tcp server in seperate thread
-    start_tcp_server(connections);
-    */
+    start_tcp_server(tcpconnections);
 
-    App::new();
+    App::new()
+        .insert_resource(tcpconnections);
 
-    let mut size = ocean_map.len();
+    /*let mut size = ocean_map.len();
 
     for tile in ocean_map {
         let packet = Packet {
@@ -50,5 +47,5 @@ fn main() {
         size -= 1;
     }
 
-    println!("Done")
+    println!("Done")*/
 }

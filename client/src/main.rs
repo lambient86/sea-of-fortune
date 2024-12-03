@@ -1,45 +1,35 @@
+mod level;
+mod network;
+
+use std::net::{TcpStream, UdpSocket};
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
-use std::net::UdpSocket;
 
-#[derive(Serialize, Deserialize)]
-pub struct Packet<T> {
-    pub message: String,
-    pub payload: T,
-}
-
-#[derive(Component, Serialize, Deserialize)]
-pub struct OceanTile {
-    translation: Vec3,
-    tile_index: usize,
-}
-
-/// implementation for ocean tile
-impl OceanTile {
-    // constructor for ocean tile
-    pub fn new(t: Vec3, ti: usize) -> Self {
-        OceanTile {
-            translation: t,
-            tile_index: ti,
-        }
-    }
-}
+use crate::network::systems::*;
+use crate::level::systems::*;
+use crate::level::components::*;
 
 fn main() {
     println!("Starting Client");
 
     //connect to server
-    let socket = UdpSocket::bind("127.0.0.1:4000").unwrap();
+    let udp_addr = "127.0.0.1:4000";
+    let tcp_addr = "127.0.0.1:80";
 
-    println!("Client listening on {}", socket.local_addr().unwrap());
+    let udp_socket = UdpSocket::bind(udp_addr).unwrap();
 
-    let server = "127.0.0.1:4000";
+    println!("Client listening on {}", udp_socket.local_addr().unwrap());
 
     let mut buf = [0; 1024];
 
-    let mut ocean_map: Vec<OceanTile> = Vec::new();
+    //starting tcp connection with server
+    let mut tcp_stream = TcpStream::connect(tcp_addr);
 
-    loop {
+
+    App::new();
+    //.add_systems(Startup, listener);
+
+
+    /*loop {
         let result = socket.recv_from(&mut buf);
         match result {
             Ok((size, src)) => {
@@ -62,8 +52,5 @@ fn main() {
                 eprintln!("Something happened: {}", e);
             }
         }
-    }
-
-    App::new();
-    //.add_systems(Startup, listener);
+    }*/
 }
