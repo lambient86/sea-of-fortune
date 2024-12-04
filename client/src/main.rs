@@ -1,33 +1,70 @@
-use std::net::UdpSocket;
+mod level;
+mod network;
+
+use bevy::prelude::*;
+use std::net::{TcpStream, UdpSocket};
+
+use crate::level::components::*;
+use crate::level::systems::*;
+use crate::network::systems::*;
 
 fn main() {
-    
     println!("Starting Client");
 
-    let socket = UdpSocket::bind("127.0.0.1:8000")
-        .unwrap();
+    //connect to server
+    let udp_addr = "127.0.0.1:4000";
+    let tcp_addr = "127.0.0.1:8000";
 
-    println!("Client listening on {}", socket.local_addr().unwrap());
+    let udp_socket = UdpSocket::bind(udp_addr).unwrap();
 
-    let server = "127.0.0.1:4000";
+    println!(
+        "UDP: Client listening on {}",
+        udp_socket.local_addr().unwrap()
+    );
 
-    let mut buffer = [0; 1024];
+    let mut buf = [0; 1024];
 
-    let mut request = "Hello there, I am a client!";
+    //starting tcp connection with server
+    let mut tcp_stream = TcpStream::connect(tcp_addr);
 
-    socket.send_to(request.as_bytes(), server)
-            .unwrap();
-        
-    let (size, source) = socket.recv_from(&mut buffer).unwrap();
+    loop {
+        match tcp_stream {
+            Ok(ref t) => {
+                println!("TCP: Stream connected!");
+                break;
+            }
+            Err(ref e) => {
+                eprintln!("Something happened: {}", e);
+                tcp_stream = TcpStream::connect(tcp_addr);
+            }
+        }
+    }
 
-    let server_response = String::from_utf8_lossy(&buffer[..size]);
+    App::new();
+    //.add_systems(Startup, listener);
 
-    println!("Server {} responded: {}", source, server_response);
+    /*loop {
+        let result = socket.recv_from(&mut buf);
+        match result {
+            Ok((size, src)) => {
+                println!("Recieved {} bytes from {}", size, src);
 
-    let request = "Okay, goodbye Mr. Server!";
+                let json_str = String::from_utf8_lossy(&buf[..size]);
+                println!("Received JSON packet: {}", json_str);
 
-    socket.send_to(request.as_bytes(), server)
-        .unwrap();
+                let deserialize: Packet<OceanTile> = serde_json::from_slice(&buf[..size]).unwrap();
 
-    println!("Client process closing...");
+                ocean_map.push(deserialize.payload);
+
+                if ocean_map.len() >= 100000 {
+                    break;
+                }
+
+                //let result = socket.send_to(&buf[..size], "127.0.0.1:8000");
+            }
+            Err(e) => {
+                eprintln!("Something happened: {}", e);
+            }
+        }
+    }*/
 }
