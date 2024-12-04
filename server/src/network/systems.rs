@@ -10,27 +10,40 @@ use crate::network::components::*;
 ///Function that handles TCP connections seperately
 pub fn start_tcp_server(mut connections: Arc<Mutex<TcpConnections>>) {
     //spawning thread to handle connections
-    thread::spawn(move || {
-        let tcp_listener = TcpListener::bind("127.0.0.1:80").unwrap();
-        println!("Server listening on 127.0.0.1:80");
+    let tcp_listener = TcpListener::bind("127.0.0.1:8000").unwrap();
+    println!("Server listening on 127.0.0.1:8000");
 
-        //Accepting incoming connection
-        for stream in tcp_listener.incoming() {
-            match stream {
-                //checking it tcp connection was successfully established
-                Ok(stream) => {
-                    println!(
-                        "Establishing a new TCP connection from {:?}",
-                        stream.peer_addr()
-                    );
-                    connections.add_connection(stream);
-                }
-                Err(e) => {
-                    println!("Failed to accept connection: {:?}", e);
-                }
+    let nonblock = tcp_listener.set_nonblocking(true);
+
+    //Accepting incoming connection
+    for stream_result in tcp_listener.incoming() {
+        match stream_result {
+            Ok(stream) => {
+                println!(
+                    "Establishing a new TCP connection from {:?}",
+                    stream.peer_addr()
+                );
+
+                // Handle the connection in a new thread
+                let connections = Arc::clone(&connections);
+                thread::spawn(move || {
+                    let connection_result = connections.lock();
+                    match connection_result {
+                        Ok(mut conn) => {
+                            conn.add_connection(stream);
+                        }
+                        Err(e) => {
+                            eprintln!("Error locking connections: {:?}", e);
+                        }
+                    }
+                });
+            }
+            Err(e) => {
+                // Log the error and continue accepting connections
+                //println!("Failed to accept connection: {:?}", e);
             }
         }
-    });
+    }
 }
 
 /*   RECEIVE_UDP FUCNTION   */
