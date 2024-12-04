@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::io::*;
 use std::net::{TcpListener, TcpStream};
+use std::sync::{Arc, Mutex};
 
 /// Struct to represent the TCP connections
 #[derive(Resource)]
@@ -36,7 +37,6 @@ impl TcpConnections {
         }
     }
 }
-
 /// Enumerator that represents different udp packet types
 pub enum PacketType {
     PlayerJoin,
