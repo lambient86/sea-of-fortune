@@ -25,18 +25,7 @@ pub fn start_tcp_server(mut connections: Arc<Mutex<TcpConnections>>) {
                 );
 
                 // Handle the connection in a new thread
-                let connections = Arc::clone(&connections);
-                thread::spawn(move || {
-                    let connection_result = connections.lock();
-                    match connection_result {
-                        Ok(mut conn) => {
-                            conn.add_connection(stream);
-                        }
-                        Err(e) => {
-                            eprintln!("Error locking connections: {:?}", e);
-                        }
-                    }
-                });
+                connections.lock().unwrap().add_connection(stream);
             }
             Err(e) => {
                 // Log the error and continue accepting connections
