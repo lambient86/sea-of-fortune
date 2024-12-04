@@ -20,17 +20,15 @@ fn main() {
     // Creating ocean level
     let mut ocean_map = build_ocean();
 
-    /*
     let tcpconnections = TcpConnections {
         streams: Vec::new(),
     };
 
     //creating a shared and thread safe TcpConnections resource
-    let connections = Arc::new(Mutex::new(&tcpconnections));
+    let connections = Arc::new(Mutex::new(tcpconnections));
 
     //starting tcp server in seperate thread
     start_tcp_server(connections);
-    */
 
     App::new();
 
@@ -46,9 +44,9 @@ fn main() {
 
         let result = udp_socket.send_to(&serialized.unwrap().as_bytes(), "127.0.0.1:4000");
 
-        println!("{}", size);
-        size -= 1;
+        //println!("{}", size);
+        //size -= 1;
     }
 
-    println!("Done")
+    //println!("Done")
 }
