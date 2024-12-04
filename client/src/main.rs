@@ -56,7 +56,7 @@ fn main() {
                 ocean.push(deserialize.payload);
 
                 //let result = socket.send_to(&buf[..size], "127.0.0.1:8000");
-                if ocean.len() >= 100000 {
+                if ocean.len() >= 15625 {
                     break;
                 }
             }
@@ -117,7 +117,7 @@ pub fn listen(
         }
     }
 
-    if ocean.map.len() >= 100000 {
+    if ocean.map.len() >= 15625 {
         println!("Packets done: {} packets", ocean.map.len());
     }
 }
@@ -134,20 +134,21 @@ pub fn setup(
     let ocean_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
     let ocean_layout_handle = texture_atlases.add(ocean_layout);
 
-    let mut num = 0;
     for tile in &ocean.map {
-        let mut temp = tile.translation;
-        temp.z = 100.;
-        commands.spawn((SpriteBundle {
-            texture: asset_server.load("s_bat.png"),
-            transform: Transform {
-                translation: temp,
+        commands.spawn((
+            SpriteBundle {
+                texture: asset_server.load("ts_ocean_tiles.png"),
+                transform: Transform {
+                    translation: tile.translation,
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        },));
-        num += 1;
-        println!("Tile #{} placed at {}", num, tile.translation);
+            TextureAtlas {
+                layout: ocean_layout_handle.clone(),
+                index: tile.tile_index,
+            },
+        ));
     }
 }
 
