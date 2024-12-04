@@ -116,10 +116,6 @@ pub fn listen(
             eprintln!("Something happened: {}", e);
         }
     }
-
-    if ocean.map.len() >= 15625 {
-        println!("Packets done: {} packets", ocean.map.len());
-    }
 }
 
 pub fn setup(
@@ -151,59 +147,3 @@ pub fn setup(
         ));
     }
 }
-
-/*
-
-    if (ocean.map.len() >= 100000) {
-        println!("Hit");
-        let mut rng = rand::thread_rng();
-        let mut tile_index;
-
-        let mut w = 0;
-        let mut h = 0;
-        let mut t = Vec3::new(
-            -OCEAN_W_CENTER + TILE_SIZE as f32 / 2.,
-            -OCEAN_H_CENTER + TILE_SIZE as f32 / 2.,
-            -1.0,
-        );
-
-        let bg_ocean_texture_handle: Handle<Image> = asset_server.load("ts_ocean_tiles.png");
-        let ocean_layout =
-            TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
-        let ocean_layout_handle = texture_atlases.add(ocean_layout);
-
-        while (h as f32) * (TILE_SIZE as f32) < OCEAN_LEVEL_H {
-            while (w as f32) * (TILE_SIZE as f32) < OCEAN_LEVEL_W {
-                // weigh it so that its mostly dark blue just for aesthetic reasons
-                let rand = rng.gen_range(0..=10);
-                if rand < 9 {
-                    tile_index = 0
-                } else {
-                    tile_index = 1
-                }
-
-                commands.spawn((
-                    SpriteBundle {
-                        texture: bg_ocean_texture_handle.clone(),
-                        transform: Transform {
-                            translation: t,
-                            ..default()
-                        },
-                        ..default()
-                    },
-                    TextureAtlas {
-                        layout: ocean_layout_handle.clone(),
-                        index: tile_index,
-                    },
-                ));
-                w += 1;
-                t += Vec3::new((TILE_SIZE * 2) as f32, 0., 0.);
-            }
-
-            w = 0;
-            t += Vec3::new(0., (TILE_SIZE * 2) as f32, 0.);
-            t.x = -OCEAN_W_CENTER + (TILE_SIZE * 2) as f32 / 2.0;
-            h += 1;
-        }
-    }
-*/
