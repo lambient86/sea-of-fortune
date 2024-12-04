@@ -1,3 +1,6 @@
+use std::ops::Bound;
+
+use crate::components::BoundingBox;
 use crate::controls::*;
 use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
@@ -16,9 +19,9 @@ pub fn move_player(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mouse_input: Res<ButtonInput<MouseButton>>,
-    mut player: Query<(&mut Transform, &mut Velocity), With<Player>>,
+    mut player: Query<(&mut Transform, &mut Velocity, &mut Player), With<Player>>,
 ) {
-    let (mut player_transform, mut player_velocity) = player.single_mut();
+    let (mut player_transform, mut player_velocity, mut player) = player.single_mut();
 
     let mut deltav = Vec2::splat(0.);
 
@@ -47,6 +50,7 @@ pub fn move_player(
 
     //getting change in location
     let change = player_velocity.v * delta_t;
+    let mut change_vec = Vec2::splat(0.);
 
     //setting new player x position if within bounds
     let new_position = player_transform.translation + Vec3::new(change.x, 0., 0.);
@@ -54,6 +58,7 @@ pub fn move_player(
         && new_position.x <= SAND_LEVEL_W / 2. - (TILE_SIZE as f32) / 2.
     {
         player_transform.translation = new_position;
+        change_vec.x = player_transform.translation.x;
     }
 
     //setting new player y position if within bounds
@@ -62,6 +67,12 @@ pub fn move_player(
         && new_pos.y <= SAND_LEVEL_H / 2. - (TILE_SIZE as f32) / 2.
     {
         player_transform.translation = new_pos;
+        change_vec.y = player_transform.translation.y;
+    }
+
+    if change_vec != Vec2::splat(0.) {
+        println!("updating aabb position");
+        player.aabb.update_position(change_vec);
     }
 }
 
@@ -168,6 +179,10 @@ pub fn spawn_player(
             inventory: initial_inventory,
             spawn_position,
             weapon: 0,
+            aabb: BoundingBox::new(
+                Vec2::new(spawn_position.x, spawn_position.y),
+                Vec2::splat(PLAYER_SIZE / 2.0),
+            ),
         },
         Hurtbox {
             size,
