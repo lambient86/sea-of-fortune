@@ -27,10 +27,7 @@ pub fn start_tcp_server(mut connections: Arc<Mutex<TcpConnections>>) {
                 // Handle the connection in a new thread
                 connections.lock().unwrap().add_connection(stream);
             }
-            Err(e) => {
-                // Log the error and continue accepting connections
-                //println!("Failed to accept connection: {:?}", e);
-            }
+            Err(e) => {}
         }
     }
 }
