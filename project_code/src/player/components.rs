@@ -1,4 +1,4 @@
-use crate::shop::components::Inventory;
+use crate::{components::BoundingBox, shop::components::Inventory};
 use bevy::prelude::*;
 
 /// The speed at which the player accelerates
@@ -25,6 +25,7 @@ pub struct Player {
     pub inventory: Inventory,
     pub spawn_position: Vec3,
     pub weapon: i8,
+    pub aabb: BoundingBox,
 }
 
 /// Struct representing the sword weapon for the player

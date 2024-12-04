@@ -10,10 +10,10 @@ mod kraken;
 mod level;
 mod player;
 mod shop;
+mod skeleton;
 mod systems;
 mod transition_box;
 mod wfc;
-mod skeleton;
 
 use bat::BatPlugin;
 use bevy::{prelude::*, window::PresentMode};
@@ -27,11 +27,11 @@ use enemies::*;
 use ghost_ship::GhostShipPlugin;
 use hitbox_system::HitboxPlugin;
 use kraken::KrakenPlugin;
-use skeleton::SkeletonPlugin;
 use level::LevelPlugin;
 use player::systems::move_player;
 use player::PlayerPlugin;
 use shop::ShopPlugin;
+use skeleton::SkeletonPlugin;
 use systems::*;
 use wfc::WFCPlugin;
 
