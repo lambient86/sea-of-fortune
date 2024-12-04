@@ -4,13 +4,16 @@ mod components;
 mod controls;
 mod data;
 mod enemies;
+mod ghost_ship;
 mod hitbox_system;
 mod kraken;
 mod level;
 mod player;
 mod shop;
+mod skeleton;
 mod systems;
 mod transition_box;
+mod wfc;
 
 use bat::BatPlugin;
 use bevy::{prelude::*, window::PresentMode};
@@ -21,13 +24,16 @@ use components::GameworldState;
 use controls::*;
 use data::gameworld_data::*;
 use enemies::*;
+use ghost_ship::GhostShipPlugin;
 use hitbox_system::HitboxPlugin;
 use kraken::KrakenPlugin;
 use level::LevelPlugin;
 use player::systems::move_player;
 use player::PlayerPlugin;
 use shop::ShopPlugin;
+use skeleton::SkeletonPlugin;
 use systems::*;
+use wfc::WFCPlugin;
 
 fn main() {
     App::new()
@@ -46,9 +52,12 @@ fn main() {
         .add_plugins(BoatPlugin)
         .add_plugins(BatPlugin)
         .add_plugins(KrakenPlugin)
+        .add_plugins(SkeletonPlugin)
         .add_plugins(HitboxPlugin)
         .add_plugins(ShopPlugin)
         .add_plugins(LevelPlugin)
+        .add_plugins(WFCPlugin)
+        .add_plugins(GhostShipPlugin)
         .add_systems(
             Update,
             move_player_camera.after(move_player).run_if(

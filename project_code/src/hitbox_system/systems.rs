@@ -24,7 +24,7 @@ pub fn check_hitbox_hurtbox_collisions(
         let hurtbox_max = hurtbox_pos + hurtbox.size / 2.0;
 
         for (hitbox_entity, hitbox_transform, hitbox) in hitbox_query.iter() {
-            if hurtbox.entity != hitbox.entity {
+            if hurtbox.enemy != hitbox.enemy {
                 let hitbox_pos = hitbox_transform.translation.truncate() + hitbox.offset;
                 let hitbox_min = hitbox_pos - hitbox.size / 2.0;
                 let hitbox_max = hitbox_pos + hitbox.size / 2.0;
@@ -117,6 +117,7 @@ pub fn create_hitbox(
     lifetime: Option<f32>,
     entity_type: i32,
     projectile: bool,
+    enemy: bool,
 ) {
     let lifetime_timer = lifetime.map(|duration| Timer::from_seconds(duration, TimerMode::Once));
     commands.entity(entity).insert(Hitbox {
@@ -125,6 +126,7 @@ pub fn create_hitbox(
         lifetime: lifetime_timer,
         entity: entity_type,
         projectile,
+        enemy,
     });
 }
 
@@ -134,6 +136,7 @@ pub fn create_hurtbox(
     size: Vec2,
     offset: Vec2,
     entity_type: i32,
+    enemy: bool,
 ) {
     commands.entity(entity).insert(Hurtbox {
         size,
@@ -141,6 +144,7 @@ pub fn create_hurtbox(
         entity: entity_type,
         colliding: false,
         iframe: Timer::from_seconds(1., TimerMode::Once),
+        enemy,
     });
 }
 
