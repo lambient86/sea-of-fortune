@@ -20,6 +20,8 @@ fn main() {
     // Creating ocean level
     let mut ocean_map = build_ocean();
 
+    println!("Ocean size: {}", ocean_map.len());
+
     let tcpconnections = TcpConnections {
         streams: Vec::new(),
     };
@@ -32,7 +34,7 @@ fn main() {
 
     App::new();
 
-    let mut size = ocean_map.len();
+    let mut size = 0;
 
     for tile in ocean_map {
         let packet = Packet {
@@ -45,8 +47,8 @@ fn main() {
         let result = udp_socket.send_to(&serialized.unwrap().as_bytes(), "127.0.0.1:4000");
 
         //println!("{}", size);
-        //size -= 1;
+        size += 1;
     }
 
-    //println!("Done")
+    println!("Done. Packets sent: {}", size);
 }
