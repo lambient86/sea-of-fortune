@@ -56,7 +56,7 @@ fn main() {
                 ocean.push(deserialize.payload);
 
                 //let result = socket.send_to(&buf[..size], "127.0.0.1:8000");
-                if ocean.len() >= 100000 {
+                if ocean.len() >= 15625 {
                     break;
                 }
             }
@@ -116,9 +116,35 @@ pub fn listen(
             eprintln!("Something happened: {}", e);
         }
     }
+}
 
-    if ocean.map.len() >= 100000 {
-        println!("Packets done: {} packets", ocean.map.len());
+pub fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    ocean: Res<Ocean>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+) {
+    commands.spawn(Camera2dBundle::default());
+
+    let bg_ocean_texture_handle: Handle<Image> = asset_server.load("ts_ocean_tiles.png");
+    let ocean_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
+    let ocean_layout_handle = texture_atlases.add(ocean_layout);
+
+    for tile in &ocean.map {
+        commands.spawn((
+            SpriteBundle {
+                texture: asset_server.load("ts_ocean_tiles.png"),
+                transform: Transform {
+                    translation: tile.translation,
+                    ..default()
+                },
+                ..default()
+            },
+            TextureAtlas {
+                layout: ocean_layout_handle.clone(),
+                index: tile.tile_index,
+            },
+        ));
     }
 }
 
