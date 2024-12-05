@@ -56,6 +56,8 @@ pub fn rotate_bat(
 
 /*   ANIMATE_BAT FUNCTION   */
 /// Animates a bat entity
+///
+/// Fun fact, this actually animates everything
 pub fn animate_bat(
     time: Res<Time>,
     mut query: Query<(&mut AnimationTimer, &mut TextureAtlas, &AnimationFrameCount)>,
@@ -205,6 +207,7 @@ pub fn bat_attack(
                 lifetime: Some(Timer::from_seconds(3., TimerMode::Once)),
                 entity: BAT,
                 projectile: true,
+                enemy: true,
             },
         ));
     }

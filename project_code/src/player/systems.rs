@@ -1,3 +1,6 @@
+use std::ops::Bound;
+
+use crate::components::BoundingBox;
 use crate::controls::*;
 use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
@@ -16,9 +19,9 @@ pub fn move_player(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mouse_input: Res<ButtonInput<MouseButton>>,
-    mut player: Query<(&mut Transform, &mut Velocity), With<Player>>,
+    mut player: Query<(&mut Transform, &mut Velocity, &mut Player), With<Player>>,
 ) {
-    let (mut player_transform, mut player_velocity) = player.single_mut();
+    let (mut player_transform, mut player_velocity, mut player) = player.single_mut();
 
     let mut deltav = Vec2::splat(0.);
 
@@ -47,6 +50,7 @@ pub fn move_player(
 
     //getting change in location
     let change = player_velocity.v * delta_t;
+    let mut change_vec = Vec2::splat(0.);
 
     //setting new player x position if within bounds
     let new_position = player_transform.translation + Vec3::new(change.x, 0., 0.);
@@ -54,6 +58,7 @@ pub fn move_player(
         && new_position.x <= SAND_LEVEL_W / 2. - (TILE_SIZE as f32) / 2.
     {
         player_transform.translation = new_position;
+        change_vec.x = player_transform.translation.x;
     }
 
     //setting new player y position if within bounds
@@ -62,6 +67,12 @@ pub fn move_player(
         && new_pos.y <= SAND_LEVEL_H / 2. - (TILE_SIZE as f32) / 2.
     {
         player_transform.translation = new_pos;
+        change_vec.y = player_transform.translation.y;
+    }
+
+    if change_vec != Vec2::splat(0.) {
+        println!("updating aabb position");
+        player.aabb.update_position(change_vec);
     }
 }
 
@@ -168,6 +179,10 @@ pub fn spawn_player(
             inventory: initial_inventory,
             spawn_position,
             weapon: 0,
+            aabb: BoundingBox::new(
+                Vec2::new(spawn_position.x, spawn_position.y),
+                Vec2::splat(PLAYER_SIZE / 2.0),
+            ),
         },
         Hurtbox {
             size,
@@ -175,6 +190,7 @@ pub fn spawn_player(
             colliding: false,
             entity: PLAYER,
             iframe: Timer::from_seconds(0.75, TimerMode::Once),
+            enemy: false,
         },
     ));
 }
@@ -248,7 +264,8 @@ pub fn swap_weapon(
                 /*   spawning musket   */
                 //getting sprite info
                 let master_handle: Handle<Image> = asset_server.load("s_musket.png");
-                let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(64), 8, 5, None, None);
+                let master_layout =
+                    TextureAtlasLayout::from_grid(UVec2::splat(64), 8, 5, None, None);
                 let master_layout_handle = texture_atlases.add(master_layout);
 
                 // get player + set weapon as child
@@ -258,11 +275,11 @@ pub fn swap_weapon(
                         SpriteBundle {
                             texture: master_handle,
                             transform: Transform {
-                            scale: Vec3::splat(1.),
-                            translation: Vec3::new(32., 0.0, 0.0),
+                                scale: Vec3::splat(1.),
+                                translation: Vec3::new(32., 0.0, 0.0),
+                                ..default()
+                            },
                             ..default()
-                        },
-                        ..default()
                         },
                         TextureAtlas {
                             layout: master_layout_handle,
@@ -274,7 +291,6 @@ pub fn swap_weapon(
                         },
                     ));
                 });
-
             } else if player.weapon == 1 {
                 //switching from musket to sword
                 player.weapon = 0;
@@ -288,7 +304,8 @@ pub fn swap_weapon(
                 /*    spawning sword    */
                 //getting sprite info
                 let master_handle: Handle<Image> = asset_server.load("s_cutlass.png");
-                let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
+                let master_layout =
+                    TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
                 let master_layout_handle = texture_atlases.add(master_layout);
 
                 // get player + set weapon as child
@@ -298,18 +315,18 @@ pub fn swap_weapon(
                         SpriteBundle {
                             texture: master_handle,
                             transform: Transform {
-                            scale: Vec3::splat(2.),
-                            translation: Vec3::new(32., 0.0, 0.0),
+                                scale: Vec3::splat(2.),
+                                translation: Vec3::new(32., 0.0, 0.0),
+                                ..default()
+                            },
                             ..default()
-                        },
-                        ..default()
                         },
                         TextureAtlas {
                             layout: master_layout_handle,
                             index: 0,
                         },
                         Sword {
-                        ..Default::default()
+                            ..Default::default()
                         },
                     ));
                 });
@@ -333,7 +350,7 @@ pub fn move_weapon(
 
                 if player_direction == SpriteState::LeftRun
                     || player_direction == SpriteState::BackwardRun
-                {   
+                {
                     transform.translation = Vec3::new(-32., 0., 0.);
                     sprite.flip_x = true;
                 } else if player_direction == SpriteState::RightRun
@@ -349,7 +366,7 @@ pub fn move_weapon(
 
                 if player_direction == SpriteState::LeftRun
                     || player_direction == SpriteState::BackwardRun
-                {   
+                {
                     transform.translation = Vec3::new(-32., 0., 0.);
                     sprite.flip_x = true;
                 } else if player_direction == SpriteState::RightRun
@@ -371,7 +388,16 @@ pub fn sword_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     curr_mouse_pos: ResMut<CurrMousePos>,
     mut commands: Commands,
-    mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown, &mut Player), With<Player>>,
+    mut player_query: Query<
+        (
+            Entity,
+            &Transform,
+            &Velocity,
+            &mut AttackCooldown,
+            &mut Player,
+        ),
+        With<Player>,
+    >,
 ) {
     for (entity, transform, velocity, mut cooldown, player) in player_query.iter_mut() {
         //If the cooldown is not finished, tick and break because you can't attack anyway
@@ -379,7 +405,7 @@ pub fn sword_attack(
             cooldown.remaining.tick(time.delta());
             break;
         }
-        
+
         //checking if weapon is sword
         if player.weapon == 0 {
             // Checks if the left mouse button is pressed
@@ -409,6 +435,7 @@ pub fn sword_attack(
                     Some(0.1),
                     PLAYER,
                     false,
+                    false,
                 );
             }
         }
@@ -423,10 +450,19 @@ pub fn musket_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     curr_mouse_pos: ResMut<CurrMousePos>,
     mut commands: Commands,
-    mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown, &mut Player), With<Player>>,
+    mut player_query: Query<
+        (
+            Entity,
+            &Transform,
+            &Velocity,
+            &mut AttackCooldown,
+            &mut Player,
+        ),
+        With<Player>,
+    >,
     asset_server: Res<AssetServer>,
 ) {
-        for(entity, transform, velocity, mut cooldown, player) in player_query.iter_mut() {
+    for (entity, transform, velocity, mut cooldown, player) in player_query.iter_mut() {
         //If the cooldown is not finished, tick and break because you can't attack anyway
         if !cooldown.remaining.finished() {
             cooldown.remaining.tick(time.delta());
@@ -483,6 +519,7 @@ pub fn musket_attack(
                         lifetime: Some(Timer::from_seconds(MUSKETBALL_LIFETIME, TimerMode::Once)),
                         entity: PLAYER,
                         projectile: true,
+                        enemy: false,
                     },
                 ));
             }
@@ -493,7 +530,8 @@ pub fn musket_attack(
 /*   MOVE_MUSKETBALL FUNCTION   */
 /// Updates the locations of musket projectiles
 pub fn move_musketball(
-    mut proj_query: Query<(&mut Transform, &mut MusketballVelocity), With<Musketball>>,    time: Res<Time>,
+    mut proj_query: Query<(&mut Transform, &mut MusketballVelocity), With<Musketball>>,
+    time: Res<Time>,
 ) {
     for (mut transform, velocity) in proj_query.iter_mut() {
         // Calculates/moves the projectile
@@ -531,7 +569,7 @@ pub fn check_player_health(
 /// Despawns the weapon entity
 /// DEBUG: Will despawn any and all weapons
 pub fn despawn_weapon(
-    mut commands: Commands, 
+    mut commands: Commands,
     sword_query: Query<Entity, With<Sword>>,
     musket_query: Query<Entity, With<Musket>>,
 ) {

@@ -1,8 +1,11 @@
-use crate::player::components::*;
-use crate::boat::components::*;
-use bevy::{prelude::*, window::PresentMode};
-use crate::data::gameworld_data::*;
 use crate::components::*;
+use crate::data::gameworld_data::*;
+use crate::hitbox_system::{Hitbox, Hurtbox};
+use crate::level::components::{Dungeon, IslandType, OceanDoor};
+use crate::player::components::*;
+use crate::{boat::components::*, level::components::Island};
+use bevy::math::bounding::IntersectsVolume;
+use bevy::{prelude::*, window::PresentMode};
 
 /*   MOVE_CAMERA FUNCTIONS  */
 /// Updates the cameras position to center the current player
@@ -53,41 +56,92 @@ pub fn setup_gameworld(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(Background);
 }
 
-/*   CHANGE_GAMEWORLD_STATE FUNCTION   */
-/// Changes the state of the gameworld
-/// DEBUG: On keypress, the gameworld will switch
-/// * I - Island
-/// * O - Ocean
-/// * U - Dungeon
 pub fn change_gameworld_state(
     mut next_state: ResMut<NextState<GameworldState>>,
+    islands_query: Query<&mut Island, With<Island>>,
+    dungeon_query: Query<&mut Dungeon, With<Dungeon>>,
+    gameworld_state: Res<State<GameworldState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut player_query: Query<&mut Player, With<Player>>,
+    mut boat_query: Query<&mut Boat, With<Boat>>,
+    door_query: Query<&mut OceanDoor, With<OceanDoor>>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::KeyI) {   //ISLAND
-        //switching states to island
-        next_state.set(GameworldState::Island);
-
-    } else if keyboard_input.just_pressed(KeyCode::KeyO) {   //OCEAN
-        //switching state to ocean
+    if keyboard_input.just_pressed(KeyCode::Enter)
+        && *gameworld_state.get() != GameworldState::Ocean
+        && *gameworld_state.get() != GameworldState::Island
+        && *gameworld_state.get() != GameworldState::Dungeon
+    {
         next_state.set(GameworldState::Ocean);
-
-    } else if keyboard_input.just_pressed(KeyCode::KeyU) {   //DUNGEON
-        //switching state to dungeon
-        next_state.set(GameworldState::Dungeon)
     }
+    //  CASE: OCEAN --> ISLAND
+    if *gameworld_state.get() == GameworldState::Ocean {
+        let boat = boat_query.single_mut();
+        for island in islands_query.iter() {
+            if island.aabb.aabb.intersects(&boat.aabb.aabb) {
+                println!("going to the island!");
+                next_state.set(GameworldState::Island);
+            }
+        }
+    } else if *gameworld_state.get() == GameworldState::Island {
+        let player = player_query.single_mut();
+
+        // case: island --> dungeon
+        for dungeon in dungeon_query.iter() {
+            if dungeon.aabb.aabb.intersects(&player.aabb.aabb) {
+                println!("going to a dungeon!");
+                next_state.set(GameworldState::Dungeon);
+            }
+        }
+
+        // case: island --> ocean
+        let ocean_door = door_query.single();
+        if ocean_door.aabb.aabb.intersects(&player.aabb.aabb) {
+            println!("going to the ocean!");
+            next_state.set(GameworldState::Ocean);
+        }
+    } else if *gameworld_state.get() == GameworldState::Dungeon {
+        let player = player_query.single_mut();
+        for dungeon in dungeon_query.iter() {
+            if dungeon.aabb.aabb.intersects(&player.aabb.aabb) {
+                println!("going to a dungeon!");
+                next_state.set(GameworldState::Island);
+            }
+        }
+    }
+
+    // for (entity, island_type) in islands_query.iter() {
+    //     match island_type {
+    //         IslandType::Level1 => {
+    //             println!("Found Level 1 Island");
+    //         }
+    //         IslandType::Level2 => {
+    //             println!("Found Level 2 Island");
+    //         }
+    //         IslandType::Level3 => {
+    //             println!("Found Level 3 Island");
+    //         }
+    //         IslandType::Boss => {
+    //             println!("Found Boss Island");
+    //         }
+    //     }
+    // }
 }
 
 /*   CHANGE_GAME_STATE FUNCTION   */
 /// Changes the state of the game. Such as a switch between running and paused
 /// DEBUG: On keypress, the game state will switch
 /// * E - if Running, to InShop, if InShop, to Running
-pub fn change_game_state (
+pub fn change_game_state(
     game_state: Res<State<GameState>>,
     gameworld_state: Res<State<GameworldState>>,
     mut next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
-    if *game_state.get() == GameState::Running && (*gameworld_state.get() == GameworldState::Island || *gameworld_state.get() == GameworldState::Dungeon) && keyboard_input.just_pressed(KeyCode::KeyE) {
+    if *game_state.get() == GameState::Running
+        && (*gameworld_state.get() == GameworldState::Island
+            || *gameworld_state.get() == GameworldState::Dungeon)
+        && keyboard_input.just_pressed(KeyCode::KeyE)
+    {
         next_state.set(GameState::InShop)
     } else if *game_state.get() == GameState::InShop && keyboard_input.just_pressed(KeyCode::KeyE) {
         next_state.set(GameState::Running)
