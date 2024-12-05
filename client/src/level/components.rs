@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Component, Serialize, Deserialize)]
 pub struct OceanTile {
-    translation: Vec3,
-    tile_index: usize,
+    pub translation: Vec3,
+    pub tile_index: usize,
 }
 
 /// implementation for ocean tile

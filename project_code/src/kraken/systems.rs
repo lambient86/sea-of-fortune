@@ -181,6 +181,7 @@ pub fn kraken_attack(
                 lifetime: Some(Timer::from_seconds(5., TimerMode::Once)),
                 entity: KRAKEN,
                 projectile: true,
+                enemy: true,
             },
         ));
     }

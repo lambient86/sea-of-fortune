@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::components::BoundingBox;
+
 pub const CANNONBALL_SPEED: f32 = 800.;
 pub const CANNONBALL_LIFETIME: f32 = 6.;
 pub const MAX_ACCEL: f32 = 800.;
@@ -11,6 +13,7 @@ pub struct Boat {
     pub movement_speed: f32,
     pub rotation_speed: f32,
     pub acceleration: f32,
+    pub aabb: BoundingBox,
 }
 
 /// Struct to represent the cannon ball being shot by the player controlled

@@ -4,13 +4,16 @@ mod components;
 mod controls;
 mod data;
 mod enemies;
+mod ghost_ship;
 mod hitbox_system;
 mod kraken;
 mod level;
 mod player;
 mod shop;
+mod skeleton;
 mod systems;
 mod transition_box;
+mod wfc;
 
 use bat::BatPlugin;
 use bevy::{prelude::*, window::PresentMode};
@@ -21,13 +24,16 @@ use components::GameworldState;
 use controls::*;
 use data::gameworld_data::*;
 use enemies::*;
+use ghost_ship::GhostShipPlugin;
 use hitbox_system::HitboxPlugin;
 use kraken::KrakenPlugin;
 use level::LevelPlugin;
 use player::systems::move_player;
 use player::PlayerPlugin;
 use shop::ShopPlugin;
+use skeleton::SkeletonPlugin;
 use systems::*;
+use wfc::WFCPlugin;
 
 fn main() {
     App::new()
@@ -46,9 +52,12 @@ fn main() {
         .add_plugins(BoatPlugin)
         .add_plugins(BatPlugin)
         .add_plugins(KrakenPlugin)
+        .add_plugins(SkeletonPlugin)
         .add_plugins(HitboxPlugin)
         .add_plugins(ShopPlugin)
         .add_plugins(LevelPlugin)
+        .add_plugins(WFCPlugin)
+        .add_plugins(GhostShipPlugin)
         .add_systems(
             Update,
             move_player_camera.after(move_player).run_if(
@@ -71,29 +80,39 @@ fn main() {
 }
 
 use std::net::*;
+
 fn send_packets() {
     let socket = UdpSocket::bind("0.0.0.0:0").expect("Failed to bind to socket");
+
     let target_ip = "127.0.0.1:4000";
     let data = format!("Client -> Server");
+
     // Send the packet
     socket
         .send_to(data.as_bytes(), target_ip)
         .expect("Failed to send packet");
+
     println!("Packet sent to {}", target_ip);
 }
 /*
 fn packet_listener() {
     let socket = UdpSocket::bind("127.0.0.1:5000").expect("Failed to bind to socket");
+
     //println!("Client listening on {}", socket.local_addr().unwrap());
+
     let mut buffer = [0; 1024];
+
     socket
         .set_nonblocking(true)
         .expect("Failed to set non-blocking mode");
+
     let result = socket.recv_from(&mut buffer);
+
     match result {
         Ok((size, source)) => {
             //println!("Received {} bytes from {}", size, source);
             let request = String::from_utf8_lossy(&buffer[..size]);
+
             println!("Received {} from {}", request, source);
         }
         Err(e) => {
@@ -101,4 +120,5 @@ fn packet_listener() {
         }
     }
 }
+
 */

@@ -16,7 +16,6 @@ impl Plugin for KrakenPlugin {
             .add_systems(
                 Update,
                 (
-                    rotate_kraken,
                     kraken_attack,
                     kraken_damaged,
                     move_kraken_projectile,

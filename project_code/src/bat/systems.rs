@@ -205,6 +205,7 @@ pub fn bat_attack(
                 lifetime: Some(Timer::from_seconds(3., TimerMode::Once)),
                 entity: BAT,
                 projectile: true,
+                enemy: true,
             },
         ));
     }
