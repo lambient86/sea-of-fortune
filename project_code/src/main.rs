@@ -9,6 +9,7 @@ mod hitbox_system;
 mod kraken;
 mod level;
 mod player;
+mod rock;
 mod shop;
 mod skeleton;
 mod systems;
@@ -30,6 +31,7 @@ use kraken::KrakenPlugin;
 use level::LevelPlugin;
 use player::systems::move_player;
 use player::PlayerPlugin;
+use rock::RockPlugin;
 use shop::ShopPlugin;
 use skeleton::SkeletonPlugin;
 use systems::*;
@@ -58,6 +60,7 @@ fn main() {
         .add_plugins(LevelPlugin)
         .add_plugins(WFCPlugin)
         .add_plugins(GhostShipPlugin)
+        .add_plugins(RockPlugin)
         .add_systems(
             Update,
             move_player_camera.after(move_player).run_if(
