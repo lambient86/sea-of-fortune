@@ -15,24 +15,26 @@ fn main() {
     println!("Starting Server");
 
     // Creating UDP socket connecion
-    let udp_socket = UdpSocket::bind("127.0.0.1:8000").unwrap();
+    let udp_socket = UdpSocket::bind("127.0.0.1:0").unwrap();
 
     // Creating ocean level
-    let mut ocean_map = build_ocean();
+    let mut ocean_map = OceanMap { map: build_ocean() };
 
-    println!("Ocean size: {}", ocean_map.len());
+    println!("Ocean size: {}", ocean_map.map.len());
 
     let tcpconnections = TcpConnections {
         streams: Vec::new(),
     };
 
     //creating a shared and thread safe TcpConnections resource
-    let connections = Arc::new(Mutex::new(tcpconnections));
+    let connections = TcpResource { streams: Arc::new(Mutex::new(tcpconnections)) };
 
     //starting tcp server in seperate thread
-    start_tcp_server(connections);
+    start_tcp_server(&connections);
 
-    App::new();
+    App::new()
+        .insert_resource(connections)
+        .insert_resource(ocean_map);
 
     let mut size = 0;
 
