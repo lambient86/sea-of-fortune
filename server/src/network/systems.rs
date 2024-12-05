@@ -8,7 +8,7 @@ use crate::network::components::*;
 
 /*   START_TCP_SERVER FUNCTION   */
 ///Function that handles TCP connections seperately
-pub fn start_tcp_server(connections: Arc<Mutex<TcpConnections>>) {
+pub fn start_tcp_server(mut connections: &TcpResource) {
     //spawning thread to handle connections
     let tcp_listener = TcpListener::bind("127.0.0.1:8000").expect("TCP binding failed");
     println!("Server listening on 127.0.0.1:8000");
@@ -27,7 +27,7 @@ pub fn start_tcp_server(connections: Arc<Mutex<TcpConnections>>) {
                 );
 
                 // Handle the connection in a new thread
-                connections.lock().unwrap().add_connection(stream);
+                connections.streams.lock().unwrap().add_connection(stream);
                 break;
             }
             Err(e) => {}

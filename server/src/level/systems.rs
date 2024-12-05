@@ -1,6 +1,8 @@
 use crate::data::gameworld_data::*;
 use crate::level::components::*;
+use crate::network::components::*;
 use bevy::prelude::*;
+use bevy::utils::hashbrown::Equivalent;
 use rand::Rng;
 
 /*   BUILD_OCEAN FUNCTION   */
@@ -50,4 +52,27 @@ pub fn build_ocean() -> Vec<OceanTile> {
     }
 
     return tile_map;
+}
+
+/*   SEND_OVERWORLD_DATA FUNCTION   */
+/// Sends the information for the ocean overworld level
+pub fn send_overworld_data(
+    connections: Res<TcpResource>,
+    ocean_map: Res<OceanMap>,
+) {
+    
+    //checking if a new client requested the overworld
+    for stream in connections.streams.lock().unwrap().streams.iter() {
+        //checking if client requested overworld data
+        let mut buf = [0; 1024];
+        stream.peek(&mut buf);
+        let request: Packet<String> =  serde_json::from_slice(&buf[..1024]).unwrap();
+
+        if request.message.equivalent(&String::from("load")) && request.payload.equivalent(&String::from("ocean")) {
+
+        }
+
+        
+
+    }
 }

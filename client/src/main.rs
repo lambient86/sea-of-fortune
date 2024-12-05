@@ -148,35 +148,6 @@ pub fn setup(
     }
 }
 
-pub fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    ocean: Res<Ocean>,
-    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-) {
-    commands.spawn(Camera2dBundle::default());
-
-    let bg_ocean_texture_handle: Handle<Image> = asset_server.load("ts_ocean_tiles.png");
-    let ocean_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
-    let ocean_layout_handle = texture_atlases.add(ocean_layout);
-
-    let mut num = 0;
-    for tile in &ocean.map {
-        let mut temp = tile.translation;
-        temp.z = 100.;
-        commands.spawn((SpriteBundle {
-            texture: asset_server.load("s_bat.png"),
-            transform: Transform {
-                translation: temp,
-                ..default()
-            },
-            ..default()
-        },));
-        num += 1;
-        println!("Tile #{} placed at {}", num, tile.translation);
-    }
-}
-
 /*
 
     if (ocean.map.len() >= 100000) {

@@ -18,3 +18,9 @@ impl OceanTile {
         }
     }
 }
+
+///struct that holds the ocean map as a resource
+#[derive(Resource)]
+pub struct OceanMap {
+    pub map: Vec<OceanTile>,
+}

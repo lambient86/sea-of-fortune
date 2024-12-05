@@ -10,6 +10,11 @@ pub struct TcpConnections {
     pub streams: Vec<TcpStream>,
 }
 
+#[derive(Resource)]
+pub struct TcpResource {
+    pub streams: Arc<Mutex<TcpConnections>>,
+}
+
 impl TcpConnections {
     /// Adds a connection to the list of TCP connections
     pub fn add_connection(&mut self, stream: TcpStream) {
