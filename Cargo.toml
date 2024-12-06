@@ -2,7 +2,8 @@
 members = [
     "project_code",
     "server",
-    "client",
+    "client1",
+    "client2",
 ]
 
 default-members = [ "project_code" ]

@@ -1,8 +1,13 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::io::*;
-use std::net::{TcpListener, TcpStream};
+use std::net::*;
 use std::sync::{Arc, Mutex};
+
+#[derive(Resource)]
+pub struct UDP {
+    pub socket: UdpSocket,
+}
 
 /// Struct to represent the TCP connections
 #[derive(Resource)]
