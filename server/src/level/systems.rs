@@ -56,23 +56,18 @@ pub fn build_ocean() -> Vec<OceanTile> {
 
 /*   SEND_OVERWORLD_DATA FUNCTION   */
 /// Sends the information for the ocean overworld level
-pub fn send_overworld_data(
-    connections: Res<TcpResource>,
-    ocean_map: Res<OceanMap>,
-) {
-    
+pub fn send_overworld_data(connections: Res<TcpResource>, ocean_map: Res<OceanMap>) {
     //checking if a new client requested the overworld
+
+    /*
     for stream in connections.streams.lock().unwrap().streams.iter() {
         //checking if client requested overworld data
         let mut buf = [0; 1024];
-        stream.peek(&mut buf);
-        let request: Packet<String> =  serde_json::from_slice(&buf[..1024]).unwrap();
+        stream.peek(&mut buf).expect("Not recieved");
+        let request: Packet<String> = serde_json::from_slice(&buf[..1024]).unwrap();
 
-        if request.message.equivalent(&String::from("load")) && request.payload.equivalent(&String::from("ocean")) {
-
-        }
-
-        
-
-    }
+        if request.message.equivalent(&String::from("load"))
+            && request.payload.equivalent(&String::from("ocean"))
+        {}
+    }*/
 }
