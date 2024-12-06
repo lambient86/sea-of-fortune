@@ -1,4 +1,7 @@
+use std::thread;
+
 use crate::boat::components::*;
+use crate::components::BoundingBox;
 use crate::controls::*;
 use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
@@ -52,6 +55,9 @@ pub fn move_boat(
 
     let extents = Vec3::from((BOUNDS / 2.0, 0.0));
     transform.translation = transform.translation.min(extents).max(-extents);
+    // let pos = (((ship.aabb.aabb.min + ship.aabb.aabb.max) / 2.0) + translation_delta.truncate());
+    // ship.aabb.update_position(pos);
+    ship.aabb.update_position(transform.translation.truncate());
 }
 
 /*  SPAWN_BOAT FUNCTION */
@@ -88,6 +94,7 @@ pub fn spawn_boat(
             movement_speed: 150.,
             rotation_speed: f32::to_radians(100.0),
             acceleration: 0.,
+            aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
         },
         AttackCooldown {
             remaining: Timer::from_seconds(1.5, TimerMode::Once),
@@ -98,6 +105,7 @@ pub fn spawn_boat(
             entity: BOAT,
             colliding: false,
             iframe: Timer::from_seconds(0.75, TimerMode::Once),
+            enemy: false,
         },
     ));
 }
@@ -163,6 +171,7 @@ pub fn boat_attack(
                     lifetime: Some(Timer::from_seconds(CANNONBALL_LIFETIME, TimerMode::Once)),
                     entity: BOAT,
                     projectile: true,
+                    enemy: false,
                 },
             ));
         }
@@ -172,7 +181,8 @@ pub fn boat_attack(
 /*   MOVE_CANNONBALL FUNCTION   */
 /// Updates the locations of boat projectiles
 pub fn move_cannonball(
-    mut proj_query: Query<(&mut Transform, &mut CannonballVelocity), With<Cannonball>>,    time: Res<Time>,
+    mut proj_query: Query<(&mut Transform, &mut CannonballVelocity), With<Cannonball>>,
+    time: Res<Time>,
 ) {
     for (mut transform, velocity) in proj_query.iter_mut() {
         // Calculates/moves the projectile

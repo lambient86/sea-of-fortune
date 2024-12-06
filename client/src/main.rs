@@ -3,6 +3,7 @@ mod network;
 
 use bevy::prelude::*;
 use bevy::window::PresentMode;
+use core::panic;
 use network::components::*;
 use rand::Rng;
 use std::net::{TcpStream, UdpSocket};
@@ -29,6 +30,8 @@ fn main() {
     let mut buf = [0; 1024];
 
     //starting tcp connection with server
+
+    /*
     let mut tcp_stream = TcpStream::connect(tcp_addr);
 
     loop {
@@ -43,19 +46,49 @@ fn main() {
             }
         }
     }
+     */
+
+    println!("Trying to join world...");
+
+    let mut player = Player::default();
+
+    let packet: Packet<Player> = Packet {
+        payload: player.clone(),
+    };
+
+    let env = serde_json::to_string(&Envelope {
+        message: "new_player".to_string(),
+        packet: serde_json::to_string(&packet).unwrap(),
+    });
+
+    udp_socket
+        .send_to(env.unwrap().as_bytes(), "127.0.0.1:5000")
+        .expect("Failed to send [new_player] packet");
 
     let mut ocean = Vec::new();
-
     loop {
         let result = udp_socket.recv_from(&mut buf);
 
         match result {
             Ok((size, src)) => {
-                let deserialize: Packet<OceanTile> = serde_json::from_slice(&buf[..size]).unwrap();
+                let env: Envelope = serde_json::from_slice(&buf[..size]).unwrap();
 
-                ocean.push(deserialize.payload);
+                if env.message.eq("joined_lobby") {
+                    let packet: Packet<i32> = serde_json::from_str(&env.packet).unwrap();
 
-                //let result = socket.send_to(&buf[..size], "127.0.0.1:8000");
+                    let id = packet.payload;
+                    println!("Joined lobby! You are player #{}", id);
+                    player.id = id;
+                } else if env.message.eq("full_lobby") {
+                    panic!("{}", env.packet);
+                } else if env.message.eq("load_ocean") {
+                    let packet: Packet<OceanTile> = serde_json::from_str(&env.packet).unwrap();
+
+                    ocean.push(packet.payload);
+                } else {
+                    println!("Recieved invalid packet");
+                }
+
                 if ocean.len() >= 15625 {
                     break;
                 }
@@ -66,7 +99,11 @@ fn main() {
         }
     }
 
-    println!("Ocean map done");
+    println!("Ocean map done. Final size: {}", ocean.len());
+
+    if !udp_socket.set_nonblocking(true).is_ok() {
+        panic!("Non blocking wasn't successful; terminating");
+    }
 
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -147,3 +184,59 @@ pub fn setup(
         ));
     }
 }
+
+/*
+
+    if (ocean.map.len() >= 100000) {
+        println!("Hit");
+        let mut rng = rand::thread_rng();
+        let mut tile_index;
+
+        let mut w = 0;
+        let mut h = 0;
+        let mut t = Vec3::new(
+            -OCEAN_W_CENTER + TILE_SIZE as f32 / 2.,
+            -OCEAN_H_CENTER + TILE_SIZE as f32 / 2.,
+            -1.0,
+        );
+
+        let bg_ocean_texture_handle: Handle<Image> = asset_server.load("ts_ocean_tiles.png");
+        let ocean_layout =
+            TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
+        let ocean_layout_handle = texture_atlases.add(ocean_layout);
+
+        while (h as f32) * (TILE_SIZE as f32) < OCEAN_LEVEL_H {
+            while (w as f32) * (TILE_SIZE as f32) < OCEAN_LEVEL_W {
+                // weigh it so that its mostly dark blue just for aesthetic reasons
+                let rand = rng.gen_range(0..=10);
+                if rand < 9 {
+                    tile_index = 0
+                } else {
+                    tile_index = 1
+                }
+
+                commands.spawn((
+                    SpriteBundle {
+                        texture: bg_ocean_texture_handle.clone(),
+                        transform: Transform {
+                            translation: t,
+                            ..default()
+                        },
+                        ..default()
+                    },
+                    TextureAtlas {
+                        layout: ocean_layout_handle.clone(),
+                        index: tile_index,
+                    },
+                ));
+                w += 1;
+                t += Vec3::new((TILE_SIZE * 2) as f32, 0., 0.);
+            }
+
+            w = 0;
+            t += Vec3::new(0., (TILE_SIZE * 2) as f32, 0.);
+            t.x = -OCEAN_W_CENTER + (TILE_SIZE * 2) as f32 / 2.0;
+            h += 1;
+        }
+    }
+*/
