@@ -88,7 +88,7 @@ pub fn server_start(ocean: Res<OceanMap>, mut players: ResMut<Players>, udp: Res
                     let mut index = 0;
                     let mut full = true;
 
-                    for mut player in players.player_array.iter() {
+                    for player in players.player_array.iter() {
                         if !player.used {
                             new_player.id = index;
                             new_player.used = true;
@@ -116,7 +116,7 @@ pub fn server_start(ocean: Res<OceanMap>, mut players: ResMut<Players>, udp: Res
                         udp.socket
                             .send_to(
                                 create_env("joined_lobby".to_string(), new_player.id).as_bytes(),
-                                "127.0.0.1:4000",
+                                new_player.addr.clone(),
                             )
                             .expect("Failed to send [id] response packet");
 
@@ -131,7 +131,7 @@ pub fn server_start(ocean: Res<OceanMap>, mut players: ResMut<Players>, udp: Res
                             udp.socket
                                 .send_to(
                                     create_env("load_ocean".to_string(), tile.clone()).as_bytes(),
-                                    "127.0.0.1:4000",
+                                    new_player.addr.clone(),
                                 )
                                 .expect(&expect_msg);
                         }
@@ -161,7 +161,7 @@ pub fn listen(ocean: Res<OceanMap>, mut players: ResMut<Players>, udp: Res<UDP>)
         Ok((bytes, src)) => {
             let env: Envelope = serde_json::from_slice(&buf[..bytes]).unwrap();
 
-            if env.message.eq("new_player") {
+            if env.message == "new_player" {
                 let packet: Packet<Player> = serde_json::from_str(&env.packet).unwrap();
                 let mut new_player = packet.payload;
 
@@ -198,7 +198,7 @@ pub fn listen(ocean: Res<OceanMap>, mut players: ResMut<Players>, udp: Res<UDP>)
                     udp.socket
                         .send_to(
                             create_env("joined_lobby".to_string(), new_player.id).as_bytes(),
-                            "127.0.0.1:4000",
+                            new_player.addr.clone(),
                         )
                         .expect("Failed to send [id] response packet");
 
@@ -213,13 +213,13 @@ pub fn listen(ocean: Res<OceanMap>, mut players: ResMut<Players>, udp: Res<UDP>)
                         udp.socket
                             .send_to(
                                 create_env("load_ocean".to_string(), tile.clone()).as_bytes(),
-                                "127.0.0.1:4000",
+                                new_player.addr.clone(),
                             )
                             .expect(&expect_msg);
                     }
                     println!("Done. Total ocean packets sent: {}", size);
                 }
-            } else if env.message.eq("player_leave") {
+            } else if env.message == "player_leave" {
                 let packet: Packet<Player> = serde_json::from_str(&env.packet).unwrap();
 
                 let player = packet.payload;
@@ -234,6 +234,7 @@ pub fn listen(ocean: Res<OceanMap>, mut players: ResMut<Players>, udp: Res<UDP>)
                         addr.clone(),
                     )
                     .expect("Failed to send [leave_success] packet");
+            } else if env.message == "enemy spawned" {
             } else {
                 println!(
                     "Recieved invalid packet from [{}]: {}",
@@ -245,5 +246,25 @@ pub fn listen(ocean: Res<OceanMap>, mut players: ResMut<Players>, udp: Res<UDP>)
         Err(e) => {
             eprintln!("Something happened: {}", e);
         }
+    }
+}
+
+pub fn update(players: Res<Players>, udp: Res<UDP>, enemies: Res<Enemies>) {
+    let mut buf = [0; 1024];
+
+    for player in players.player_array.iter() {
+        udp.socket
+            .send_to(
+                create_env("update_players".to_string(), players.player_array.clone()).as_bytes(),
+                player.addr.clone(),
+            )
+            .expect("Failed to send [update_player] packet");
+
+        /*udp.socket
+        .send_to(
+            create_env("update_enemies".to_string(), enemies.list.clone()).as_bytes(),
+            player.addr.clone(),
+        )
+        .expect("Failed to send [update_enemy] packet");*/
     }
 }

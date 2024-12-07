@@ -4,50 +4,9 @@ use std::io::*;
 use std::net::*;
 use std::sync::{Arc, Mutex};
 
-#[derive(Resource)]
-pub struct UDP {
-    pub socket: UdpSocket,
-}
+use level::components::*;
 
-/// Struct to represent the TCP connections
-#[derive(Resource)]
-pub struct TcpConnections {
-    pub streams: Vec<TcpStream>,
-}
-
-#[derive(Resource)]
-pub struct TcpResource {
-    pub streams: Arc<Mutex<TcpConnections>>,
-}
-
-impl TcpConnections {
-    /// Adds a connection to the list of TCP connections
-    pub fn add_connection(&mut self, stream: TcpStream) {
-        self.streams.push(stream);
-    }
-
-    /// Handles the tcp connections
-    pub fn handle_connections(&mut self) {
-        // Iterates through all streams and checks for any new data
-        for stream in self.streams.iter_mut() {
-            let mut buffer = [0; 1024];
-
-            match stream.read(&mut buffer) {
-                Ok(size) => {
-                    if size > 0 {
-                        //process received data
-                        println!("Received data!");
-                    }
-                }
-                Err(e) => {
-                    //error encountered
-                    println!("Error reading from stream");
-                }
-            }
-        }
-    }
-}
-/// Enumerator that represents different udp packet types
+use crate::level;
 
 #[derive(Serialize, Deserialize)]
 pub struct Envelope {
@@ -76,7 +35,12 @@ impl Counter {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Resource, Serialize, Deserialize)]
+pub struct HostPlayer {
+    pub player: Player,
+}
+
+#[derive(Clone, Serialize, Deserialize, Component)]
 pub struct Player {
     pub id: i32,
     pub addr: String,
@@ -99,7 +63,7 @@ impl Player {
     }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Serialize, Deserialize)]
 pub struct Players {
     pub player_array: [Player; 4],
 }
@@ -131,7 +95,7 @@ pub struct Velocity {
     pub v: Vec2,
 }
 
-#[derive(Resource)]
+#[derive(Resource, Serialize, Deserialize)]
 pub struct Enemies {
     pub list: Vec<Enemy>,
 }
@@ -152,12 +116,17 @@ pub enum EType {
     MSkeleton,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize)]
 
 pub struct Enemy {
     pub id: i32,
-    pub etype: i32,
+    pub etype: EType,
     pub translation: Vec3,
     pub animation_index: usize,
     pub alive: bool,
+}
+
+#[derive(Resource)]
+pub struct UDP {
+    pub socket: UdpSocket,
 }

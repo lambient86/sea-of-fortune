@@ -133,7 +133,7 @@ pub fn listen(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-    mut player_query: Query<(&mut Transform, &Player), With<Player>>,
+    player_query: Query<(&Transform, &Player), With<Player>>,
     host: Res<HostPlayer>,
 ) {
     let mut buf = [0; 1024];
@@ -155,7 +155,7 @@ pub fn listen(
 
                 let players = packet.payload.player_array;
 
-                for (mut transform, player) in player_query.iter_mut() {
+                for (transform, player) in player_query.into_iter() {
                     if player.id == host.player.id {
                         continue;
                     }

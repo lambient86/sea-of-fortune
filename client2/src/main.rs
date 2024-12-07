@@ -6,18 +6,31 @@ use bevy::window::PresentMode;
 use core::panic;
 use network::components::*;
 use rand::Rng;
-use std::net::{TcpStream, UdpSocket};
+use serde::*;
+use std::net::*;
 use std::sync::{Arc, Mutex};
 
 use crate::level::components::*;
 use crate::level::systems::*;
 use crate::network::systems::*;
 
+pub const OCEAN_LENGTH: i32 = 15625;
+
+pub fn create_env<T: Serialize>(message: String, object: T) -> String {
+    let packet: Packet<T> = Packet { payload: object };
+
+    serde_json::to_string(&Envelope {
+        message: message,
+        packet: serde_json::to_string(&packet).unwrap(),
+    })
+    .unwrap()
+}
+
 fn main() {
     println!("Starting Client");
 
     //connect to server
-    let udp_addr = "127.0.0.1:6000";
+    let udp_addr = "127.0.0.1:0";
     //let tcp_addr = "127.0.0.1:8000";
 
     let udp_socket = UdpSocket::bind(udp_addr).unwrap();
@@ -28,25 +41,6 @@ fn main() {
     );
 
     let mut buf = [0; 1024];
-
-    //starting tcp connection with server
-
-    /*
-    let mut tcp_stream = TcpStream::connect(tcp_addr);
-
-    loop {
-        match tcp_stream {
-            Ok(ref t) => {
-                println!("TCP: Stream connected!");
-                break;
-            }
-            Err(ref e) => {
-                eprintln!("Something happened: {}", e);
-                tcp_stream = TcpStream::connect(tcp_addr);
-            }
-        }
-    }
-     */
 
     println!("Trying to join world...");
 
@@ -64,10 +58,14 @@ fn main() {
     });
 
     udp_socket
-        .send_to(env.unwrap().as_bytes(), "127.0.0.1:5000")
+        .send_to(
+            create_env("new_player".to_string(), player.clone()).as_bytes(),
+            "127.0.0.1:5000",
+        )
         .expect("Failed to send [new_player] packet");
 
     let mut ocean = Vec::new();
+
     loop {
         let result = udp_socket.recv_from(&mut buf);
 
@@ -91,7 +89,7 @@ fn main() {
                     println!("Recieved invalid packet");
                 }
 
-                if ocean.len() >= 15625 {
+                if ocean.len() >= OCEAN_LENGTH as usize {
                     break;
                 }
             }
@@ -122,34 +120,48 @@ fn main() {
         })
         .insert_resource(UDP { socket: udp_socket })
         .insert_resource(Ocean { map: ocean })
+        .insert_resource(HostPlayer { player: player })
         .add_systems(Startup, setup)
+        .add_systems(Last, leave)
         /*.add_systems(Update, listen)*/
         .run();
     //.add_systems(Startup, listener);
 }
 
 pub fn listen(
-    connections: Res<TcpConnections>,
     udp: Res<UDP>,
-    mut ocean: ResMut<Ocean>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+    player_query: Query<(&Transform, &Player), With<Player>>,
 ) {
     let mut buf = [0; 1024];
 
     let result = udp.socket.recv_from(&mut buf);
 
     match result {
-        Ok((size, src)) => {
-            //println!("Recieved {} bytes from {}", size, src);
+        Ok((bytes, src)) => {
+            let env: Envelope = serde_json::from_slice(&buf[..bytes]).unwrap();
 
-            let json_str = String::from_utf8_lossy(&buf[..size]);
-            //println!("Received JSON packet: {}", json_str);
+            if env.message == "update_enemies" {
+                let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
 
-            let deserialize: Packet<OceanTile> = serde_json::from_slice(&buf[..size]).unwrap();
+                let enemies = packet.payload;
+            } else if env.message == "update_player" {
+                let packet: Packet<Players> = serde_json::from_str(&env.packet).unwrap();
 
-            //let result = socket.send_to(&buf[..size], "127.0.0.1:8000");
+                let players = packet.payload;
+            } else if env.message == "spawn_enemy" {
+                let packet: Packet<Enemy> = serde_json::from_str(&env.packet).unwrap();
+
+                let enemy = packet.payload;
+            } else {
+                println!(
+                    "Recieved invalid packet from [{}]: {}",
+                    src.ip(),
+                    env.message
+                );
+            }
         }
         Err(e) => {
             eprintln!("Something happened: {}", e);
@@ -165,7 +177,6 @@ pub fn setup(
 ) {
     commands.spawn(Camera2dBundle::default());
 
-    let bg_ocean_texture_handle: Handle<Image> = asset_server.load("ts_ocean_tiles.png");
     let ocean_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
     let ocean_layout_handle = texture_atlases.add(ocean_layout);
 
@@ -187,58 +198,40 @@ pub fn setup(
     }
 }
 
-/*
+fn leave(
+    exit_events: EventReader<AppExit>,
+    mut exit_triggered: Local<bool>,
+    udp: Res<UDP>,
+    player: Res<HostPlayer>,
+) {
+    if !*exit_triggered && exit_events.len() > 0 {
+        *exit_triggered = true;
 
-    if (ocean.map.len() >= 100000) {
-        println!("Hit");
-        let mut rng = rand::thread_rng();
-        let mut tile_index;
+        udp.socket
+            .send_to(
+                create_env("player_leave".to_string(), player.player.clone()).as_bytes(),
+                "127.0.0.1:5000",
+            )
+            .expect("Failed to send [player_leave]] packet");
 
-        let mut w = 0;
-        let mut h = 0;
-        let mut t = Vec3::new(
-            -OCEAN_W_CENTER + TILE_SIZE as f32 / 2.,
-            -OCEAN_H_CENTER + TILE_SIZE as f32 / 2.,
-            -1.0,
-        );
+        let mut buf = [0; 1024];
 
-        let bg_ocean_texture_handle: Handle<Image> = asset_server.load("ts_ocean_tiles.png");
-        let ocean_layout =
-            TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
-        let ocean_layout_handle = texture_atlases.add(ocean_layout);
+        udp.socket.set_nonblocking(false).expect("fail");
 
-        while (h as f32) * (TILE_SIZE as f32) < OCEAN_LEVEL_H {
-            while (w as f32) * (TILE_SIZE as f32) < OCEAN_LEVEL_W {
-                // weigh it so that its mostly dark blue just for aesthetic reasons
-                let rand = rng.gen_range(0..=10);
-                if rand < 9 {
-                    tile_index = 0
-                } else {
-                    tile_index = 1
+        loop {
+            let result = udp.socket.recv_from(&mut buf);
+
+            match result {
+                Ok((bytes, src)) => {
+                    let env: Envelope = serde_json::from_slice(&buf[..bytes]).unwrap();
+
+                    if env.message.eq("leave_success") {
+                        println!("Leave success");
+                        break;
+                    }
                 }
-
-                commands.spawn((
-                    SpriteBundle {
-                        texture: bg_ocean_texture_handle.clone(),
-                        transform: Transform {
-                            translation: t,
-                            ..default()
-                        },
-                        ..default()
-                    },
-                    TextureAtlas {
-                        layout: ocean_layout_handle.clone(),
-                        index: tile_index,
-                    },
-                ));
-                w += 1;
-                t += Vec3::new((TILE_SIZE * 2) as f32, 0., 0.);
+                Err(e) => {}
             }
-
-            w = 0;
-            t += Vec3::new(0., (TILE_SIZE * 2) as f32, 0.);
-            t.x = -OCEAN_W_CENTER + (TILE_SIZE * 2) as f32 / 2.0;
-            h += 1;
         }
     }
-*/
+}

@@ -8,6 +8,7 @@ mod ghost_ship;
 mod hitbox_system;
 mod kraken;
 mod level;
+mod network;
 mod player;
 mod shop;
 mod skeleton;
@@ -19,14 +20,14 @@ use bat::BatPlugin;
 use bevy::{prelude::*, window::PresentMode};
 use boat::systems::move_boat;
 use boat::BoatPlugin;
-use components::GameState;
-use components::GameworldState;
+use components::*;
 use controls::*;
 use data::gameworld_data::*;
 use enemies::*;
 use ghost_ship::GhostShipPlugin;
 use hitbox_system::HitboxPlugin;
 use kraken::KrakenPlugin;
+use level::components::*;
 use level::LevelPlugin;
 use player::systems::move_player;
 use player::PlayerPlugin;
@@ -35,8 +36,85 @@ use skeleton::SkeletonPlugin;
 use systems::*;
 use wfc::WFCPlugin;
 
+use std::net::*;
+
+use network::components::*;
+use network::systems::*;
+
 fn main() {
+    println!("Starting Client");
+
+    //connect to server
+    let udp_addr = "127.0.0.1:0";
+    //let tcp_addr = "127.0.0.1:8000";
+
+    let udp_socket = UdpSocket::bind(udp_addr).unwrap();
+
+    println!(
+        "UDP: Client listening on {}",
+        udp_socket.local_addr().unwrap()
+    );
+
+    let mut buf = [0; 1024];
+
+    println!("Trying to join world...");
+
+    let mut player = Player::default();
+    player.addr = udp_socket.local_addr().unwrap().to_string();
+    println!("Player addr = {}", player.addr);
+
+    udp_socket
+        .send_to(
+            create_env("new_player".to_string(), player.clone()).as_bytes(),
+            "127.0.0.1:5000",
+        )
+        .expect("Failed to send [new_player] packet");
+
+    let mut ocean = Vec::new();
+
+    loop {
+        let result = udp_socket.recv_from(&mut buf);
+
+        match result {
+            Ok((size, src)) => {
+                let env: Envelope = serde_json::from_slice(&buf[..size]).unwrap();
+
+                if env.message.eq("joined_lobby") {
+                    let packet: Packet<i32> = serde_json::from_str(&env.packet).unwrap();
+
+                    let id = packet.payload;
+                    println!("Joined lobby! You are player #{}", id);
+                    player.id = id;
+                } else if env.message.eq("full_lobby") {
+                    panic!("{}", env.packet);
+                } else if env.message.eq("load_ocean") {
+                    let packet: Packet<OceanT> = serde_json::from_str(&env.packet).unwrap();
+
+                    ocean.push(packet.payload);
+                } else {
+                    println!("Recieved invalid packet");
+                }
+
+                if ocean.len() >= OCEAN_LENGTH as usize {
+                    break;
+                }
+            }
+            Err(e) => {
+                eprintln!("Something happened: {}", e);
+            }
+        }
+    }
+
+    println!("Ocean map done. Final size: {}", ocean.len());
+
+    if !udp_socket.set_nonblocking(true).is_ok() {
+        panic!("Non blocking wasn't successful; terminating");
+    }
+
     App::new()
+        .insert_resource(UDP { socket: udp_socket })
+        .insert_resource(Ocean { map: ocean })
+        .insert_resource(HostPlayer { player: player })
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Sea of Fortune | Build 0.2".into(),
@@ -73,52 +151,7 @@ fn main() {
         .add_systems(Update, change_gameworld_state)
         .add_systems(Update, change_game_state)
         .add_systems(Update, update_mouse_pos)
-        .add_systems(Update, send_packets)
         .insert_state(GameworldState::MainMenu)
         .insert_state(GameState::Running)
         .run();
 }
-
-use std::net::*;
-
-fn send_packets() {
-    let socket = UdpSocket::bind("0.0.0.0:0").expect("Failed to bind to socket");
-
-    let target_ip = "127.0.0.1:4000";
-    let data = format!("Client -> Server");
-
-    // Send the packet
-    socket
-        .send_to(data.as_bytes(), target_ip)
-        .expect("Failed to send packet");
-
-    println!("Packet sent to {}", target_ip);
-}
-/*
-fn packet_listener() {
-    let socket = UdpSocket::bind("127.0.0.1:5000").expect("Failed to bind to socket");
-
-    //println!("Client listening on {}", socket.local_addr().unwrap());
-
-    let mut buffer = [0; 1024];
-
-    socket
-        .set_nonblocking(true)
-        .expect("Failed to set non-blocking mode");
-
-    let result = socket.recv_from(&mut buffer);
-
-    match result {
-        Ok((size, source)) => {
-            //println!("Received {} bytes from {}", size, source);
-            let request = String::from_utf8_lossy(&buffer[..size]);
-
-            println!("Received {} from {}", request, source);
-        }
-        Err(e) => {
-            eprintln!("Failed to receive data: {}", e);
-        }
-    }
-}
-
-*/
