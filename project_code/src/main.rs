@@ -15,7 +15,6 @@ mod skeleton;
 mod systems;
 mod transition_box;
 mod wfc;
-mod skeleton;
 mod whirlpool;
 
 use bat::BatPlugin;
@@ -42,6 +41,7 @@ use systems::*;
 use wfc::WFCPlugin;
 use whirlpool::WhirlpoolPlugin;
 
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -65,11 +65,8 @@ fn main() {
         .add_plugins(LevelPlugin)
         .add_plugins(WFCPlugin)
         .add_plugins(GhostShipPlugin)
-<<<<<<< HEAD
-        .add_plugins(WhirlpoolPlugin)
-=======
         .add_plugins(RockPlugin)
->>>>>>> 43ca76b9e40b378d202265bbdf126c09d64b2728
+        .add_plugins(WhirlpoolPlugin)
         .add_systems(
             Update,
             move_player_camera.after(move_player).run_if(
