@@ -1,8 +1,17 @@
-use crate::player::components::*;
-use crate::boat::components::*;
-use bevy::{prelude::*, window::PresentMode};
-use crate::data::gameworld_data::*;
 use crate::components::*;
+use crate::data::gameworld_data::*;
+use crate::hitbox_system::{Hitbox, Hurtbox};
+use crate::level::components::{Dungeon, IslandType, OceanDoor};
+use crate::player::components::*;
+use crate::{boat::components::*, level::components::Island};
+use bevy::math::bounding::IntersectsVolume;
+use bevy::{prelude::*, window::PresentMode};
+use bevy::math::bounding::BoundingVolume;
+
+use crate::wfc::components::Wall;
+use crate::bat::components::Bat;
+use crate::skeleton::components::Skeleton;
+use crate::player::components::Player; 
 
 /*   MOVE_CAMERA FUNCTIONS  */
 /// Updates the cameras position to center the current player
@@ -10,14 +19,26 @@ use crate::components::*;
 pub fn move_player_camera(
     player: Query<&Transform, With<Player>>,
     mut camera: Query<&mut Transform, (Without<Player>, With<Camera>)>,
+    gameworld_state: Res<State<GameworldState>>,
 ) {
     let pt = player.single();
     let mut ct = camera.single_mut();
 
-    let x_bound = SAND_LEVEL_W / 2. - WIN_W / 2.;
-    let y_bound = SAND_LEVEL_H / 2. - WIN_H / 2.;
-    ct.translation.x = pt.translation.x.clamp(-x_bound, x_bound);
-    ct.translation.y = pt.translation.y.clamp(-y_bound, y_bound);
+    match gameworld_state.get() {
+        GameworldState::Island => {
+            let x_bound = SAND_LEVEL_W / 2. - WIN_W / 2.;
+            let y_bound = SAND_LEVEL_H / 2. - WIN_H / 2.;
+            ct.translation.x = pt.translation.x.clamp(-x_bound, x_bound);
+            ct.translation.y = pt.translation.y.clamp(-y_bound, y_bound);
+        }
+        GameworldState::Dungeon => {
+            let x_bound = DUNGEON_LEVEL_W / 2. - WIN_W / 2.;
+            let y_bound = DUNGEON_LEVEL_H / 2. - WIN_H / 2.;
+            ct.translation.x = pt.translation.x.clamp(-x_bound, x_bound);
+            ct.translation.y = pt.translation.y.clamp(-y_bound, y_bound);
+        }
+        _ => {}
+    }
 }
 
 /// Updates the cameras position to the center of the current
@@ -53,43 +74,165 @@ pub fn setup_gameworld(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(Background);
 }
 
-/*   CHANGE_GAMEWORLD_STATE FUNCTION   */
-/// Changes the state of the gameworld
-/// DEBUG: On keypress, the gameworld will switch
-/// * I - Island
-/// * O - Ocean
-/// * U - Dungeon
 pub fn change_gameworld_state(
     mut next_state: ResMut<NextState<GameworldState>>,
+    islands_query: Query<&mut Island, With<Island>>,
+    dungeon_query: Query<&mut Dungeon, With<Dungeon>>,
+    gameworld_state: Res<State<GameworldState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut player_query: Query<&mut Player, With<Player>>,
+    mut boat_query: Query<&mut Boat, With<Boat>>,
+    door_query: Query<&mut OceanDoor, With<OceanDoor>>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::KeyI) {   //ISLAND
-        //switching states to island
-        next_state.set(GameworldState::Island);
-
-    } else if keyboard_input.just_pressed(KeyCode::KeyO) {   //OCEAN
-        //switching state to ocean
+    if keyboard_input.just_pressed(KeyCode::Enter)
+        && *gameworld_state.get() != GameworldState::Ocean
+        && *gameworld_state.get() != GameworldState::Island
+        && *gameworld_state.get() != GameworldState::Dungeon
+    {
         next_state.set(GameworldState::Ocean);
-
-    } else if keyboard_input.just_pressed(KeyCode::KeyU) {   //DUNGEON
-        //switching state to dungeon
-        next_state.set(GameworldState::Dungeon)
     }
+    //  CASE: OCEAN --> ISLAND
+    if *gameworld_state.get() == GameworldState::Ocean {
+        let boat = boat_query.single_mut();
+        for island in islands_query.iter() {
+            if island.aabb.aabb.intersects(&boat.aabb.aabb) {
+                println!("going to the island!");
+                next_state.set(GameworldState::Island);
+            }
+        }
+    } else if *gameworld_state.get() == GameworldState::Island {
+        let player = player_query.single_mut();
+
+        // case: island --> dungeon
+        for dungeon in dungeon_query.iter() {
+            if dungeon.aabb.aabb.intersects(&player.aabb.aabb) {
+                println!("going to a dungeon!");
+                next_state.set(GameworldState::Dungeon);
+            }
+        }
+
+        // case: island --> ocean
+        let ocean_door = door_query.single();
+        if ocean_door.aabb.aabb.intersects(&player.aabb.aabb) {
+            println!("going to the ocean!");
+            next_state.set(GameworldState::Ocean);
+        }
+    } else if *gameworld_state.get() == GameworldState::Dungeon {
+        let player = player_query.single_mut();
+        for dungeon in dungeon_query.iter() {
+            if dungeon.aabb.aabb.intersects(&player.aabb.aabb) {
+                println!("going to a dungeon!");
+                next_state.set(GameworldState::Island);
+            }
+        }
+    }
+
+    // for (entity, island_type) in islands_query.iter() {
+    //     match island_type {
+    //         IslandType::Level1 => {
+    //             println!("Found Level 1 Island");
+    //         }
+    //         IslandType::Level2 => {
+    //             println!("Found Level 2 Island");
+    //         }
+    //         IslandType::Level3 => {
+    //             println!("Found Level 3 Island");
+    //         }
+    //         IslandType::Boss => {
+    //             println!("Found Boss Island");
+    //         }
+    //     }
+    // }
 }
 
 /*   CHANGE_GAME_STATE FUNCTION   */
 /// Changes the state of the game. Such as a switch between running and paused
 /// DEBUG: On keypress, the game state will switch
 /// * E - if Running, to InShop, if InShop, to Running
-pub fn change_game_state (
+pub fn change_game_state(
     game_state: Res<State<GameState>>,
     gameworld_state: Res<State<GameworldState>>,
     mut next_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
-    if *game_state.get() == GameState::Running && (*gameworld_state.get() == GameworldState::Island || *gameworld_state.get() == GameworldState::Dungeon) && keyboard_input.just_pressed(KeyCode::KeyE) {
+    if *game_state.get() == GameState::Running
+        && (*gameworld_state.get() == GameworldState::Island
+            || *gameworld_state.get() == GameworldState::Dungeon)
+        && keyboard_input.just_pressed(KeyCode::KeyE)
+    {
         next_state.set(GameState::InShop)
     } else if *game_state.get() == GameState::InShop && keyboard_input.just_pressed(KeyCode::KeyE) {
         next_state.set(GameState::Running)
+    }
+}
+
+pub fn check_wall_collisions(
+    mut entities_query: Query<(&mut Transform, &mut Velocity, &Hurtbox), Or<(With<Player>, With<Bat>, With<Skeleton>)>>,
+    walls_query: Query<&BoundingBox, With<Wall>>,
+) {
+    for (mut transform, mut velocity, hurtbox) in entities_query.iter_mut() {
+        let entity_aabb = BoundingBox::new(
+            transform.translation.truncate(),
+            hurtbox.size
+        ).aabb;
+
+        for wall_box in walls_query.iter() {
+            if entity_aabb.intersects(&wall_box.aabb) {
+                // Stop movement in collision direction
+                let overlap = entity_aabb.center() - wall_box.aabb.center();
+                let push_direction = overlap.normalize();
+                
+                transform.translation += Vec3::new(push_direction.x, push_direction.y, 0.0) * 2.0;
+                
+                // Zero out velocity in collision direction
+                if overlap.x.abs() > overlap.y.abs() {
+                    velocity.v.x = 0.0;
+                } else {
+                    velocity.v.y = 0.0;
+                }
+            }
+        }
+    }
+}
+
+pub fn handle_dungeon_entry(
+    mut player_query: Query<&mut Transform, With<Player>>,
+    gameworld_state: Res<State<GameworldState>>,
+) {
+    if *gameworld_state.get() == GameworldState::Dungeon {
+        if let Ok(mut transform) = player_query.get_single_mut() {
+            transform.translation = Vec3::new(-2976.0, -2976.0, 0.0);
+            println!("Translated player to dungeon spawn: {:?}", transform.translation);
+        }
+    }
+}
+
+pub fn handle_door_translation(
+    mut door_query: Query<&mut Transform, Or<(With<Dungeon>, With<OceanDoor>)>>,
+    gameworld_state: Res<State<GameworldState>>,
+) {
+    if let Ok(mut transform) = door_query.get_single_mut() {
+        match *gameworld_state.get() {
+            GameworldState::Dungeon => {
+                transform.translation = Vec3::new(2976.0, 2976.0, 10.0);
+                println!("Translated door to dungeon position");
+            },
+            GameworldState::Island => {
+                transform.translation = Vec3::new(0.0, 256.0, 10.0);
+                println!("Translated door to island position");
+            },
+            _ => {}
+        }
+    }
+}
+
+pub fn update_dungeon_collision(
+    mut dungeon_query: Query<(&Transform, &mut Dungeon)>,
+) {
+    for (transform, mut dungeon) in dungeon_query.iter_mut() {
+        dungeon.aabb = BoundingBox::new(
+            transform.translation.truncate(),
+            dungeon.size
+        );
     }
 }

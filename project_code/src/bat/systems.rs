@@ -56,6 +56,8 @@ pub fn rotate_bat(
 
 /*   ANIMATE_BAT FUNCTION   */
 /// Animates a bat entity
+///
+/// Fun fact, this actually animates everything
 pub fn animate_bat(
     time: Res<Time>,
     mut query: Query<(&mut AnimationTimer, &mut TextureAtlas, &AnimationFrameCount)>,

@@ -6,6 +6,7 @@ use crate::ghost_ship::components::*;
 use crate::hitbox_system::components::*;
 use crate::kraken::components::*;
 use crate::player::components::*;
+use crate::rock::components::*;
 use crate::skeleton::components::*;
 use crate::whirlpool::components::*;
 use crate::whirlpool::components::Lifetime;
@@ -191,11 +192,51 @@ pub fn spawn_enemy(
                     entity: SKELETON,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
-                }
+                },
             ));
         }
-        Enemy::Rock => {}
-        Enemy::Skeleton => {}
+        Enemy::Rock => {
+            let rock_layout =
+                TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
+
+            commands.spawn((
+                SpriteBundle {
+                    texture: asset_server.load("s_rock.png"),
+                    transform,
+                    ..default()
+                },
+                Rock {
+                    //Setting default stats
+                    current_hp: ROCK_MAX_HP,
+                },
+                TextureAtlas {
+                    layout: texture_atlases.add(rock_layout.clone()),
+                    index: 0,
+                },
+                AnimationTimer::new(Timer::from_seconds(
+                    ROCK_ANIMATION_TIME,
+                    TimerMode::Repeating,
+                )),
+                AnimationFrameCount::new(2),
+                Velocity::new(),
+                Hurtbox {
+                    size: Vec2::splat(50.),
+                    offset: Vec2::splat(0.),
+                    colliding: false,
+                    entity: ROCK,
+                    iframe: Timer::from_seconds(0.75, TimerMode::Once),
+                    enemy: true,
+                },
+                Hitbox {
+                    size: Vec2::splat(40.),
+                    offset: Vec2::splat(0.),
+                    lifetime: Some(Timer::from_seconds(1000000., TimerMode::Repeating)),
+                    projectile: false,
+                    entity: ROCK,
+                    enemy: true,
+                },
+            ));
+        }
         Enemy::Skel2 => {}
     }
 }

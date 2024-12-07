@@ -9,12 +9,17 @@ mod hitbox_system;
 mod kraken;
 mod level;
 mod player;
+mod rock;
 mod shop;
+mod skeleton;
 mod systems;
 mod transition_box;
 mod wfc;
+<<<<<<< HEAD
 mod skeleton;
 mod whirlpool;
+=======
+>>>>>>> 43ca76b9e40b378d202265bbdf126c09d64b2728
 
 use bat::BatPlugin;
 use bevy::{prelude::*, window::PresentMode};
@@ -22,17 +27,20 @@ use boat::systems::move_boat;
 use boat::BoatPlugin;
 use components::GameState;
 use components::GameworldState;
+use components::SpawnLocations;
 use controls::*;
 use data::gameworld_data::*;
 use enemies::*;
 use ghost_ship::GhostShipPlugin;
 use hitbox_system::HitboxPlugin;
 use kraken::KrakenPlugin;
-use skeleton::SkeletonPlugin;
 use level::LevelPlugin;
 use player::systems::move_player;
+use player::systems::spawn_player;
 use player::PlayerPlugin;
+use rock::RockPlugin;
 use shop::ShopPlugin;
+use skeleton::SkeletonPlugin;
 use systems::*;
 use wfc::WFCPlugin;
 use whirlpool::WhirlpoolPlugin;
@@ -60,7 +68,11 @@ fn main() {
         .add_plugins(LevelPlugin)
         .add_plugins(WFCPlugin)
         .add_plugins(GhostShipPlugin)
+<<<<<<< HEAD
         .add_plugins(WhirlpoolPlugin)
+=======
+        .add_plugins(RockPlugin)
+>>>>>>> 43ca76b9e40b378d202265bbdf126c09d64b2728
         .add_systems(
             Update,
             move_player_camera.after(move_player).run_if(
@@ -76,7 +88,13 @@ fn main() {
         .add_systems(Update, change_gameworld_state)
         .add_systems(Update, change_game_state)
         .add_systems(Update, update_mouse_pos)
+        .add_systems(Update, check_wall_collisions.after(move_player))
+        .add_systems(OnEnter(GameworldState::Dungeon), handle_dungeon_entry.after(spawn_player))
+        .add_systems(OnEnter(GameworldState::Dungeon), handle_door_translation)
+        .add_systems(OnEnter(GameworldState::Island), handle_door_translation)
+        .add_systems(Update, update_dungeon_collision)
         .insert_state(GameworldState::MainMenu)
         .insert_state(GameState::Running)
+        .insert_resource(SpawnLocations::default())
         .run();
 }
