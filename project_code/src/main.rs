@@ -157,7 +157,7 @@ fn main() {
         .add_systems(Update, update_mouse_pos)
         .insert_state(GameworldState::MainMenu)
         .insert_state(GameState::Running)
-        .add_systems(OnEnter(GameworldState::Ocean), update)
+        .add_systems(Update, update.run_if(in_state(GameworldState::Ocean)))
         .run();
 }
 
@@ -193,10 +193,10 @@ pub fn update(
                 let env: Envelope = serde_json::from_slice(&buf[..bytes]).unwrap();
 
                 if env.message == "update_players" {
-                    println!("Updating players....");
                     let packet: Packet<Players> = serde_json::from_str(&env.packet).unwrap();
                     let players = packet.payload;
 
+                    let mut done = false;
                     for p in players.player_array.iter() {
                         if p.id == host.player.id || !p.used {
                             continue;
@@ -206,6 +206,26 @@ pub fn update(
 
                         for (mut transform, player) in player_query.iter_mut() {
                             if player.id == host.player.id {
+                                if !done {
+                                    let boat = Player {
+                                        id: player.id,
+                                        addr: host.player.addr.clone(),
+                                        pos: transform.translation,
+                                        rot: transform.rotation,
+                                        boat: true,
+                                        used: true,
+                                    };
+
+                                    udp.socket
+                                        .send_to(
+                                            create_env("player_update".to_string(), boat)
+                                                .as_bytes(),
+                                            "127.0.0.1:5000",
+                                        )
+                                        .expect("Failed to send [update] packet");
+                                    done = true;
+                                }
+
                                 continue;
                             }
                             boat_found = true;
@@ -246,7 +266,6 @@ pub fn update(
 
                     done1 = true;
                 } else if env.message == "update_enemies" {
-                    println!("Updating enemies....");
                     let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
                     let enemies = packet.payload;
 
@@ -263,6 +282,7 @@ pub fn update(
                     );
                 }
 
+                println!("1: {}, 2: {}", done1, done2);
                 if done1 && done2 {
                     udp.socket
                         .send_to(
@@ -274,11 +294,11 @@ pub fn update(
                     println!("update request done");
                     break;
                 }
-
-                println!("1: {}, 2: {}", done1, done2);
             }
             Err(e) => {
-                //println!("Update: Something happened: {}", e);
+                //println!("Update: Something happened: {}", e);\
+                println!("This happened");
+                break;
             }
         }
     }

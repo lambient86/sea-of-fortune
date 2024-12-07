@@ -232,6 +232,8 @@ pub fn handle(
                             addr.clone(),
                         )
                         .expect("Failed to send [leave_success] packet");
+
+                    println!("Logged out player");
                 } else if env.message == "update" {
                     for player in players.player_array.iter() {
                         if player.used {
@@ -252,6 +254,13 @@ pub fn handle(
                                 .expect("Failed to send [update_enemy] packet");
                         }
                     }
+                } else if env.message == "player_update" {
+                    let packet: Packet<Player> = serde_json::from_str(&env.packet).unwrap();
+                    let player = packet.payload;
+                    let id = player.id;
+
+                    players.player_array[id as usize].pos = player.pos;
+                    players.player_array[id as usize].rot = player.rot;
                 } else {
                     println!(
                         "Recieved invalid packet from [{}]: {}",
