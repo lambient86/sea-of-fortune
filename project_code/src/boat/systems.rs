@@ -59,6 +59,7 @@ pub fn move_boat(
     let movement_dir = transform.rotation * Vec3::Y;
     let movement_dis = movement_factor * (ship.movement_speed * time.delta_seconds() * cs)
         + (0.5 * ship.acceleration * time.delta_seconds());
+    print!("movement_distance: {}\n", movement_dis);
     let translation_delta = movement_dir * movement_dis;
 
     //moving the boat
