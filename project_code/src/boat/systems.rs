@@ -3,9 +3,9 @@ use std::thread;
 use crate::boat::components::*;
 use crate::components::BoundingBox;
 use crate::data::gameworld_data::*;
-use crate::hitbox_system::*;
 use crate::player::components::AttackCooldown;
-use crate::{controls::*, HostPlayer};
+use crate::{controls::*, create_env, HostPlayer, UDP};
+use crate::{hitbox_system::*, Player};
 use bevy::prelude::*;
 
 /*   MOVE_BOAT FUNCTION   */
@@ -16,6 +16,7 @@ pub fn move_boat(
     mouse_input: Res<ButtonInput<MouseButton>>,
     mut query: Query<(&mut Boat, &mut Transform)>,
     host: Res<HostPlayer>,
+    udp: Res<UDP>,
 ) {
     for (mut boat, mut transform) in query.iter_mut() {
         if boat.id != host.player.id {
@@ -61,6 +62,22 @@ pub fn move_boat(
         // let pos = (((ship.aabb.aabb.min + ship.aabb.aabb.max) / 2.0) + translation_delta.truncate());
         // ship.aabb.update_position(pos);
         boat.aabb.update_position(transform.translation.truncate());
+
+        let boat = Player {
+            id: boat.id,
+            addr: host.player.addr.clone(),
+            pos: transform.translation,
+            rot: transform.rotation,
+            boat: true,
+            used: true,
+        };
+
+        udp.socket
+            .send_to(
+                create_env("player_update".to_string(), boat).as_bytes(),
+                "127.0.0.1:5000",
+            )
+            .expect("Failed to send [update] packet");
     }
 }
 

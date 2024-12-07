@@ -158,6 +158,7 @@ fn main() {
         .insert_state(GameworldState::MainMenu)
         .insert_state(GameState::Running)
         .add_systems(Update, update.run_if(in_state(GameworldState::Ocean)))
+        .add_systems(Last, leave)
         .run();
 }
 
@@ -178,128 +179,102 @@ pub fn update(
         )
         .expect("Failed to send [update] packet");
 
-    println!("Sent update request");
+    let mut buf = [0; 1024];
 
-    let mut done1 = false;
-    let mut done2 = false;
+    let result = udp.socket.recv_from(&mut buf);
 
-    loop {
-        let mut buf = [0; 1024];
+    match result {
+        Ok((bytes, src)) => {
+            let env: Envelope = serde_json::from_slice(&buf[..bytes]).unwrap();
 
-        let result = udp.socket.recv_from(&mut buf);
+            if env.message == "update_players" {
+                let packet: Packet<Players> = serde_json::from_str(&env.packet).unwrap();
+                let players = packet.payload;
 
-        match result {
-            Ok((bytes, src)) => {
-                let env: Envelope = serde_json::from_slice(&buf[..bytes]).unwrap();
+                for p in players.player_array.iter() {
+                    if p.id == host.player.id || !p.used {
+                        continue;
+                    }
 
-                if env.message == "update_players" {
-                    let packet: Packet<Players> = serde_json::from_str(&env.packet).unwrap();
-                    let players = packet.payload;
+                    let mut boat_found = false;
 
-                    let mut done = false;
-                    for p in players.player_array.iter() {
-                        if p.id == host.player.id || !p.used {
+                    for (mut transform, player) in player_query.iter_mut() {
+                        if player.id == host.player.id {
                             continue;
                         }
+                        boat_found = true;
+                        transform.translation = players.player_array[player.id as usize].pos;
+                        transform.rotation = players.player_array[player.id as usize].rot;
+                    }
 
-                        let mut boat_found = false;
+                    if !boat_found {
+                        //getting boat sprite info
+                        let boat_sheet_handle = asset_server.load("s_basic_ship.png");
+                        let boat_layout =
+                            TextureAtlasLayout::from_grid(UVec2::splat(100), 2, 2, None, None);
+                        let boat_layout_handle = texture_atlases.add(boat_layout);
 
-                        for (mut transform, player) in player_query.iter_mut() {
-                            if player.id == host.player.id {
-                                if !done {
-                                    let boat = Player {
-                                        id: player.id,
-                                        addr: host.player.addr.clone(),
-                                        pos: transform.translation,
-                                        rot: transform.rotation,
-                                        boat: true,
-                                        used: true,
-                                    };
-
-                                    udp.socket
-                                        .send_to(
-                                            create_env("player_update".to_string(), boat)
-                                                .as_bytes(),
-                                            "127.0.0.1:5000",
-                                        )
-                                        .expect("Failed to send [update] packet");
-                                    done = true;
-                                }
-
-                                continue;
-                            }
-                            boat_found = true;
-                            transform.translation = players.player_array[player.id as usize].pos;
-                        }
-
-                        if !boat_found {
-                            //getting boat sprite info
-                            let boat_sheet_handle = asset_server.load("s_basic_ship.png");
-                            let boat_layout =
-                                TextureAtlasLayout::from_grid(UVec2::splat(100), 2, 2, None, None);
-                            let boat_layout_handle = texture_atlases.add(boat_layout);
-
-                            //spawning boat
-                            commands.spawn((
-                                SpriteBundle {
-                                    texture: boat_sheet_handle,
-                                    transform: Transform {
-                                        translation: Vec3::new(0., 0., 900.),
-                                        ..default()
-                                    },
+                        //spawning boat
+                        commands.spawn((
+                            SpriteBundle {
+                                texture: boat_sheet_handle,
+                                transform: Transform {
+                                    translation: Vec3::new(0., 0., 900.),
                                     ..default()
                                 },
-                                TextureAtlas {
-                                    layout: boat_layout_handle.clone(),
-                                    index: 0,
-                                },
-                                Boat {
-                                    id: p.id,
-                                    movement_speed: 150.,
-                                    rotation_speed: f32::to_radians(100.0),
-                                    acceleration: 0.,
-                                    aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
-                                },
-                            ));
-                        }
+                                ..default()
+                            },
+                            TextureAtlas {
+                                layout: boat_layout_handle.clone(),
+                                index: 0,
+                            },
+                            Boat {
+                                id: p.id,
+                                movement_speed: 150.,
+                                rotation_speed: f32::to_radians(100.0),
+                                acceleration: 0.,
+                                aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
+                            },
+                        ));
                     }
-
-                    done1 = true;
-                } else if env.message == "update_enemies" {
-                    let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
-                    let enemies = packet.payload;
-
-                    for e in enemies.list.iter() {
-                        for (mut transform, mut enemy) in enemy_query.iter_mut() {}
-                    }
-
-                    done2 = true;
-                } else {
-                    println!(
-                        "Recieved invalid packet from [{}]: {}",
-                        src.ip(),
-                        env.message
-                    );
                 }
+            } else if env.message == "update_enemies" {
+                let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
+                let enemies = packet.payload;
 
-                println!("1: {}, 2: {}", done1, done2);
-                if done1 && done2 {
-                    udp.socket
-                        .send_to(
-                            create_env("update_received".to_string(), "null".to_string())
-                                .as_bytes(),
-                            "127.0.0.1:5000",
-                        )
-                        .expect("Failed to send [update] packet");
-                    println!("update request done");
-                    break;
+                let mut enemy_found = false;
+
+                for e in enemies.list.iter() {
+                    for (mut transform, mut enemy) in enemy_query.iter_mut() {}
                 }
-            }
-            Err(e) => {
-                //println!("Update: Something happened: {}", e);\
-                println!("This happened");
-                break;
+            } else {
+                println!(
+                    "Recieved invalid packet from [{}]: {}",
+                    src.ip(),
+                    env.message
+                );
             }
         }
+        Err(e) => {
+            //println!("Update: Something happened: {}", e);\
+        }
+    }
+}
+
+fn leave(
+    exit_events: EventReader<AppExit>,
+    mut exit_triggered: Local<bool>,
+    udp: Res<UDP>,
+    player: Res<HostPlayer>,
+) {
+    if !*exit_triggered && exit_events.len() > 0 {
+        *exit_triggered = true;
+
+        udp.socket
+            .send_to(
+                create_env("player_leave".to_string(), player.player.clone()).as_bytes(),
+                "127.0.0.1:5000",
+            )
+            .expect("Failed to send [player_leave]] packet");
     }
 }
