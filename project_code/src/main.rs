@@ -18,7 +18,8 @@ mod wfc;
 
 use bat::BatPlugin;
 use bevy::{prelude::*, window::PresentMode};
-use boat::systems::move_boat;
+use boat::components::Boat;
+use boat::systems::*;
 use boat::BoatPlugin;
 use components::*;
 use controls::*;
@@ -26,10 +27,13 @@ use data::gameworld_data::*;
 use enemies::*;
 use ghost_ship::GhostShipPlugin;
 use hitbox_system::HitboxPlugin;
+use hitbox_system::Hurtbox;
+use hitbox_system::BOAT;
 use kraken::KrakenPlugin;
 use level::components::*;
 use level::LevelPlugin;
-use player::systems::move_player;
+use player::components::AttackCooldown;
+use player::systems::*;
 use player::PlayerPlugin;
 use shop::ShopPlugin;
 use skeleton::SkeletonPlugin;
@@ -153,5 +157,129 @@ fn main() {
         .add_systems(Update, update_mouse_pos)
         .insert_state(GameworldState::MainMenu)
         .insert_state(GameState::Running)
+        .add_systems(OnEnter(GameworldState::Ocean), update)
         .run();
+}
+
+pub fn update(
+    udp: Res<UDP>,
+    host: Res<HostPlayer>,
+    mut player_query: Query<(&mut Transform, &Boat), With<Boat>>,
+    mut enemy_query: Query<(&mut Transform, &Enemy), (With<EnemyTag>, Without<Boat>)>,
+
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+) {
+    udp.socket
+        .send_to(
+            create_env("update".to_string(), "null".to_string()).as_bytes(),
+            "127.0.0.1:5000",
+        )
+        .expect("Failed to send [update] packet");
+
+    println!("Sent update request");
+
+    let mut done1 = false;
+    let mut done2 = false;
+
+    loop {
+        let mut buf = [0; 1024];
+
+        let result = udp.socket.recv_from(&mut buf);
+
+        match result {
+            Ok((bytes, src)) => {
+                let env: Envelope = serde_json::from_slice(&buf[..bytes]).unwrap();
+
+                if env.message == "update_players" {
+                    println!("Updating players....");
+                    let packet: Packet<Players> = serde_json::from_str(&env.packet).unwrap();
+                    let players = packet.payload;
+
+                    for p in players.player_array.iter() {
+                        if p.id == host.player.id || !p.used {
+                            continue;
+                        }
+
+                        let mut boat_found = false;
+
+                        for (mut transform, player) in player_query.iter_mut() {
+                            if player.id == host.player.id {
+                                continue;
+                            }
+                            boat_found = true;
+                            transform.translation = players.player_array[player.id as usize].pos;
+                        }
+
+                        if !boat_found {
+                            //getting boat sprite info
+                            let boat_sheet_handle = asset_server.load("s_basic_ship.png");
+                            let boat_layout =
+                                TextureAtlasLayout::from_grid(UVec2::splat(100), 2, 2, None, None);
+                            let boat_layout_handle = texture_atlases.add(boat_layout);
+
+                            //spawning boat
+                            commands.spawn((
+                                SpriteBundle {
+                                    texture: boat_sheet_handle,
+                                    transform: Transform {
+                                        translation: Vec3::new(0., 0., 900.),
+                                        ..default()
+                                    },
+                                    ..default()
+                                },
+                                TextureAtlas {
+                                    layout: boat_layout_handle.clone(),
+                                    index: 0,
+                                },
+                                Boat {
+                                    id: p.id,
+                                    movement_speed: 150.,
+                                    rotation_speed: f32::to_radians(100.0),
+                                    acceleration: 0.,
+                                    aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
+                                },
+                            ));
+                        }
+                    }
+
+                    done1 = true;
+                } else if env.message == "update_enemies" {
+                    println!("Updating enemies....");
+                    let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
+                    let enemies = packet.payload;
+
+                    for e in enemies.list.iter() {
+                        for (mut transform, mut enemy) in enemy_query.iter_mut() {}
+                    }
+
+                    done2 = true;
+                } else {
+                    println!(
+                        "Recieved invalid packet from [{}]: {}",
+                        src.ip(),
+                        env.message
+                    );
+                }
+
+                if done1 && done2 {
+                    udp.socket
+                        .send_to(
+                            create_env("update_received".to_string(), "null".to_string())
+                                .as_bytes(),
+                            "127.0.0.1:5000",
+                        )
+                        .expect("Failed to send [update] packet");
+                    println!("update request done");
+                    break;
+                }
+
+                println!("1: {}, 2: {}", done1, done2);
+            }
+            Err(e) => {
+                //println!("Update: Something happened: {}", e);
+            }
+        }
+    }
 }

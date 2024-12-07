@@ -106,23 +106,13 @@ impl Enemies {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub enum EType {
-    Bat,
-    Kraken,
-    GhostShip,
-    Rock,
-    RSkeleton,
-    MSkeleton,
-}
-
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Component)]
 
 pub struct Enemy {
     pub id: i32,
-    pub etype: EType,
+    pub etype: i32,
     pub translation: Vec3,
-    pub animation_index: usize,
+    pub rotation: Quat,
     pub alive: bool,
 }
 

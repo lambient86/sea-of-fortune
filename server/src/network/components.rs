@@ -9,46 +9,6 @@ pub struct UDP {
     pub socket: UdpSocket,
 }
 
-/// Struct to represent the TCP connections
-#[derive(Resource)]
-pub struct TcpConnections {
-    pub streams: Vec<TcpStream>,
-}
-
-#[derive(Resource)]
-pub struct TcpResource {
-    pub streams: Arc<Mutex<TcpConnections>>,
-}
-
-impl TcpConnections {
-    /// Adds a connection to the list of TCP connections
-    pub fn add_connection(&mut self, stream: TcpStream) {
-        self.streams.push(stream);
-    }
-
-    /// Handles the tcp connections
-    pub fn handle_connections(&mut self) {
-        // Iterates through all streams and checks for any new data
-        for stream in self.streams.iter_mut() {
-            let mut buffer = [0; 1024];
-
-            match stream.read(&mut buffer) {
-                Ok(size) => {
-                    if size > 0 {
-                        //process received data
-                        println!("Received data!");
-                    }
-                }
-                Err(e) => {
-                    //error encountered
-                    println!("Error reading from stream");
-                }
-            }
-        }
-    }
-}
-/// Enumerator that represents different udp packet types
-
 #[derive(Serialize, Deserialize)]
 pub struct Envelope {
     pub message: String,
@@ -99,7 +59,7 @@ impl Player {
     }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Clone, Serialize, Deserialize)]
 pub struct Players {
     pub player_array: [Player; 4],
 }
@@ -131,7 +91,7 @@ pub struct Velocity {
     pub v: Vec2,
 }
 
-#[derive(Resource)]
+#[derive(Resource, Clone, Serialize, Deserialize)]
 pub struct Enemies {
     pub list: Vec<Enemy>,
 }
@@ -142,22 +102,12 @@ impl Enemies {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub enum EType {
-    Bat,
-    Kraken,
-    GhostShip,
-    Rock,
-    RSkeleton,
-    MSkeleton,
-}
-
 #[derive(Serialize, Deserialize, Clone)]
 
 pub struct Enemy {
     pub id: i32,
     pub etype: i32,
     pub translation: Vec3,
-    pub animation_index: usize,
+    pub rotation: Quat,
     pub alive: bool,
 }
