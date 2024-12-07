@@ -6,6 +6,7 @@ use crate::controls::*;
 use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
 use crate::player::components::AttackCooldown;
+use crate::wind::components::Wind;
 use bevy::prelude::*;
 
 /*   MOVE_BOAT FUNCTION   */
@@ -14,9 +15,19 @@ pub fn move_boat(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mouse_input: Res<ButtonInput<MouseButton>>,
+    wind: Res<Wind>,
     mut query: Query<(&mut Boat, &mut Transform)>,
 ) {
     let (mut ship, mut transform) = query.single_mut();
+
+    let boat_direction = transform.rotation * Vec3::Y;
+    let wind_direction = wind.direction;
+
+    // calculate the cosine similarity
+    let dot = boat_direction.truncate().dot(wind_direction);
+    let mag_w = wind_direction.length();
+    let mag_b = boat_direction.length();
+    let cs = dot / (mag_b * mag_w);
 
     //initializing rotation and movement variables
     let mut rotation_factor = 0.0;
@@ -46,7 +57,7 @@ pub fn move_boat(
 
     //getting movement information
     let movement_dir = transform.rotation * Vec3::Y;
-    let movement_dis = movement_factor * (ship.movement_speed * time.delta_seconds())
+    let movement_dis = movement_factor * (ship.movement_speed * time.delta_seconds() * cs)
         + (0.5 * ship.acceleration * time.delta_seconds());
     let translation_delta = movement_dir * movement_dis;
 
