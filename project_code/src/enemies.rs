@@ -7,6 +7,9 @@ use crate::hitbox_system::components::*;
 use crate::kraken::components::*;
 use crate::player::components::*;
 use crate::skeleton::components::*;
+use crate::whirlpool::components::*;
+use crate::whirlpool::components::Lifetime;
+use crate::whirlpool::components::WHIRLPOOL_LIFETIME;
 
 pub enum Enemy {
     Bat,
@@ -15,6 +18,7 @@ pub enum Enemy {
     Rock,
     Skeleton,
     Skel2,
+    Whirlpool,
 }
 
 pub fn spawn_enemy(
@@ -25,6 +29,31 @@ pub fn spawn_enemy(
     texture_atlases: &mut ResMut<Assets<TextureAtlasLayout>>,
 ) {
     match enemy {
+        Enemy::Whirlpool => {
+            let whirlpool_texture_asset: Handle<Image> = asset_server.load("s_whirlpool.png");
+
+            commands.spawn((
+                SpriteBundle{
+                    texture: whirlpool_texture_asset,
+                    transform,
+                    ..default()
+                },
+                Whirlpool {
+                    rotation_speed: f32::to_radians(90.0),
+                    current_hp: WHIRLPOOL_HP,
+                    max_hp: WHIRLPOOL_HP,
+                },
+                Lifetime(WHIRLPOOL_LIFETIME),
+                Hurtbox {
+                    size: Vec2::new(400., 290.),
+                    offset: Vec2::splat(0.),
+                    colliding: false,
+                    entity: WHIRLPOOL,
+                    iframe: Timer::from_seconds(0.75, TimerMode::Once),
+                    enemy: true,
+                }, 
+            ));
+        },
         Enemy::Bat => {
             let bat_layout =
                 TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 3, 1, None, None);

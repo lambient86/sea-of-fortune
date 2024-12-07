@@ -14,6 +14,7 @@ mod systems;
 mod transition_box;
 mod wfc;
 mod skeleton;
+mod whirlpool;
 
 use bat::BatPlugin;
 use bevy::{prelude::*, window::PresentMode};
@@ -34,6 +35,7 @@ use player::PlayerPlugin;
 use shop::ShopPlugin;
 use systems::*;
 use wfc::WFCPlugin;
+use whirlpool::WhirlpoolPlugin;
 
 fn main() {
     App::new()
@@ -58,6 +60,7 @@ fn main() {
         .add_plugins(LevelPlugin)
         .add_plugins(WFCPlugin)
         .add_plugins(GhostShipPlugin)
+        .add_plugins(WhirlpoolPlugin)
         .add_systems(
             Update,
             move_player_camera.after(move_player).run_if(
