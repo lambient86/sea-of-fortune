@@ -15,11 +15,8 @@ mod skeleton;
 mod systems;
 mod transition_box;
 mod wfc;
-<<<<<<< HEAD
 mod skeleton;
 mod whirlpool;
-=======
->>>>>>> 43ca76b9e40b378d202265bbdf126c09d64b2728
 
 use bat::BatPlugin;
 use bevy::{prelude::*, window::PresentMode};
