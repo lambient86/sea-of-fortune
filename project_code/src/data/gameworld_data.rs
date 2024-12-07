@@ -21,8 +21,8 @@ pub const SAND_LEVEL_W: f32 = 2000.;
 pub const SAND_H_CENTER: f32 = SAND_LEVEL_H / 2.;
 pub const SAND_W_CENTER: f32 = SAND_LEVEL_W / 2.;
 
-pub const DUNGEON_LEVEL_H: f32 = 2000.;
-pub const DUNGEON_LEVEL_W: f32 = 2000.;
+pub const DUNGEON_LEVEL_H: f32 = 32000.;
+pub const DUNGEON_LEVEL_W: f32 = 32000.;
 pub const DUNGEON_H_CENTER: f32 = DUNGEON_LEVEL_H / 2.;
 pub const DUNGEON_W_CENTER: f32 = DUNGEON_LEVEL_W / 2.;
 
