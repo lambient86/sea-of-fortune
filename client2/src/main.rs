@@ -31,6 +31,7 @@ fn main() {
 
     //connect to server
     let udp_addr = "127.0.0.1:0";
+
     //let tcp_addr = "127.0.0.1:8000";
 
     let udp_socket = UdpSocket::bind(udp_addr).unwrap();
@@ -90,6 +91,7 @@ fn main() {
                 }
 
                 if ocean.len() >= OCEAN_LENGTH as usize {
+
                     break;
                 }
             }
@@ -123,6 +125,7 @@ fn main() {
         .insert_resource(HostPlayer { player: player })
         .add_systems(Startup, setup)
         .add_systems(Last, leave)
+
         /*.add_systems(Update, listen)*/
         .run();
     //.add_systems(Startup, listener);
@@ -134,6 +137,7 @@ pub fn listen(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     player_query: Query<(&Transform, &Player), With<Player>>,
+
 ) {
     let mut buf = [0; 1024];
 
@@ -176,7 +180,7 @@ pub fn setup(
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     commands.spawn(Camera2dBundle::default());
-
+  
     let ocean_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
     let ocean_layout_handle = texture_atlases.add(ocean_layout);
 

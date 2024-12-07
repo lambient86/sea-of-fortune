@@ -111,6 +111,7 @@ pub struct HostPlayer {
 }
 
 #[derive(Clone, Serialize, Deserialize, Component)]
+
 pub struct Player {
     pub id: i32,
     pub addr: String,

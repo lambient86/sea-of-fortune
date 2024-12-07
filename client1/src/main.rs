@@ -31,6 +31,7 @@ fn main() {
 
     //connect to server
     let udp_addr = "127.0.0.1:0";
+
     //let tcp_addr = "127.0.0.1:8000";
 
     let udp_socket = UdpSocket::bind(udp_addr).unwrap();

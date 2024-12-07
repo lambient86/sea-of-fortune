@@ -36,6 +36,22 @@ impl Counter {
     }
 }
 
+#[derive(Resource)]
+pub struct Counter {
+    pub count: i32,
+}
+
+impl Counter {
+    pub fn init() -> Counter {
+        Counter { count: 0 }
+    }
+
+    pub fn next(&mut self) -> i32 {
+        self.count += 1;
+        self.count
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Player {
     pub id: i32,
@@ -59,7 +75,7 @@ impl Player {
     }
 }
 
-#[derive(Resource, Clone, Serialize, Deserialize)]
+#[derive(Resource)]
 pub struct Players {
     pub player_array: [Player; 4],
 }
@@ -91,7 +107,7 @@ pub struct Velocity {
     pub v: Vec2,
 }
 
-#[derive(Resource, Clone, Serialize, Deserialize)]
+#[derive(Resource)]
 pub struct Enemies {
     pub list: Vec<Enemy>,
 }
@@ -102,12 +118,22 @@ impl Enemies {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize)]
+pub enum EType {
+    Bat,
+    Kraken,
+    GhostShip,
+    Rock,
+    RSkeleton,
+    MSkeleton,
+}
+
+#[derive(Serialize, Deserialize)]
 
 pub struct Enemy {
     pub id: i32,
-    pub etype: i32,
+    pub etype: EType,
     pub translation: Vec3,
-    pub rotation: Quat,
+    pub animation_index: usize,
     pub alive: bool,
 }
