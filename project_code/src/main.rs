@@ -22,6 +22,7 @@ use boat::systems::move_boat;
 use boat::BoatPlugin;
 use components::GameState;
 use components::GameworldState;
+use components::SpawnLocations;
 use controls::*;
 use data::gameworld_data::*;
 use enemies::*;
@@ -30,6 +31,7 @@ use hitbox_system::HitboxPlugin;
 use kraken::KrakenPlugin;
 use level::LevelPlugin;
 use player::systems::move_player;
+use player::systems::spawn_player;
 use player::PlayerPlugin;
 use rock::RockPlugin;
 use shop::ShopPlugin;
@@ -76,7 +78,13 @@ fn main() {
         .add_systems(Update, change_gameworld_state)
         .add_systems(Update, change_game_state)
         .add_systems(Update, update_mouse_pos)
+        .add_systems(Update, check_wall_collisions.after(move_player))
+        .add_systems(OnEnter(GameworldState::Dungeon), handle_dungeon_entry.after(spawn_player))
+        .add_systems(OnEnter(GameworldState::Dungeon), handle_door_translation)
+        .add_systems(OnEnter(GameworldState::Island), handle_door_translation)
+        .add_systems(Update, update_dungeon_collision)
         .insert_state(GameworldState::MainMenu)
         .insert_state(GameState::Running)
+        .insert_resource(SpawnLocations::default())
         .run();
 }
