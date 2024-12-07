@@ -105,7 +105,13 @@ impl Counter {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Resource, Serialize, Deserialize)]
+pub struct HostPlayer {
+    pub player: Player,
+}
+
+#[derive(Clone, Serialize, Deserialize, Component)]
+
 pub struct Player {
     pub id: i32,
     pub addr: String,
@@ -128,7 +134,7 @@ impl Player {
     }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Serialize, Deserialize)]
 pub struct Players {
     pub player_array: [Player; 4],
 }
@@ -160,7 +166,7 @@ pub struct Velocity {
     pub v: Vec2,
 }
 
-#[derive(Resource)]
+#[derive(Resource, Serialize, Deserialize)]
 pub struct Enemies {
     pub list: Vec<Enemy>,
 }

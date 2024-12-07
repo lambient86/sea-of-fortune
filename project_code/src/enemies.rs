@@ -7,25 +7,29 @@ use crate::hitbox_system::components::*;
 use crate::kraken::components::*;
 use crate::player::components::*;
 use crate::skeleton::components::*;
+use crate::Enemy;
 
-pub enum Enemy {
-    Bat,
-    Kraken,
-    GhostShip,
-    Rock,
-    Skeleton,
-    Skel2,
+#[derive(Component)]
+pub struct EnemyTag;
+
+pub enum EnemyT {
+    Bat(i32),
+    Kraken(i32),
+    GhostShip(i32),
+    Rock(i32),
+    Skeleton(i32),
+    Skel2(i32),
 }
 
 pub fn spawn_enemy(
     commands: &mut Commands,
-    enemy: Enemy,
+    enemy: EnemyT,
     transform: Transform,
     asset_server: &Res<AssetServer>,
     texture_atlases: &mut ResMut<Assets<TextureAtlasLayout>>,
 ) {
     match enemy {
-        Enemy::Bat => {
+        EnemyT::Bat(id) => {
             let bat_layout =
                 TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 3, 1, None, None);
 
@@ -64,7 +68,7 @@ pub fn spawn_enemy(
                 },
             ));
         }
-        Enemy::Kraken => {
+        EnemyT::Kraken(id) => {
             let kraken_texture_handle = asset_server.load("s_kraken.png");
 
             commands.spawn((
@@ -90,9 +94,16 @@ pub fn spawn_enemy(
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
                 },
+                Enemy {
+                    id: id,
+                    etype: KRAKEN,
+                    translation: transform.translation,
+                    rotation: transform.rotation,
+                    alive: true,
+                },
             ));
         }
-        Enemy::GhostShip => {
+        EnemyT::GhostShip(id) => {
             let ghostship_texture_handle = asset_server.load("s_ghost_ship.png");
 
             commands.spawn((
@@ -117,9 +128,16 @@ pub fn spawn_enemy(
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
                 },
+                Enemy {
+                    id: id,
+                    etype: GHOSTSHIP,
+                    translation: transform.translation,
+                    rotation: transform.rotation,
+                    alive: true,
+                },
             ));
         }
-        Enemy::Skeleton => {
+        EnemyT::Skeleton(id) => {
             let skeleton_layout = TextureAtlasLayout::from_grid(
                 UVec2::new(31, 32), // SpriteSheet 1 pixel off, maybe fix later? it works like this though
                 6,                  // Columns
@@ -162,11 +180,11 @@ pub fn spawn_enemy(
                     entity: SKELETON,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
-                }
+                },
             ));
         }
-        Enemy::Rock => {}
-        Enemy::Skeleton => {}
-        Enemy::Skel2 => {}
+        EnemyT::Rock(id) => {}
+        EnemyT::Skeleton(id) => {}
+        EnemyT::Skel2(id) => {}
     }
 }

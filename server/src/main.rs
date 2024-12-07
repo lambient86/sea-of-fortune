@@ -33,18 +33,12 @@ fn main() {
 
     println!("Ocean size: {}", ocean_map.map.len());
 
-    let tcpconnections = TcpConnections {
-        streams: Vec::new(),
-    };
-
-    let connections = TcpResource {
-        streams: Arc::new(Mutex::new(tcpconnections)),
-    };
-
     let result = UdpSocket::bind("127.0.0.1:5000");
 
     if result.is_ok() {
         let udp_socket = result.unwrap();
+
+        udp_socket.set_nonblocking(true).expect("Fail");
 
         println!(
             "UDP Socket listening to {}",
@@ -52,14 +46,12 @@ fn main() {
         );
 
         App::new()
-            .insert_resource(connections)
             .insert_resource(ocean_map)
             .insert_resource(Counter::init())
             .insert_resource(Players::init())
             .insert_resource(Enemies::init())
             .insert_resource(UDP { socket: udp_socket })
-            .add_systems(Startup, server_start)
-            .add_systems(Update, listen)
+            .add_systems(Update, handle)
             .run();
     } else {
         println!("UDP Socket unsuccessfully bound");
@@ -88,7 +80,7 @@ pub fn server_start(ocean: Res<OceanMap>, mut players: ResMut<Players>, udp: Res
                     let mut index = 0;
                     let mut full = true;
 
-                    for mut player in players.player_array.iter() {
+                    for player in players.player_array.iter() {
                         if !player.used {
                             new_player.id = index;
                             new_player.used = true;
@@ -116,7 +108,7 @@ pub fn server_start(ocean: Res<OceanMap>, mut players: ResMut<Players>, udp: Res
                         udp.socket
                             .send_to(
                                 create_env("joined_lobby".to_string(), new_player.id).as_bytes(),
-                                "127.0.0.1:4000",
+                                new_player.addr.clone(),
                             )
                             .expect("Failed to send [id] response packet");
 
@@ -131,7 +123,7 @@ pub fn server_start(ocean: Res<OceanMap>, mut players: ResMut<Players>, udp: Res
                             udp.socket
                                 .send_to(
                                     create_env("load_ocean".to_string(), tile.clone()).as_bytes(),
-                                    "127.0.0.1:4000",
+                                    new_player.addr.clone(),
                                 )
                                 .expect(&expect_msg);
                         }
@@ -152,98 +144,126 @@ pub fn server_start(ocean: Res<OceanMap>, mut players: ResMut<Players>, udp: Res
     //start_tcp_server(&connections);
 }
 
-pub fn listen(ocean: Res<OceanMap>, mut players: ResMut<Players>, udp: Res<UDP>) {
-    let mut buf = [0; 1024];
+pub fn handle(
+    ocean: Res<OceanMap>,
+    mut players: ResMut<Players>,
+    udp: Res<UDP>,
+    enemies: Res<Enemies>,
+) {
+    loop {
+        let mut buf = [0; 1024];
 
-    let result = udp.socket.recv_from(&mut buf);
+        let result = udp.socket.recv_from(&mut buf);
 
-    match result {
-        Ok((bytes, src)) => {
-            let env: Envelope = serde_json::from_slice(&buf[..bytes]).unwrap();
+        match result {
+            Ok((bytes, src)) => {
+                let env: Envelope = serde_json::from_slice(&buf[..bytes]).unwrap();
 
-            if env.message.eq("new_player") {
-                let packet: Packet<Player> = serde_json::from_str(&env.packet).unwrap();
-                let mut new_player = packet.payload;
+                if env.message == "new_player" {
+                    let packet: Packet<Player> = serde_json::from_str(&env.packet).unwrap();
+                    let mut new_player = packet.payload;
 
-                println!("Player join request from [{}]", new_player.addr);
+                    println!("Player join request from [{}]", new_player.addr);
 
-                let mut index = 0;
-                let mut full = true;
+                    let mut index = 0;
+                    let mut full = true;
 
-                for player in players.player_array.iter() {
-                    if !player.used {
-                        new_player.id = index;
-                        new_player.used = true;
-                        players.player_array[index as usize] = new_player.clone();
-                        full = false;
-                        break;
+                    for player in players.player_array.iter() {
+                        if !player.used {
+                            new_player.id = index;
+                            new_player.used = true;
+                            players.player_array[index as usize] = new_player.clone();
+                            full = false;
+                            break;
+                        }
+                        index += 1;
                     }
-                    index += 1;
-                }
 
-                if full {
-                    udp.socket
-                        .send_to(
-                            create_env(
-                                "full_lobby".to_string(),
-                                "Lobby is full, cannot join right now. Try again later!"
-                                    .to_string(),
-                            )
-                            .as_bytes(),
-                            new_player.addr,
-                        )
-                        .expect("Failed to send [full_lobby] packet");
-                } else {
-                    //If lobby isn't full
-                    udp.socket
-                        .send_to(
-                            create_env("joined_lobby".to_string(), new_player.id).as_bytes(),
-                            "127.0.0.1:4000",
-                        )
-                        .expect("Failed to send [id] response packet");
-
-                    println!("Sending ocean overworld...");
-                    let mut size = 0;
-                    for tile in ocean.map.iter() {
-                        size += 1;
-
-                        let expect_msg =
-                            "Failed to send ocean tile packet #".to_string() + &size.to_string();
-
+                    if full {
                         udp.socket
                             .send_to(
-                                create_env("load_ocean".to_string(), tile.clone()).as_bytes(),
-                                "127.0.0.1:4000",
+                                create_env(
+                                    "full_lobby".to_string(),
+                                    "Lobby is full, cannot join right now. Try again later!"
+                                        .to_string(),
+                                )
+                                .as_bytes(),
+                                new_player.addr,
                             )
-                            .expect(&expect_msg);
+                            .expect("Failed to send [full_lobby] packet");
+                    } else {
+                        //If lobby isn't full
+                        udp.socket
+                            .send_to(
+                                create_env("joined_lobby".to_string(), new_player.id).as_bytes(),
+                                new_player.addr.clone(),
+                            )
+                            .expect("Failed to send [id] response packet");
+
+                        println!("Sending ocean overworld...");
+                        let mut size = 0;
+                        for tile in ocean.map.iter() {
+                            size += 1;
+
+                            let expect_msg = "Failed to send ocean tile packet #".to_string()
+                                + &size.to_string();
+
+                            udp.socket
+                                .send_to(
+                                    create_env("load_ocean".to_string(), tile.clone()).as_bytes(),
+                                    new_player.addr.clone(),
+                                )
+                                .expect(&expect_msg);
+                        }
+                        println!("Done. Total ocean packets sent: {}", size);
                     }
-                    println!("Done. Total ocean packets sent: {}", size);
+                } else if env.message == "player_leave" {
+                    let packet: Packet<Player> = serde_json::from_str(&env.packet).unwrap();
+
+                    let player = packet.payload;
+                    let id = player.id;
+                    let addr = player.addr;
+
+                    players.player_array[id as usize].used = false;
+
+                    udp.socket
+                        .send_to(
+                            create_env("leave_success".to_string(), "null".to_string()).as_bytes(),
+                            addr.clone(),
+                        )
+                        .expect("Failed to send [leave_success] packet");
+                } else if env.message == "update" {
+                    for player in players.player_array.iter() {
+                        if player.used {
+                            udp.socket
+                                .send_to(
+                                    create_env("update_players".to_string(), players.clone())
+                                        .as_bytes(),
+                                    player.addr.clone(),
+                                )
+                                .expect("Failed to send [update_player] packet");
+
+                            udp.socket
+                                .send_to(
+                                    create_env("update_enemies".to_string(), enemies.clone())
+                                        .as_bytes(),
+                                    player.addr.clone(),
+                                )
+                                .expect("Failed to send [update_enemy] packet");
+                        }
+                    }
+                } else {
+                    println!(
+                        "Recieved invalid packet from [{}]: {}",
+                        src.ip(),
+                        env.message
+                    );
                 }
-            } else if env.message.eq("player_leave") {
-                let packet: Packet<Player> = serde_json::from_str(&env.packet).unwrap();
-
-                let player = packet.payload;
-                let id = player.id;
-                let addr = player.addr;
-
-                players.player_array[id as usize].used = false;
-
-                udp.socket
-                    .send_to(
-                        create_env("leave_success".to_string(), "null".to_string()).as_bytes(),
-                        addr.clone(),
-                    )
-                    .expect("Failed to send [leave_success] packet");
-            } else {
-                println!(
-                    "Recieved invalid packet from [{}]: {}",
-                    src.ip(),
-                    env.message
-                );
             }
-        }
-        Err(e) => {
-            eprintln!("Something happened: {}", e);
+            Err(e) => {
+                //println!("Listen: Something happened: {}", e);
+                //Update portion
+            }
         }
     }
 }

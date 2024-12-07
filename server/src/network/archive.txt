@@ -36,3 +36,23 @@ pub fn receive_udp(socket: UdpSocket) {}
 fn handle_connections(mut tcpconnections: ResMut<TcpConnections>) {
     tcpconnections.handle_connections();
 }
+
+//starting tcp connection with server
+
+    /*
+    let mut tcp_stream = TcpStream::connect(tcp_addr);
+
+    loop {
+        match tcp_stream {
+            Ok(ref t) => {
+                println!("TCP: Stream connected!");
+                break;
+            }
+            Err(ref e) => {
+                eprintln!("Something happened: {}", e);
+                tcp_stream = TcpStream::connect(tcp_addr);
+            }
+        }
+    }
+     */
+

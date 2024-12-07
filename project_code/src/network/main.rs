@@ -31,7 +31,6 @@ fn main() {
 
     //connect to server
     let udp_addr = "127.0.0.1:0";
-
     //let tcp_addr = "127.0.0.1:8000";
 
     let udp_socket = UdpSocket::bind(udp_addr).unwrap();
@@ -91,7 +90,6 @@ fn main() {
                 }
 
                 if ocean.len() >= OCEAN_LENGTH as usize {
-
                     break;
                 }
             }
@@ -125,7 +123,6 @@ fn main() {
         .insert_resource(HostPlayer { player: player })
         .add_systems(Startup, setup)
         .add_systems(Last, leave)
-
         /*.add_systems(Update, listen)*/
         .run();
     //.add_systems(Startup, listener);
@@ -137,7 +134,7 @@ pub fn listen(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     player_query: Query<(&Transform, &Player), With<Player>>,
-
+    host: Res<HostPlayer>,
 ) {
     let mut buf = [0; 1024];
 
@@ -151,14 +148,29 @@ pub fn listen(
                 let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
 
                 let enemies = packet.payload;
-            } else if env.message == "update_player" {
+
+                println!("Received update_enemies");
+            } else if env.message == "update_players" {
                 let packet: Packet<Players> = serde_json::from_str(&env.packet).unwrap();
 
-                let players = packet.payload;
+                let players = packet.payload.player_array;
+
+                for (transform, player) in player_query.into_iter() {
+                    if player.id == host.player.id {
+                        continue;
+                    }
+
+                    transform.translation = players[player.id as usize].pos;
+                    transform.rotation = players[player.id as usize].rot;
+                }
+
+                println!("Received update_players");
             } else if env.message == "spawn_enemy" {
                 let packet: Packet<Enemy> = serde_json::from_str(&env.packet).unwrap();
 
                 let enemy = packet.payload;
+
+                println!("Received spawn_enemy");
             } else {
                 println!(
                     "Recieved invalid packet from [{}]: {}",
@@ -180,7 +192,7 @@ pub fn setup(
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     commands.spawn(Camera2dBundle::default());
-  
+
     let ocean_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
     let ocean_layout_handle = texture_atlases.add(ocean_layout);
 

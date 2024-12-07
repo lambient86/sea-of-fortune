@@ -4,10 +4,9 @@ use std::io::*;
 use std::net::*;
 use std::sync::{Arc, Mutex};
 
-#[derive(Resource)]
-pub struct UDP {
-    pub socket: UdpSocket,
-}
+use level::components::*;
+
+use crate::level;
 
 #[derive(Serialize, Deserialize)]
 pub struct Envelope {
@@ -36,23 +35,12 @@ impl Counter {
     }
 }
 
-#[derive(Resource)]
-pub struct Counter {
-    pub count: i32,
+#[derive(Resource, Serialize, Deserialize)]
+pub struct HostPlayer {
+    pub player: Player,
 }
 
-impl Counter {
-    pub fn init() -> Counter {
-        Counter { count: 0 }
-    }
-
-    pub fn next(&mut self) -> i32 {
-        self.count += 1;
-        self.count
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Component)]
 pub struct Player {
     pub id: i32,
     pub addr: String,
@@ -75,7 +63,7 @@ impl Player {
     }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Serialize, Deserialize)]
 pub struct Players {
     pub player_array: [Player; 4],
 }
@@ -107,7 +95,7 @@ pub struct Velocity {
     pub v: Vec2,
 }
 
-#[derive(Resource)]
+#[derive(Resource, Serialize, Deserialize)]
 pub struct Enemies {
     pub list: Vec<Enemy>,
 }
@@ -118,22 +106,17 @@ impl Enemies {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub enum EType {
-    Bat,
-    Kraken,
-    GhostShip,
-    Rock,
-    RSkeleton,
-    MSkeleton,
-}
-
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Component)]
 
 pub struct Enemy {
     pub id: i32,
-    pub etype: EType,
+    pub etype: i32,
     pub translation: Vec3,
-    pub animation_index: usize,
+    pub rotation: Quat,
     pub alive: bool,
+}
+
+#[derive(Resource)]
+pub struct UDP {
+    pub socket: UdpSocket,
 }
