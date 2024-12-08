@@ -4,3 +4,8 @@ use bevy::prelude::*;
 pub struct Wind {
     pub direction: Vec2,
 }
+
+#[derive(Component)]
+pub struct CountdownTimer {
+    pub timer: Timer,
+}
