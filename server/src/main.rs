@@ -33,14 +33,56 @@ fn main() {
     // Creating ocean level
     let ocean_map = OceanMap { map: build_ocean() };
     let projectiles = Projectiles { list: Vec::new() };
-    let mut enemies = Enemies { list: Vec::new() };
+    let mut new = Enemies { list: Vec::new() };
+    let mut update = Enemies { list: Vec::new() };
+    let mut cooldowns = Cooldowns { list: Vec::new() };
 
-    enemies.list.push(Enemy {
+    new.list.push(Enemy {
         id: 15,
         etype: KRAKEN,
         pos: Vec3::new(0., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.),
         animation_index: 0,
         alive: true,
+        hp: KRAKEN_MAX_HP,
+    });
+
+    update.list.push(Enemy {
+        id: 15,
+        etype: KRAKEN,
+        pos: Vec3::new(0., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.),
+        animation_index: 0,
+        alive: true,
+        hp: KRAKEN_MAX_HP,
+    });
+
+    cooldowns.list.push(CD {
+        enemy_id: 15,
+        og: 2.5,
+        timer: Timer::new(Duration::from_secs(3), TimerMode::Once),
+    });
+
+    new.list.push(Enemy {
+        id: 16,
+        etype: GHOSTSHIP,
+        pos: Vec3::new(200., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.),
+        animation_index: 0,
+        alive: true,
+        hp: GHOSTSHIP_MAX_HP,
+    });
+
+    update.list.push(Enemy {
+        id: 16,
+        etype: GHOSTSHIP,
+        pos: Vec3::new(200., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.),
+        animation_index: 0,
+        alive: true,
+        hp: GHOSTSHIP_MAX_HP,
+    });
+
+    cooldowns.list.push(CD {
+        enemy_id: 16,
+        og: 2.5,
+        timer: Timer::new(Duration::from_secs(3), TimerMode::Once),
     });
 
     println!("Ocean size: {}", ocean_map.map.len());
@@ -61,10 +103,12 @@ fn main() {
             .insert_resource(ocean_map)
             .insert_resource(Counter::init())
             .insert_resource(Players::init())
-            .insert_resource(enemies)
+            .insert_resource(EnemyLists { new, update })
             .insert_resource(projectiles)
             .insert_resource(UDP { socket: udp_socket })
+            .insert_resource(cooldowns)
             .add_systems(Update, handle)
+            //.add_systems(Update, enemy_proj_handle)
             .add_plugins(DefaultPlugins.set(WindowPlugin {
                 primary_window: Some(Window {
                     title: "Sea of Fortune | Build 0.2".into(),
@@ -88,7 +132,7 @@ pub fn handle(
     ocean: Res<OceanMap>,
     mut players: ResMut<Players>,
     udp: Res<UDP>,
-    enemies: Res<Enemies>,
+    mut enemies: ResMut<EnemyLists>,
     mut projectiles: ResMut<Projectiles>,
 ) {
     loop {
@@ -188,13 +232,24 @@ pub fn handle(
 
                             udp.socket
                                 .send_to(
-                                    create_env("update_enemies".to_string(), enemies.clone())
-                                        .as_bytes(),
+                                    create_env(
+                                        "update_enemies".to_string(),
+                                        enemies.update.clone(),
+                                    )
+                                    .as_bytes(),
                                     player.addr.clone(),
                                 )
                                 .expect("Failed to send [update_enemy] packet");
 
                             udp.socket
+                                .send_to(
+                                    create_env("new_enemies".to_string(), enemies.new.clone())
+                                        .as_bytes(),
+                                    player.addr.clone(),
+                                )
+                                .expect("Failed to send [update_enemy] packet");
+
+                            /*udp.socket
                                 .send_to(
                                     create_env(
                                         "update_projectiles".to_string(),
@@ -204,8 +259,9 @@ pub fn handle(
                                     player.addr.clone(),
                                 )
                                 .expect("Failed to send [update_projectiles] packet");
-                            projectiles.list.clear();
+                            projectiles.list.clear();*/
                         }
+                        enemies.new.list.clear();
                     }
                 } else if env.message == "player_update" {
                     let packet: Packet<Player> = serde_json::from_str(&env.packet).unwrap();
@@ -214,6 +270,60 @@ pub fn handle(
 
                     players.player_array[id as usize].pos = player.pos;
                     players.player_array[id as usize].rot = player.rot;
+                } else if env.message == "enemy_damaged" {
+                    let packet: Packet<Damage> = serde_json::from_str(&env.packet).unwrap();
+                    let attack = packet.payload;
+
+                    let option = enemies
+                        .update
+                        .list
+                        .iter()
+                        .position(|x| x.id == attack.target_id);
+
+                    match option {
+                        Some(index) => {
+                            enemies.update.list[index].hp -= attack.dmg;
+
+                            if enemies.update.list[index].hp <= 0. {
+                                for player in players.player_array.iter() {
+                                    if player.used {
+                                        println!(
+                                            "Sending enemy [{}] dead to player #{}",
+                                            enemies.update.list[index].id, player.id
+                                        );
+                                        udp.socket
+                                            .send_to(
+                                                create_env(
+                                                    "enemy_dead".to_string(),
+                                                    enemies.update.list[index].clone(),
+                                                )
+                                                .as_bytes(),
+                                                player.addr.clone(),
+                                            )
+                                            .expect("Failed to send [enemy_dead] packet");
+                                    }
+                                }
+
+                                enemies.update.list.remove(index);
+                            }
+                        }
+                        None => {}
+                    }
+                } else if env.message == "got_here_late" {
+                    let packet: Packet<Player> = serde_json::from_str(&env.packet).unwrap();
+                    let player = packet.payload;
+                    println!(
+                        "This happened for player #{}: Sending [{}] enemies",
+                        player.id,
+                        enemies.update.list.len()
+                    );
+                    udp.socket
+                        .send_to(
+                            create_env("new_enemies".to_string(), enemies.update.clone())
+                                .as_bytes(),
+                            player.addr.clone(),
+                        )
+                        .expect("Failed to send [update_enemy] packet");
                 } else {
                     println!(
                         "Recieved invalid packet from [{}]: {}",
@@ -231,13 +341,27 @@ pub fn handle(
 }
 
 pub fn enemy_proj_handle(
-    enemies: Res<Enemies>,
+    enemies: Res<EnemyLists>,
     mut projectiles: ResMut<Projectiles>,
     players: ResMut<Players>,
-    udp: Res<UDP>,
-    mut counter: ResMut<Counter>,
+    mut cooldowns: ResMut<Cooldowns>,
+    time: Res<Time>,
 ) {
-    for enemy in enemies.list.iter() {
+    for enemy in enemies.update.list.iter() {
+        let index = cooldowns
+            .list
+            .iter()
+            .position(|x| x.enemy_id == enemy.id)
+            .unwrap();
+
+        cooldowns.list[index].timer.tick(time.delta());
+        if !cooldowns.list[index].timer.finished() {
+            continue;
+        }
+
+        cooldowns.list[index].timer =
+            Timer::from_seconds(cooldowns.list[index].og, TimerMode::Once);
+
         let (attack_dist, lifetime, speed) = match enemy.etype {
             KRAKEN => (
                 KRAKEN_ATTACK_DIST,
@@ -256,6 +380,9 @@ pub fn enemy_proj_handle(
         };
 
         for player in players.player_array.iter() {
+            if !player.used {
+                continue;
+            }
             let player_position = player.pos.xy();
             let enemy_position = enemy.pos.xy();
 
@@ -269,7 +396,8 @@ pub fn enemy_proj_handle(
             let angle = original_direction.x.atan2(original_direction.y);
             let angle_direction = Vec3::new(angle.sin(), angle.cos(), 0.0).normalize();
 
-            let projectile_start_pos = enemy.pos + angle_direction * 10.0;
+            let mut projectile_start_pos = enemy.pos + angle_direction * 10.0;
+            projectile_start_pos.z = 2.;
 
             let projectile = Projectile {
                 owner_id: enemy.id,
@@ -280,6 +408,7 @@ pub fn enemy_proj_handle(
                 lifetime: lifetime,
             };
 
+            println!("Player #{} is in range of entity [{}]", player.id, enemy.id);
             projectiles.list.push(projectile);
             break;
         }

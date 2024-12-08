@@ -3,8 +3,8 @@ use bevy::prelude::*;
 use crate::boat::components::Boat;
 use crate::data::gameworld_data::*;
 use crate::ghost_ship::components::*;
-use crate::hitbox_system::*;
 use crate::player::components::*;
+use crate::{create_env, hitbox_system::*, Damage, Enemy, UDP};
 use crate::{enemies::*, HostPlayer};
 
 /*   ROTATE_KRAKEN FUNCTION   */
@@ -83,18 +83,34 @@ pub fn spawn_ghostship(
 // player weapon/attack collision) and then takes 1 damage (dies)
 pub fn ghostship_damaged(
     mut commands: Commands,
-    mut ghostship_query: Query<(&mut GhostShip, Entity, &mut Hurtbox)>,
+    mut ghostship_query: Query<(&mut GhostShip, Entity, &mut Hurtbox, &mut Enemy)>,
+    udp: Res<UDP>,
 ) {
-    for (mut ghostship, entity, mut hurtbox) in ghostship_query.iter_mut() {
+    for (mut ghostship, entity, mut hurtbox, mut enemy) in ghostship_query.iter_mut() {
         if !hurtbox.colliding {
             continue;
         }
+
+        udp.socket
+            .send_to(
+                create_env(
+                    "enemy_damaged".to_string(),
+                    Damage {
+                        target_id: enemy.id,
+                        dmg: 1.,
+                    },
+                )
+                .as_bytes(),
+                "127.0.0.1:5000",
+            )
+            .expect("Failed to send [enemy_damaged] packet");
 
         ghostship.current_hp -= 1.;
 
         if ghostship.current_hp <= 0. {
             println!("Ghostship was attacked by player, it is dead :(");
             commands.entity(entity).despawn();
+            enemy.alive = false;
         } else {
             println!("Ghostship was attacked by player");
         }

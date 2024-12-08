@@ -90,7 +90,7 @@ pub struct Projectiles {
 pub struct Projectile {
     pub owner_id: i32,
     pub velocity: Velocity,
-    pub pos: Vec3,
+    pub translation: Vec3,
     pub lifetime: f32,
 }
 
@@ -112,13 +112,19 @@ impl Enemies {
 }
 
 #[derive(Serialize, Deserialize, Clone, Component)]
-
 pub struct Enemy {
     pub id: i32,
     pub etype: i32,
     pub pos: Vec3,
     pub animation_index: usize,
+    pub hp: f32,
     pub alive: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Damage {
+    pub target_id: i32,
+    pub dmg: f32,
 }
 
 #[derive(Resource)]

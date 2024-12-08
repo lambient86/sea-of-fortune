@@ -1,9 +1,9 @@
+use super::components::*;
 use bevy::prelude::*;
 use rand::prelude::*;
-use super::components::*;
 
-use crate::level::systems::*;
 use crate::data::gameworld_data::*;
+use crate::level::systems::*;
 
 impl WFCState {
     pub fn new(width: usize, height: usize, weights: &TileWeights) -> Self {
@@ -50,18 +50,22 @@ impl WFCState {
         if let Some(possible_types) = self.entropy.get(y).and_then(|row| row.get(x)) {
             if !possible_types.is_empty() {
                 let mut rng = thread_rng();
-                
+
                 // Calculate total weight
                 let total_weight: f32 = possible_types.iter().map(|(_, w)| w).sum();
-                
+
                 // Generate a random value between 0 and total weight
                 let mut random_val = rng.gen::<f32>() * total_weight;
-                
+
                 // Select tile based on weights
-                let selected = possible_types.iter().find(|(_, weight)| {
-                    random_val -= weight;
-                    random_val <= 0.0
-                }).unwrap().0;
+                let selected = possible_types
+                    .iter()
+                    .find(|(_, weight)| {
+                        random_val -= weight;
+                        random_val <= 0.0
+                    })
+                    .unwrap()
+                    .0;
 
                 self.cells[y][x] = Some(selected);
                 self.entropy[y][x] = vec![(selected, 1.0)];
@@ -89,8 +93,11 @@ impl WFCState {
                     let new_x = x as i32 + dx;
                     let new_y = y as i32 + dy;
 
-                    if new_x >= 0 && new_x < self.width as i32 && 
-                       new_y >= 0 && new_y < self.height as i32 {
+                    if new_x >= 0
+                        && new_x < self.width as i32
+                        && new_y >= 0
+                        && new_y < self.height as i32
+                    {
                         let nx = new_x as usize;
                         let ny = new_y as usize;
 
@@ -118,18 +125,24 @@ pub fn load_dungeon(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-
     // load dungeon tiles
     let bg_dungeon_texture_handle: Handle<Image> = asset_server.load("ts_dungeon_tiles_1.png");
-    let dungeon_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 4, 1, None, None);
+    let dungeon_layout =
+        TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 4, 1, None, None);
     let dungeon_layout_handle = texture_atlases.add(dungeon_layout);
 
     // store tilesheets and handles
-    commands.insert_resource(DungeonTileSheet(bg_dungeon_texture_handle, dungeon_layout_handle));
+    commands.insert_resource(DungeonTileSheet(
+        bg_dungeon_texture_handle,
+        dungeon_layout_handle,
+    ));
 }
 
-pub fn setup_wfc(mut commands: Commands, weights: Res<TileWeights>, dungeon_tile_sheet: Res<DungeonTileSheet>,) {
-
+pub fn setup_wfc(
+    mut commands: Commands,
+    weights: Res<TileWeights>,
+    dungeon_tile_sheet: Res<DungeonTileSheet>,
+) {
     let mut rng = rand::thread_rng();
     // let width = rng.gen_range(50..=100);
     // let height = rng.gen_range(50..=100);
@@ -141,12 +154,12 @@ pub fn setup_wfc(mut commands: Commands, weights: Res<TileWeights>, dungeon_tile
     // For example, setting borders as walls
     for y in 0..height {
         wfc.cells[y][0] = Some(TileType::Void);
-        wfc.cells[y][width-1] = Some(TileType::Void);
+        wfc.cells[y][width - 1] = Some(TileType::Void);
     }
 
     for x in 0..width {
         wfc.cells[0][x] = Some(TileType::Void);
-        wfc.cells[height-1][x] = Some(TileType::Void);
+        wfc.cells[height - 1][x] = Some(TileType::Void);
     }
 
     // Run the WFC algorithm
@@ -158,7 +171,7 @@ pub fn setup_wfc(mut commands: Commands, weights: Res<TileWeights>, dungeon_tile
         -(width as f32) * TILE_SIZE as f32 + (TILE_SIZE * 2) as f32 / 2.,
         -(height as f32) * TILE_SIZE as f32 + (TILE_SIZE * 2) as f32 / 2.,
         -1.0,
-        );
+    );
 
     for y in 0..wfc.height {
         for x in 0..wfc.width {
@@ -181,7 +194,9 @@ pub fn setup_wfc(mut commands: Commands, weights: Res<TileWeights>, dungeon_tile
                             TileType::Hole => 3,
                         },
                     },
-                    Tile {tile_type: tile_type},
+                    Tile {
+                        tile_type: tile_type,
+                    },
                 ));
                 t += Vec3::new((TILE_SIZE * 2) as f32, 0., 0.);
             }

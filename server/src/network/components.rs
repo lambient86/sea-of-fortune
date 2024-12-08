@@ -96,6 +96,12 @@ pub struct Velocity {
 }
 
 #[derive(Resource, Serialize, Deserialize, Clone)]
+pub struct EnemyLists {
+    pub new: Enemies,
+    pub update: Enemies,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Enemies {
     pub list: Vec<Enemy>,
 }
@@ -106,16 +112,6 @@ impl Enemies {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub enum EType {
-    Bat,
-    Kraken,
-    GhostShip,
-    Rock,
-    RSkeleton,
-    MSkeleton,
-}
-
 #[derive(Serialize, Deserialize, Clone)]
 
 pub struct Enemy {
@@ -123,5 +119,24 @@ pub struct Enemy {
     pub etype: i32,
     pub pos: Vec3,
     pub animation_index: usize,
+    pub hp: f32,
     pub alive: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Damage {
+    pub target_id: i32,
+    pub dmg: f32,
+}
+
+#[derive(Resource, Clone)]
+pub struct Cooldowns {
+    pub list: Vec<CD>,
+}
+
+#[derive(Clone)]
+pub struct CD {
+    pub enemy_id: i32,
+    pub og: f32,
+    pub timer: Timer,
 }

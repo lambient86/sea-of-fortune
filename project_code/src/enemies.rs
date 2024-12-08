@@ -80,6 +80,7 @@ pub fn spawn_enemy(
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
                 },
+                EnemyTag,
             ));
         }
         EnemyT::Kraken(id) => {
@@ -114,7 +115,9 @@ pub fn spawn_enemy(
                     pos: transform.translation,
                     alive: true,
                     animation_index: 0,
+                    hp: KRAKEN_MAX_HP,
                 },
+                EnemyTag,
             ));
         }
         EnemyT::GhostShip(id) => {
@@ -148,7 +151,9 @@ pub fn spawn_enemy(
                     pos: transform.translation,
                     alive: true,
                     animation_index: 0,
+                    hp: GHOSTSHIP_MAX_HP,
                 },
+                EnemyTag,
             ));
         }
         EnemyT::Skeleton(id) => {
@@ -195,6 +200,7 @@ pub fn spawn_enemy(
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
                 },
+                EnemyTag,
             ));
         }
         EnemyT::Rock(id) => {}
