@@ -118,25 +118,24 @@ pub fn setup_ocean(
         let mut island_type = IslandType::Level1;
 
         // loop through each zone
-        while zone_count < 4.0 {
-            match zone_count {
-                1.0 => island_type = IslandType::Level2,
-                2.0 => island_type = IslandType::Level3,
-                3.0 => island_type = IslandType::Boss,
-                _ => island_type = IslandType::Boss,
-            }
+        for zone_count in 0..4 {
+            let island_type = match zone_count {
+                0 => IslandType::Level1,
+                1 => IslandType::Level2,
+                2 => IslandType::Level3,
+                3 => IslandType::Boss,
+                _ => IslandType::Level1, // Fallback
+            };
 
             let rand_x = rng.gen_range(-OCEAN_W_CENTER + 64.0..OCEAN_W_CENTER - 64.0);
-
-            // get random y within range
             let rand_y = rng.gen_range(
-                -OCEAN_H_CENTER + (zone_count * zone_size.y)
-                    ..(-OCEAN_H_CENTER + ((zone_count * zone_size.y) + zone_size.y)) - 128.0,
+                -OCEAN_H_CENTER + (zone_count as f32 * zone_size.y)
+                    ..(-OCEAN_H_CENTER + ((zone_count as f32 * zone_size.y) + zone_size.y)) - 128.0,
             );
 
             let rand_position = Vec2::new(rand_x, rand_y);
 
-            println!("spawning island at {}, {}", rand_x, rand_y);
+            println!("Spawning island at {}, {} with type {:?}", rand_x, rand_y, island_type);
 
             commands.spawn((
                 SpriteBundle {
@@ -149,8 +148,6 @@ pub fn setup_ocean(
                     island_type,
                 },
             ));
-
-            zone_count += 1.0;
         }
     }
 }

@@ -8,11 +8,6 @@ use crate::data::gameworld_data::*;
 use crate::level::components::IslandType;
 use crate::level::components::Island;
 
-#[derive(Resource)]
-pub struct DungeonTemplates {
-    pub templates: Vec<Handle<Image>>,
-    pub loaded: bool,
-}
 
 pub fn init_wfc_resources(
     mut commands: Commands,
@@ -140,39 +135,48 @@ fn extract_patterns(image: &Image, pattern_size: usize) -> Vec<Pattern> {
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-    query: Query<&Island>,
 ) {
-    for island in query.iter() {
-        // Access the `dungeon_type` field inside the `Dungeon` component
-        let tile_sheet_path = match island.island_type {
-            IslandType::Level1 => "ts_dungeon_tiles_1.png",
-            IslandType::Level2 => "ts_dungeon_tiles_2.png",
-            IslandType::Level3 => "ts_dungeon_tiles_3.png",
-            IslandType::Boss => "ts_dungeon_tiles_4.png",
-            _ => "ts_dungeon_tiles_1.png",
-        };
+    // Load all dungeon tilesets
+    let dungeon_1_handle = asset_server.load("ts_dungeon_tiles_1.png");
+    let dungeon_2_handle = asset_server.load("ts_dungeon_tiles_2.png");
+    let dungeon_3_handle = asset_server.load("ts_dungeon_tiles_3.png");
+    let dungeon_4_handle = asset_server.load("ts_dungeon_tiles_4.png");
+    
+    let dungeon_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 4, 1, None, None);
+    let dungeon_layout_handle = texture_atlases.add(dungeon_layout);
 
-        // Load the appropriate texture
-        let texture_handle: Handle<Image> = asset_server.load(tile_sheet_path);
-        let texture_atlas = TextureAtlasLayout::from_grid(
-            UVec2::splat(32), // Adjust this to your tile size
-            4, // Number of columns
-            1, // Number of rows
-            None, // Optional padding
-            None, // Optional offset
-        );
-        let texture_atlas_handle = texture_atlases.add(texture_atlas);
-
-        // Store tilesheet and texture atlas handle as resources or components
-        commands.insert_resource(DungeonTileSheet(texture_handle, texture_atlas_handle));
-    }
+    commands.insert_resource(DungeonTileSheet(
+        dungeon_1_handle,
+        dungeon_2_handle,
+        dungeon_3_handle,
+        dungeon_4_handle,
+        dungeon_layout_handle
+    ));
 }
 
 fn spawn_dungeon_tiles(
     commands: &mut Commands,
     dungeon: &Vec<Vec<TileType>>,
     dungeon_tile_sheet: &Res<DungeonTileSheet>,
+    islands_query: Query<&mut Island, With<Island>>,
 ) {
+    for island in islands_query.iter() {
+        let texture_handle = match island.island_type {
+            IslandType::Level1 => {
+                println!("level 1");
+                dungeon_tile_sheet.0.clone()},
+            IslandType::Level2 => {
+                println!("level 2");
+                dungeon_tile_sheet.1.clone()},
+            IslandType::Level3 => {
+                println!("level 3");
+                dungeon_tile_sheet.2.clone()},
+            IslandType::Boss => {
+                println!("level 4");
+                dungeon_tile_sheet.3.clone()},
+        };
+    }
+
     let height = dungeon.len();
     let width = dungeon[0].len();
 
@@ -188,7 +192,7 @@ fn spawn_dungeon_tiles(
             
             let mut entity = commands.spawn((
                 SpriteBundle {
-                    texture: dungeon_tile_sheet.0.clone(),
+                    texture: texture_handle.clone(),
                     transform: Transform {
                         translation: t,
                         scale: Vec3::splat(1.0),
@@ -197,28 +201,26 @@ fn spawn_dungeon_tiles(
                     ..default()
                 },
                 TextureAtlas {
-                    layout: dungeon_tile_sheet.1.clone(),
+                    layout: dungeon_tile_sheet.4.clone(),
                     index: match tile_type {
-                        TileType::Wall => 0,  // Wall tile from tileset
-                        TileType::Ground => 1, // Floor tile from tileset
-                        TileType::Void => 2,   // Empty/void tile from tileset
-                        TileType::Hole => 3,   // Hole/pit tile from tileset
+                        TileType::Wall => 0,
+                        TileType::Ground => 1,
+                        TileType::Void => 2,
+                        TileType::Hole => 3,
                     },
                 },
                 Tile { tile_type },
             ));
 
-            // Add collision for walls
             if tile_type == TileType::Wall {
                 entity.insert((
                     Wall,
                     BoundingBox::new(
-                        Vec2::new(t.x, t.y), // Use exact tile position
-                        Vec2::new(TILE_SIZE as f32 * 0.8, TILE_SIZE as f32 * 0.8) // Slightly smaller than visual tile
+                        Vec2::new(t.x, t.y),
+                        Vec2::new(TILE_SIZE as f32 * 0.8, TILE_SIZE as f32 * 0.8)
                     ),
                 ));
             }
-            
             
             t += Vec3::new((TILE_SIZE * 2) as f32, 0., 0.);
         }
@@ -275,8 +277,14 @@ pub fn generate_dungeon(
     mut wfc_state: Option<ResMut<WFCState>>,
     settings: Res<WFCSettings>,
     dungeon_tile_sheet: Res<DungeonTileSheet>,
+    island_query: Query<&mut Island, With<Island>>,
 ) {
     if let Some(mut wfc_state) = wfc_state {
+        let island_type = if let Ok(island) = island_query.get_single() {
+            island.island_type
+        } else {
+            IslandType::Level1 // Fallback default
+        };
         for attempt in 0..20 {
             // First create guaranteed path between spawn and door
             let mut grid = vec![TileType::Wall; settings.output_width * settings.output_height];

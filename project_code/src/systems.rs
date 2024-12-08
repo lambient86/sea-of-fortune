@@ -96,7 +96,7 @@ pub fn change_gameworld_state(
         let boat = boat_query.single_mut();
         for island in islands_query.iter() {
             if island.aabb.aabb.intersects(&boat.aabb.aabb) {
-                println!("going to the island!");
+                println!("going to the island! {:?}", island.island_type);
                 next_state.set(GameworldState::Island);
             }
         }
