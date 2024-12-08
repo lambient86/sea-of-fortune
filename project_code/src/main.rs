@@ -15,6 +15,7 @@ mod skeleton;
 mod systems;
 mod transition_box;
 mod wfc;
+mod whirlpool;
 mod wind;
 
 use bat::BatPlugin;
@@ -39,6 +40,7 @@ use shop::ShopPlugin;
 use skeleton::SkeletonPlugin;
 use systems::*;
 use wfc::WFCPlugin;
+use whirlpool::WhirlpoolPlugin;
 use wind::WindPlugin;
 
 fn main() {
@@ -66,6 +68,7 @@ fn main() {
         .add_plugins(GhostShipPlugin)
         .add_plugins(RockPlugin)
         .add_plugins(WindPlugin)
+        .add_plugins(WhirlpoolPlugin)
         .add_systems(
             Update,
             move_player_camera.after(move_player).run_if(
