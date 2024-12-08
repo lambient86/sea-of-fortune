@@ -1,9 +1,9 @@
-use crate::components::*;
 use crate::data::gameworld_data::*;
 use crate::hitbox_system::{Hitbox, Hurtbox};
 use crate::level::components::{Dungeon, IslandType, OceanDoor};
 use crate::player::components::*;
 use crate::{boat::components::*, level::components::Island};
+use crate::{components::*, HostPlayer};
 use bevy::math::bounding::IntersectsVolume;
 use bevy::{prelude::*, window::PresentMode};
 use bevy::math::bounding::BoundingVolume;
@@ -44,16 +44,21 @@ pub fn move_player_camera(
 /// Updates the cameras position to the center of the current
 /// players boats and track it wherever they go
 pub fn move_boat_camera(
-    boat: Query<&Transform, With<Boat>>,
+    boat: Query<(&Transform, &Boat), With<Boat>>,
     mut camera: Query<&mut Transform, (Without<Boat>, With<Camera>)>,
+    host: Res<HostPlayer>,
 ) {
-    let bt = boat.single();
-    let mut ct = camera.single_mut();
+    for (transform, bt) in boat.iter() {
+        if bt.id != host.player.id {
+            continue;
+        }
+        let mut ct = camera.single_mut();
 
-    let x_bound = OCEAN_LEVEL_W / 2. - WIN_W / 2.;
-    let y_bound = OCEAN_LEVEL_H / 2. - WIN_H / 2.;
-    ct.translation.x = bt.translation.x.clamp(-x_bound, x_bound);
-    ct.translation.y = bt.translation.y.clamp(-y_bound, y_bound);
+        let x_bound = OCEAN_LEVEL_W / 2. - WIN_W / 2.;
+        let y_bound = OCEAN_LEVEL_H / 2. - WIN_H / 2.;
+        ct.translation.x = transform.translation.x.clamp(-x_bound, x_bound);
+        ct.translation.y = transform.translation.y.clamp(-y_bound, y_bound);
+    }
 }
 
 /*   SETUP_GAMEWORLD FUCNTION   */
@@ -83,6 +88,7 @@ pub fn change_gameworld_state(
     mut player_query: Query<&mut Player, With<Player>>,
     mut boat_query: Query<&mut Boat, With<Boat>>,
     door_query: Query<&mut OceanDoor, With<OceanDoor>>,
+    host: Res<HostPlayer>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Enter)
         && *gameworld_state.get() != GameworldState::Ocean
@@ -93,7 +99,7 @@ pub fn change_gameworld_state(
     }
     //  CASE: OCEAN --> ISLAND
     if *gameworld_state.get() == GameworldState::Ocean {
-        let boat = boat_query.single_mut();
+        let boat = boat_query.iter().find(|&x| x.id == host.player.id).unwrap();
         for island in islands_query.iter() {
             if island.aabb.aabb.intersects(&boat.aabb.aabb) {
                 println!("going to the island!");

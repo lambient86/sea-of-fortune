@@ -79,7 +79,6 @@ pub fn move_player(
     }
 
     if change_vec != Vec2::splat(0.) {
-        // println!("updating aabb position");
         player.aabb.update_position(change_vec);
     }
 }
