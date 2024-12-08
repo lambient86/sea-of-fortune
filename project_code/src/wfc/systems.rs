@@ -5,7 +5,8 @@ use crate::components::BoundingBox;
 
 use crate::level::systems::*;
 use crate::data::gameworld_data::*;
-use crate::wfc::IslandType;
+use crate::level::components::IslandType;
+use crate::level::components::Island;
 
 #[derive(Resource)]
 pub struct DungeonTemplates {
@@ -139,21 +140,32 @@ fn extract_patterns(image: &Image, pattern_size: usize) -> Vec<Pattern> {
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+    query: Query<&Island>,
 ) {
-    let tile_sheet_path = match dungeon_type.0 { // Access the IslandType inside DungeonType
-        IslandType::Level1 => "ts_dungeon_tiles_1.png",
-        IslandType::Level2 => "ts_dungeon_tiles_2.png",
-        IslandType::Level3 => "ts_dungeon_tiles_3.png",
-        IslandType::Boss => "ts_dungeon_tiles_4.png",
-        _ => "ts_dungeon_tiles_1.png",  // Default to Level1 tileset
-    };
-    // load dungeon tiles
-    let bg_dungeon_texture_handle: Handle<Image> = asset_server.load(tile_sheet_path);
-    let dungeon_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 4, 1, None, None);
-    let dungeon_layout_handle = texture_atlases.add(dungeon_layout);
+    for island in query.iter() {
+        // Access the `dungeon_type` field inside the `Dungeon` component
+        let tile_sheet_path = match island.island_type {
+            IslandType::Level1 => "ts_dungeon_tiles_1.png",
+            IslandType::Level2 => "ts_dungeon_tiles_2.png",
+            IslandType::Level3 => "ts_dungeon_tiles_3.png",
+            IslandType::Boss => "ts_dungeon_tiles_4.png",
+            _ => "ts_dungeon_tiles_1.png",
+        };
 
-    // store tilesheets and handles
-    commands.insert_resource(DungeonTileSheet(bg_dungeon_texture_handle, dungeon_layout_handle));
+        // Load the appropriate texture
+        let texture_handle: Handle<Image> = asset_server.load(tile_sheet_path);
+        let texture_atlas = TextureAtlasLayout::from_grid(
+            UVec2::splat(32), // Adjust this to your tile size
+            4, // Number of columns
+            1, // Number of rows
+            None, // Optional padding
+            None, // Optional offset
+        );
+        let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
+        // Store tilesheet and texture atlas handle as resources or components
+        commands.insert_resource(DungeonTileSheet(texture_handle, texture_atlas_handle));
+    }
 }
 
 fn spawn_dungeon_tiles(

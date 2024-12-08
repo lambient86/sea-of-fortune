@@ -15,7 +15,7 @@ impl Plugin for WFCPlugin {
         app.init_resource::<WFCSettings>()
             .add_systems(Startup, (
                 init_wfc_resources,
-                load_dungeon,
+                load_dungeon.after(init_wfc_resources),
             ).chain())
             .add_systems(OnEnter(GameworldState::Dungeon), 
                (create_patterns_from_template, generate_dungeon, despawn_with::<Background>).chain())
