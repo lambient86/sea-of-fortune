@@ -1,6 +1,7 @@
 use crate::components::{BoundingBox, GameworldState};
 use crate::level::components::*;
 use bevy::prelude::*;
+use crate::wfc::components::WFCSettings;
 
 use crate::data::gameworld_data::*;
 
@@ -252,6 +253,11 @@ pub fn setup_island(
                 }
             }
         }
+
+        commands.insert_resource(WFCSettings {
+            dungeon_type: curr_dungeon_type,
+            ..default()
+        });
 
         // spawn the according dungeon gate
         commands.spawn((

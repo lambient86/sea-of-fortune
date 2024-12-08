@@ -7,6 +7,7 @@ use crate::level::systems::*;
 use crate::data::gameworld_data::*;
 use crate::level::components::IslandType;
 use crate::level::components::Island;
+use crate::level::components::Dungeon;
 
 
 pub fn init_wfc_resources(
@@ -158,24 +159,14 @@ fn spawn_dungeon_tiles(
     commands: &mut Commands,
     dungeon: &Vec<Vec<TileType>>,
     dungeon_tile_sheet: &Res<DungeonTileSheet>,
-    islands_query: Query<&mut Island, With<Island>>,
+    dungeon_type: IslandType,
 ) {
-    for island in islands_query.iter() {
-        let texture_handle = match island.island_type {
-            IslandType::Level1 => {
-                println!("level 1");
-                dungeon_tile_sheet.0.clone()},
-            IslandType::Level2 => {
-                println!("level 2");
-                dungeon_tile_sheet.1.clone()},
-            IslandType::Level3 => {
-                println!("level 3");
-                dungeon_tile_sheet.2.clone()},
-            IslandType::Boss => {
-                println!("level 4");
-                dungeon_tile_sheet.3.clone()},
-        };
-    }
+    let texture_handle = match dungeon_type {
+        IslandType::Level1 => dungeon_tile_sheet.0.clone(),
+        IslandType::Level2 => dungeon_tile_sheet.1.clone(),
+        IslandType::Level3 => dungeon_tile_sheet.2.clone(),
+        IslandType::Boss => dungeon_tile_sheet.3.clone(),
+    };
 
     let height = dungeon.len();
     let width = dungeon[0].len();
@@ -210,7 +201,9 @@ fn spawn_dungeon_tiles(
                     },
                 },
                 Tile { tile_type },
+
             ));
+            
 
             if tile_type == TileType::Wall {
                 entity.insert((
@@ -227,6 +220,8 @@ fn spawn_dungeon_tiles(
         t += Vec3::new(0., (TILE_SIZE * 2) as f32, 0.);
         t.x = -(width as f32) * TILE_SIZE as f32 + (TILE_SIZE * 2) as f32 / 2.;
     }
+    println!("dungeon! {:?}", texture_handle);
+    println!("dungeon! {:?}", dungeon_type);
 }
 
 fn add_outer_walls(grid: &mut Vec<TileType>, width: usize, height: usize) {
@@ -277,14 +272,12 @@ pub fn generate_dungeon(
     mut wfc_state: Option<ResMut<WFCState>>,
     settings: Res<WFCSettings>,
     dungeon_tile_sheet: Res<DungeonTileSheet>,
-    island_query: Query<&mut Island, With<Island>>,
 ) {
     if let Some(mut wfc_state) = wfc_state {
-        let island_type = if let Ok(island) = island_query.get_single() {
-            island.island_type
-        } else {
-            IslandType::Level1 // Fallback default
-        };
+        
+        let dungeon_type = settings.dungeon_type;
+        println!("in dungeon! {:?}", dungeon_type);
+        
         for attempt in 0..20 {
             // First create guaranteed path between spawn and door
             let mut grid = vec![TileType::Wall; settings.output_width * settings.output_height];
@@ -318,7 +311,7 @@ pub fn generate_dungeon(
                         .map(|chunk| chunk.to_vec())
                         .collect();
                     
-                    spawn_dungeon_tiles(&mut commands, &dungeon, &dungeon_tile_sheet);
+                    spawn_dungeon_tiles(&mut commands, &dungeon, &dungeon_tile_sheet, settings.dungeon_type);
                     return;
                 }
             }
@@ -448,5 +441,14 @@ pub fn cleanup_debug_markers(
 ) {
     for entity in markers.iter() {
         commands.entity(entity).despawn();
+    }
+}
+
+pub fn update_settings(
+    mut settings: ResMut<WFCSettings>,
+    dungeon_query: Query<&Dungeon>,
+) {
+    if let Ok(dungeon) = dungeon_query.get_single(){
+        settings.dungeon_type = dungeon.dungeon_type;
     }
 }

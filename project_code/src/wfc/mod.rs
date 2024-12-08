@@ -18,7 +18,7 @@ impl Plugin for WFCPlugin {
                 load_dungeon.after(init_wfc_resources),
             ).chain())
             .add_systems(OnEnter(GameworldState::Dungeon), 
-               (create_patterns_from_template, generate_dungeon, despawn_with::<Background>).chain())
+               (create_patterns_from_template, update_settings, generate_dungeon, despawn_with::<Background>).chain())
             .add_systems(OnExit(GameworldState::Dungeon),(despawn_with::<Tile>, cleanup_debug_markers))
             .add_systems(OnExit(GameworldState::Dungeon), cleanup_debug_markers);
 

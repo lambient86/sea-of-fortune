@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use rand::Rng;
 use std::collections::BinaryHeap;
 use std::cmp::Ordering;
+use crate::wfc::IslandType;
 
 use super::systems::find_spawn_points;
 
@@ -184,6 +185,7 @@ pub struct WFCSettings {
     pub output_height: usize,
     pub spawn_area: (usize, usize), // bottom left corner coordinates
     pub door_area: (usize, usize),  // top right corner coordinates
+    pub dungeon_type: IslandType,
 }
 
 impl Default for WFCSettings {
@@ -194,6 +196,7 @@ impl Default for WFCSettings {
             output_height: 100,
             spawn_area: (3, 3),    // x,y coordinates for spawn area
             door_area: (97, 97),     // x,y coordinates for door area
+            dungeon_type: IslandType::Level1,
         }
     }
 }
