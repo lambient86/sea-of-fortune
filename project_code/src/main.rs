@@ -6,6 +6,7 @@ mod data;
 mod enemies;
 mod ghost_ship;
 mod hitbox_system;
+mod hud;
 mod kraken;
 mod level;
 mod player;
@@ -30,6 +31,7 @@ use data::gameworld_data::*;
 use enemies::*;
 use ghost_ship::GhostShipPlugin;
 use hitbox_system::HitboxPlugin;
+use hud::HUDPlugin;
 use kraken::KrakenPlugin;
 use level::LevelPlugin;
 use player::systems::move_player;
@@ -69,6 +71,7 @@ fn main() {
         .add_plugins(RockPlugin)
         .add_plugins(WindPlugin)
         .add_plugins(WhirlpoolPlugin)
+        .add_plugins(HUDPlugin)
         .add_systems(
             Update,
             move_player_camera.after(move_player).run_if(

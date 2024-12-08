@@ -1,24 +1,32 @@
-#[derive(Component)]
-struct PlayerHP;
+use bevy::prelude::*;
 
 #[derive(Component)]
-struct ShipHP;
+pub struct PlayerHPText;
+
+#[derive(Component)]
+pub struct ShipHPText;
+
+#[derive(Component)]
+pub struct GoldText;
+
+#[derive(Component)]
+pub struct WindText;
 
 #[derive(Resource)]
-struct ShipStats {
-    hp: f32,
-    gold: i32,
-    wind: Direction,
+pub struct ShipStats {
+    pub hp: f32,
+    pub gold: u32,
+    pub wind: CardinalDirection,
 }
 
 #[derive(Resource)]
-struct PlayerStats {
-    hp: f32,
-    gold: i32,
+pub struct PlayerStats {
+    pub hp: f32,
+    pub gold: u32,
 }
 
 #[derive(Component)]
-enum Direction {
+pub enum CardinalDirection {
     NORTH,
     NORTHWEST,
     WEST,
@@ -28,3 +36,6 @@ enum Direction {
     EAST,
     NORTHEAST,
 }
+
+#[derive(Component)]
+pub struct PlayerHUD;
