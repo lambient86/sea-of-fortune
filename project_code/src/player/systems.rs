@@ -6,7 +6,7 @@ use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
 
-use crate::shop::components::{Inventory, ItemType};
+use crate::shop::components::{Inventory, ItemType, Item};
 use crate::shop::systems::generate_loot_item;
 
 use bevy::input::mouse::{self, MouseButtonInput};
@@ -157,9 +157,11 @@ pub fn spawn_player(
     let size = Vec2::new(32., 32.);
     let offset = Vec2::new(0., 0.);
 
-    let mut initial_inventory = Inventory::new(1000);
-
-    initial_inventory.add_item(generate_loot_item());
+    let mut initial_inventory = Inventory::new(100);
+    initial_inventory.add_item(Item::new(ItemType::Dagger, "Dagger".to_string(), 75));
+    initial_inventory.add_item(Item::new(ItemType::Sword, "Sword".to_string(), 100));
+    initial_inventory.add_item(Item::new(ItemType::Pistol, "Pistol".to_string(), 150));
+    initial_inventory.add_item(Item::new(ItemType::Musket, "Musket".to_string(), 200));
 
     //setting up player for spawning
     commands.spawn((
