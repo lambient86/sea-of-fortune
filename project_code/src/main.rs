@@ -20,6 +20,7 @@ mod whirlpool;
 mod wind;
 
 use bat::BatPlugin;
+use bevy::asset;
 use bevy::{prelude::*, window::PresentMode};
 use boat::components::Boat;
 use boat::systems::*;
@@ -31,10 +32,10 @@ use components::SpawnLocations;
 use controls::*;
 use data::gameworld_data::*;
 use enemies::*;
+use ghost_ship::components::*;
 use ghost_ship::GhostShipPlugin;
-use hitbox_system::HitboxPlugin;
-use hitbox_system::Hurtbox;
-use hitbox_system::BOAT;
+use hitbox_system::*;
+use kraken::components::*;
 use kraken::KrakenPlugin;
 use level::components::*;
 use level::LevelPlugin;
@@ -51,7 +52,9 @@ use wfc::WFCPlugin;
 use whirlpool::WhirlpoolPlugin;
 use wind::WindPlugin;
 
+use std::io::ErrorKind;
 use std::net::*;
+use std::time::Duration;
 
 use network::components::*;
 use network::systems::*;
@@ -70,24 +73,27 @@ fn main() {
         udp_socket.local_addr().unwrap()
     );
 
-    let mut buf = [0; 1024];
-
-    println!("Trying to join world...");
-
-    let mut player = Player::default();
-    player.addr = udp_socket.local_addr().unwrap().to_string();
-    println!("Player addr = {}", player.addr);
-
-    udp_socket
-        .send_to(
-            create_env("new_player".to_string(), player.clone()).as_bytes(),
-            "127.0.0.1:5000",
-        )
-        .expect("Failed to send [new_player] packet");
-
     let mut ocean = Vec::new();
+    let mut player = Player::default();
 
+    let mut joined = false;
     loop {
+        let mut buf = [0; 1024];
+
+        if !joined {
+            println!("Trying to join world...");
+
+            player.addr = udp_socket.local_addr().unwrap().to_string();
+            println!("Player addr = {}", player.addr);
+
+            udp_socket
+                .send_to(
+                    create_env("new_player".to_string(), player.clone()).as_bytes(),
+                    "127.0.0.1:5000",
+                )
+                .expect("Failed to send [new_player] packet");
+        }
+
         let result = udp_socket.recv_from(&mut buf);
 
         match result {
@@ -100,6 +106,7 @@ fn main() {
                     let id = packet.payload;
                     println!("Joined lobby! You are player #{}", id);
                     player.id = id;
+                    joined = true;
                 } else if env.message.eq("full_lobby") {
                     panic!("{}", env.packet);
                 } else if env.message.eq("load_ocean") {
@@ -117,6 +124,9 @@ fn main() {
             Err(e) => {
                 eprintln!("Something happened: {}", e);
             }
+        }
+        if !joined {
+            std::thread::sleep(Duration::from_secs(3));
         }
     }
 
@@ -139,6 +149,7 @@ fn main() {
             }),
             ..default()
         }))
+        .add_systems(Update, update.run_if(in_state(GameworldState::Ocean)))
         .init_resource::<CurrMousePos>()
         .add_systems(Startup, setup_gameworld)
         .add_plugins(PlayerPlugin)
@@ -179,7 +190,6 @@ fn main() {
         .add_systems(Update, update_dungeon_collision)
         .insert_state(GameworldState::MainMenu)
         .insert_state(GameState::Running)
-        .add_systems(Update, update.run_if(in_state(GameworldState::Ocean)))
         .add_systems(Last, leave)
         .insert_resource(SpawnLocations::default())
         .run();
@@ -189,11 +199,12 @@ pub fn update(
     udp: Res<UDP>,
     host: Res<HostPlayer>,
     mut player_query: Query<(&mut Transform, &Boat), With<Boat>>,
-    mut enemy_query: Query<(&mut Transform, &Enemy), (With<EnemyTag>, Without<Boat>)>,
+    mut enemy_query: Query<(&mut Transform, &mut Enemy, Entity), (With<EnemyTag>, Without<Boat>)>,
 
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+    time: Res<Time>,
 ) {
     udp.socket
         .send_to(
@@ -265,10 +276,128 @@ pub fn update(
                 let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
                 let enemies = packet.payload;
 
-                let mut enemy_found = false;
+                for e in enemies.list.iter() {
+                    for (mut transform, enemy, entity) in enemy_query.iter_mut() {
+                        if e.id != enemy.id || !enemy.alive {
+                            continue;
+                        }
+                        transform.translation = e.pos;
+                    }
+                }
+            } else if env.message == "update_projectiles" {
+                let packet: Packet<Projectiles> = serde_json::from_str(&env.packet).unwrap();
+                let projectiles = packet.payload;
+
+                for proj in projectiles.list.iter() {
+                    for (transform, enemy, entity) in enemy_query.iter() {
+                        if proj.owner_id == enemy.id {
+                            match enemy.etype {
+                                KRAKEN => {
+                                    commands.spawn((
+                                    SpriteBundle {
+                                        texture: asset_server.load("s_kraken_spit_1.png"),
+                                        transform: Transform {
+                                            translation: proj.translation,
+                                            scale: Vec3::splat(2.0),
+                                            ..default()
+                                        },
+                                        ..default()
+                                    },
+                                    KrakenProjectile,
+                                    Lifetime(proj.lifetime),
+                                    Velocity {
+                                        v: proj.velocity.v, /* (direction * speed of projectile) */
+                                    },
+                                    Hitbox {
+                                        size: Vec2::splat(60.),
+                                        offset: Vec2::splat(0.),
+                                        lifetime: Some(Timer::from_seconds(5., TimerMode::Once)),
+                                        entity: KRAKEN,
+                                        projectile: true,
+                                        enemy: true,
+                                    },
+                                ));
+                                }
+                                GHOSTSHIP => {
+                                    commands.spawn((
+                                    SpriteBundle {
+                                        texture: asset_server.load("s_cannonball.png"),
+                                        transform: Transform {
+                                            translation: proj.translation,
+                                            scale: Vec3::splat(2.0),
+                                            ..default()
+                                        },
+                                        ..default()
+                                    },
+                                    GhostShipProjectile,
+                                    Lifetime(proj.lifetime),
+                                    Velocity {
+                                        v: proj.velocity.v, /* (direction * speed of projectile) */
+                                    },
+                                    Hitbox {
+                                        size: Vec2::splat(60.),
+                                        offset: Vec2::splat(0.),
+                                        lifetime: Some(Timer::from_seconds(5., TimerMode::Once)),
+                                        entity: GHOSTSHIP,
+                                        projectile: true,
+                                        enemy: true,
+                                    },));
+                                }
+                                _ => {
+                                    println!("Undefined enemy type");
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            } else if env.message == "enemy_dead" {
+                let packet: Packet<Enemy> = serde_json::from_str(&env.packet).unwrap();
+                let enemy = packet.payload;
+                println!("Received [enemy_dead]");
+
+                for (transform, mut e, entity) in enemy_query.iter_mut() {
+                    if e.id != enemy.id {
+                        continue;
+                    }
+                    e.alive = false;
+                    commands.entity(entity).despawn();
+
+                    println!("Enemy [{}] dead", e.id);
+                    break;
+                }
+            } else if env.message == "new_enemies" {
+                let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
+                let enemies = packet.payload;
 
                 for e in enemies.list.iter() {
-                    for (mut transform, mut enemy) in enemy_query.iter_mut() {}
+                    match e.etype {
+                        KRAKEN => {
+                            let transform =
+                                Transform::from_translation(e.pos).with_scale(Vec3::splat(2.0));
+                            spawn_enemy(
+                                &mut commands,
+                                EnemyT::Kraken(e.id),
+                                transform,
+                                &asset_server,
+                                &mut texture_atlases,
+                            )
+                        }
+                        GHOSTSHIP => {
+                            let transform =
+                                Transform::from_translation(e.pos).with_scale(Vec3::splat(2.0));
+                            spawn_enemy(
+                                &mut commands,
+                                EnemyT::GhostShip(e.id),
+                                transform,
+                                &asset_server,
+                                &mut texture_atlases,
+                            )
+                        }
+                        _ => {
+                            println!("Undefined enemy in [update_enemies]");
+                        }
+                    }
                 }
             } else {
                 println!(
@@ -278,9 +407,12 @@ pub fn update(
                 );
             }
         }
-        Err(e) => {
-            //println!("Update: Something happened: {}", e);\
-        }
+        Err(e) => match e.kind() {
+            ErrorKind::WouldBlock => {}
+            _ => {
+                println!("Something happened: {}", e)
+            }
+        },
     }
 }
 

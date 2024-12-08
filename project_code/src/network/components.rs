@@ -81,15 +81,20 @@ impl Players {
     }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Serialize, Deserialize)]
 pub struct Projectiles {
     pub list: Vec<Projectile>,
 }
 
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Projectile {
+    pub owner_id: i32,
     pub velocity: Velocity,
-    pub tranform: Transform,
+    pub translation: Vec3,
+    pub lifetime: f32,
 }
+
+#[derive(Component, Clone, Serialize, Deserialize)]
 
 pub struct Velocity {
     pub v: Vec2,
@@ -106,14 +111,20 @@ impl Enemies {
     }
 }
 
-#[derive(Serialize, Deserialize, Component)]
-
+#[derive(Serialize, Deserialize, Clone, Component)]
 pub struct Enemy {
     pub id: i32,
     pub etype: i32,
-    pub translation: Vec3,
-    pub rotation: Quat,
+    pub pos: Vec3,
+    pub animation_index: usize,
+    pub hp: f32,
     pub alive: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Damage {
+    pub target_id: i32,
+    pub dmg: f32,
 }
 
 #[derive(Resource)]

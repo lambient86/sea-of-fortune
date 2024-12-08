@@ -4,10 +4,10 @@ use bevy::render::texture;
 
 use crate::boat::components::Boat;
 use crate::data::gameworld_data::*;
-use crate::hitbox_system::*;
 use crate::kraken::components::*;
 use crate::player::components::*;
-use crate::{enemies::*, HostPlayer};
+use crate::{create_env, enemies::*, Damage, HostPlayer, UDP};
+use crate::{hitbox_system::*, Enemy};
 
 /*  SPAWN_KRAKEN FUNCTION  */
 /// Spawns a kraken entity in the gameworld
@@ -19,13 +19,13 @@ pub fn spawn_kraken(
     let transform = Transform::from_xyz(0., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.)
         .with_scale(Vec3::splat(2.0));
 
-    spawn_enemy(
+    /*spawn_enemy(
         &mut commands,
         EnemyT::Kraken(0),
         transform,
         &asset_server,
         &mut texture_atlases,
-    );
+    );*/
 }
 
 /*   KRAKEN_DAMAGED FUNCTION   */
@@ -33,21 +33,27 @@ pub fn spawn_kraken(
 // player weapon/attack collision) and then takes 1 damage (dies)
 pub fn kraken_damaged(
     mut commands: Commands,
-    mut kraken_query: Query<(&mut Kraken, Entity, &mut Hurtbox), With<Kraken>>,
+    mut kraken_query: Query<(&mut Kraken, Entity, &mut Hurtbox, &mut Enemy), With<Kraken>>,
+    udp: Res<UDP>,
 ) {
-    for (mut kraken, entity, mut hurtbox) in kraken_query.iter_mut() {
+    for (mut kraken, entity, mut hurtbox, mut enemy) in kraken_query.iter_mut() {
         if !hurtbox.colliding {
             continue;
         }
 
-        kraken.current_hp -= 1.;
-
-        if kraken.current_hp <= 0. {
-            println!("Kraken was attacked by player, it is dead :(");
-            commands.entity(entity).despawn();
-        } else {
-            println!("Kraken was attacked by player");
-        }
+        udp.socket
+            .send_to(
+                create_env(
+                    "enemy_damaged".to_string(),
+                    Damage {
+                        target_id: enemy.id,
+                        dmg: 1.,
+                    },
+                )
+                .as_bytes(),
+                "127.0.0.1:5000",
+            )
+            .expect("Failed to send [enemy_damaged] packet");
 
         hurtbox.colliding = false;
     }
@@ -157,7 +163,6 @@ pub fn move_kraken_projectile(
 ) {
     for (mut transform, velocity) in proj_query.iter_mut() {
         // Calculates/moves the projectile
-
         transform.translation += velocity.to_vec3(0.) * time.delta_seconds();
     }
 }
@@ -185,11 +190,11 @@ pub fn kraken_proj_lifetime_check(
 /// Moves the kraken as long as a player is within agro range
 pub fn move_kraken(
     time: Res<Time>,
-    mut kraken_query: Query<&mut Transform, With<Kraken>>,
+    mut kraken_query: Query<(&mut Transform, &Enemy), With<Kraken>>,
     player_query: Query<(&Transform, &Boat), (With<Boat>, Without<Kraken>)>,
     host: Res<HostPlayer>,
 ) {
-    for mut transform in kraken_query.iter_mut() {
+    for (mut transform, enemy) in kraken_query.iter_mut() {
         //Gets positions (Vec3) of the entities
         let kraken_translation = transform.translation;
 

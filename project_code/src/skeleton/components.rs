@@ -24,6 +24,3 @@ pub struct Skeleton {
 pub struct SkeletonProjectile {
     pub timer: Timer,
 }
-
-#[derive(Component)]
-pub struct Lifetime(pub f32);

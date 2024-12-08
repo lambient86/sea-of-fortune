@@ -27,7 +27,7 @@ pub struct Counter {
 
 impl Counter {
     pub fn init() -> Counter {
-        Counter { count: 0 }
+        Counter { count: 5 }
     }
 
     pub fn next(&mut self) -> i32 {
@@ -77,21 +77,32 @@ impl Players {
     }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Clone, Serialize, Deserialize)]
 pub struct Projectiles {
     pub list: Vec<Projectile>,
 }
 
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Projectile {
+    pub owner_id: i32,
     pub velocity: Velocity,
-    pub tranform: Transform,
+    pub translation: Vec3,
+    pub lifetime: f32,
 }
 
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Velocity {
     pub v: Vec2,
 }
 
 #[derive(Resource, Serialize, Deserialize, Clone)]
+pub struct EnemyLists {
+    pub new: Enemies,
+    pub update: Enemies,
+    pub dead: Enemies,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Enemies {
     pub list: Vec<Enemy>,
 }
@@ -102,22 +113,31 @@ impl Enemies {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub enum EType {
-    Bat,
-    Kraken,
-    GhostShip,
-    Rock,
-    RSkeleton,
-    MSkeleton,
-}
-
 #[derive(Serialize, Deserialize, Clone)]
 
 pub struct Enemy {
     pub id: i32,
     pub etype: i32,
-    pub translation: Vec3,
+    pub pos: Vec3,
     pub animation_index: usize,
+    pub hp: f32,
     pub alive: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Damage {
+    pub target_id: i32,
+    pub dmg: f32,
+}
+
+#[derive(Resource, Clone)]
+pub struct Cooldowns {
+    pub list: Vec<CD>,
+}
+
+#[derive(Clone)]
+pub struct CD {
+    pub enemy_id: i32,
+    pub og: f32,
+    pub timer: Timer,
 }
