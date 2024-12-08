@@ -22,9 +22,7 @@ use bat::BatPlugin;
 use bevy::{prelude::*, window::PresentMode};
 use boat::systems::move_boat;
 use boat::BoatPlugin;
-use components::GameState;
-use components::GameworldState;
-use components::SpawnLocations;
+use components::*;
 use controls::*;
 use data::gameworld_data::*;
 use enemies::*;
@@ -95,5 +93,7 @@ fn main() {
         .insert_state(GameworldState::MainMenu)
         .insert_state(GameState::Running)
         .insert_resource(SpawnLocations::default())
+        .insert_resource(PlayerEntities::default())
+        .insert_resource(CurrentIslandType::default())
         .run();
 }
