@@ -9,8 +9,6 @@ use crate::player::components::*;
 use crate::rock::components::*;
 use crate::skeleton::components::*;
 use crate::whirlpool::components::*;
-use crate::whirlpool::components::Lifetime;
-use crate::whirlpool::components::WHIRLPOOL_LIFETIME;
 use crate::Enemy;
 
 #[derive(Component)]
@@ -52,7 +50,7 @@ pub fn spawn_enemy(
             let whirlpool_texture_asset: Handle<Image> = asset_server.load("s_whirlpool.png");
 
             commands.spawn((
-                SpriteBundle{
+                SpriteBundle {
                     texture: whirlpool_texture_asset,
                     transform,
                     ..default()
@@ -70,9 +68,9 @@ pub fn spawn_enemy(
                     entity: WHIRLPOOL,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
-                }, 
+                },
             ));
-        },
+        }
         EnemyT::Bat(id) => {
             let bat_layout =
                 TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 3, 1, None, None);
