@@ -65,7 +65,7 @@ pub fn spawn_whirlpool(
 
             spawn_enemy(
                 &mut commands,
-                Enemy::Whirlpool,
+                EnemyT::Whirlpool(0),
                 Transform::from_translation(spawn_pos),
                 &asset_server,
                 &mut texture_atlases,

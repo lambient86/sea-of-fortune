@@ -34,7 +34,7 @@ pub fn spawn_enemy(
     texture_atlases: &mut ResMut<Assets<TextureAtlasLayout>>,
 ) {
     match enemy {
-        Enemy::Whirlpool(id) => {
+        EnemyT::Whirlpool(id) => {
             let whirlpool_texture_asset: Handle<Image> = asset_server.load("s_whirlpool.png");
 
             commands.spawn((
@@ -59,7 +59,7 @@ pub fn spawn_enemy(
                 }, 
             ));
         },
-        Enemy::Bat(id) => {
+        EnemyT::Bat(id) => {
             let bat_layout =
                 TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 3, 1, None, None);
 
@@ -213,7 +213,7 @@ pub fn spawn_enemy(
                 },
             ));
         }
-        Enemy::Rock(id) => {
+        EnemyT::Rock(id) => {
             let rock_layout =
                 TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
 
@@ -255,6 +255,6 @@ pub fn spawn_enemy(
                 },
             ));
         }
-        Enemy::Skel2 => {}
+        EnemyT::Skel2(id) => {}
     }
 }

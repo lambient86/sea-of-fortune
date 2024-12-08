@@ -24,6 +24,17 @@ pub fn move_boat(
         if boat.id != host.player.id {
             continue;
         }
+        
+        // getting boat and wind direction
+        let boat_direction = transform.rotation * Vec3::Y;
+        let wind_direction = wind.direction;
+
+        // calculate the cosine similarity
+        let dot = boat_direction.truncate().dot(wind_direction);
+        let mag_w = wind_direction.length();
+        let mag_b = boat_direction.length();
+        let cs = dot / (mag_b * mag_w);
+        
         //initializing rotation and movement variables
         let mut rotation_factor = 0.0;
         let mut movement_factor = 0.0;
@@ -52,8 +63,8 @@ pub fn move_boat(
 
         //getting movement information
         let movement_dir = transform.rotation * Vec3::Y;
-        let movement_dis = movement_factor * (ship.movement_speed * time.delta_seconds() * cs)
-            + (0.5 * ship.acceleration * time.delta_seconds());
+        let movement_dis = movement_factor * (boat.movement_speed * time.delta_seconds() * cs)
+            + (0.5 * boat.acceleration * time.delta_seconds());
         let translation_delta = movement_dir * movement_dis;
 
         //moving the boat
