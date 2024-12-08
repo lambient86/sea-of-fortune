@@ -18,7 +18,7 @@ pub fn spawn_rock(
 
     spawn_enemy(
         &mut commands,
-        Enemy::Rock,
+        EnemyT::Rock(0),
         transform,
         &asset_server,
         &mut texture_atlases,
