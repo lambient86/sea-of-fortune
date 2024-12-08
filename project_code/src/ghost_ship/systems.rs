@@ -6,6 +6,19 @@ use crate::enemies::*;
 use crate::ghost_ship::components::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
+use rand::Rng;
+
+#[derive(Resource, Default)]
+pub struct GhostSpawnTimer {
+    pub timer: Timer,
+}
+
+pub fn setup_ghost_timer(mut commands: Commands) {
+    let initial_duration = rand::thread_rng().gen_range(30.0..70.0);
+    commands.insert_resource(GhostSpawnTimer {
+        timer: Timer::from_seconds(initial_duration, TimerMode::Once),
+    });
+}
 
 /*   ROTATE_KRAKEN FUNCTION   */
 /// This should be changed to a function called "track_player", which will
@@ -59,18 +72,38 @@ pub fn rotate_ghostship(
 pub fn spawn_ghostship(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,time: Res<Time>,
+    mut spawn_timer: ResMut<GhostSpawnTimer>,
 ) {
-    let transform = Transform::from_xyz(200., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.)
-        .with_scale(Vec3::splat(2.0));
+    spawn_timer.timer.tick(time.delta());
 
-    spawn_enemy(
-        &mut commands,
-        Enemy::GhostShip,
-        transform,
-        &asset_server,
-        &mut texture_atlases,
-    );
+    if spawn_timer.timer.just_finished() {
+        // Generate random coordinates within world bounds
+        let spawn_x = rand::thread_rng().gen_range(-OCEAN_LEVEL_W/2.0..OCEAN_LEVEL_W/2.0);
+        let spawn_y = rand::thread_rng().gen_range(-OCEAN_LEVEL_H/2.0..OCEAN_LEVEL_H/2.0);
+        
+        let spawn_pos = Vec3::new(
+            spawn_x,
+            spawn_y,
+            900.0
+        );
+
+        let transform = Transform::from_translation(spawn_pos)
+            .with_scale(Vec3::splat(2.0));
+
+        spawn_enemy(
+            &mut commands,
+            Enemy::GhostShip,
+            transform,
+            &asset_server,
+            &mut texture_atlases,
+        );
+
+        // Set new random duration for next spawn
+        let new_duration = rand::thread_rng().gen_range(30.0..60.0);
+        spawn_timer.timer.set_duration(std::time::Duration::from_secs_f32(new_duration));
+        spawn_timer.timer.reset();
+    }
 }
 
 /*   KRAKEN_DAMAGED FUNCTION   */

@@ -22,7 +22,7 @@ pub struct WhirlpoolCooldownTimer {
 }
 
 pub fn setup_whirlpool_timer(mut commands: Commands) {
-    let initial_duration = rand::thread_rng().gen_range(25.0..45.0);
+    let initial_duration = rand::thread_rng().gen_range(25.0..35.0);
     commands.insert_resource(WhirlpoolSpawnTimer {
         timer: Timer::from_seconds(initial_duration, TimerMode::Once), 
     });
@@ -40,28 +40,25 @@ pub fn spawn_whirlpool(
 
     if spawn_timer.timer.just_finished() {
         if let Ok(boat_transform) = boat_query.get_single() {
-            // Screen dimensions 
-            let screen_width = WIN_W; 
-            let screen_height = WIN_H; 
+            let mut rng = rand::thread_rng();
             
-            // Calculate minimum spawn distance to be just outside screen
-            let min_spawn_distance = (screen_width.max(screen_height) / 2.0) + 25.0; 
-            let max_spawn_distance = min_spawn_distance + 50.0; 
+            // Generate random coordinates within the ocean bounds
+            let spawn_x = rng.gen_range(-(OCEAN_LEVEL_W/2.0)..(OCEAN_LEVEL_W/2.0));
+            let spawn_y = rng.gen_range(-(OCEAN_LEVEL_H/2.0)..(OCEAN_LEVEL_H/2.0));
             
-            // Generate random angle
-            let angle = random::<f32>() * std::f32::consts::TAU;
+            // Ensure minimum distance from boat
+            let min_distance = 300.0; // Minimum distance from boat
+            let boat_pos = Vec2::new(boat_transform.translation.x, boat_transform.translation.y);
+            let spawn_pos = Vec2::new(spawn_x, spawn_y);
             
-            // Generate random distance between min and max
-            let distance = rand::thread_rng().gen_range(min_spawn_distance..max_spawn_distance);
-            
-            let offset_x = angle.cos() * distance;
-            let offset_y = angle.sin() * distance;
-            
-            let spawn_pos = Vec3::new(
-                boat_transform.translation.x + offset_x,
-                boat_transform.translation.y + offset_y,
-                0.0
-            );
+            // If too close to boat, adjust the position
+            let spawn_pos = if (spawn_pos - boat_pos).length() < min_distance {
+                let direction = (spawn_pos - boat_pos).normalize();
+                let adjusted_pos = boat_pos + direction * min_distance;
+                Vec3::new(adjusted_pos.x, adjusted_pos.y, 0.0)
+            } else {
+                Vec3::new(spawn_x, spawn_y, 0.0)
+            };
 
             spawn_enemy(
                 &mut commands,
@@ -71,7 +68,7 @@ pub fn spawn_whirlpool(
                 &mut texture_atlases,
             );
 
-            let new_duration = rand::thread_rng().gen_range(25.0..45.0);
+            let new_duration = rng.gen_range(25.0..35.0);
             spawn_timer.timer.set_duration(std::time::Duration::from_secs_f32(new_duration));
             spawn_timer.timer.reset();
         }
@@ -94,8 +91,10 @@ pub fn despawn_whirlpool_system(
 }
 
 pub fn check_whirlpool_collisions(
-    boat_query: Query<(&Transform, &Hurtbox), With<Boat>>,
-    whirlpool_query: Query<(&Transform, &Hurtbox), With<Whirlpool>>,
+    mut query_set: ParamSet<(
+        Query<(&mut Transform, &Hurtbox), With<Boat>>,
+        Query<(&Transform, &Hurtbox), With<Whirlpool>>
+    )>,
     time: Res<Time>,
     mut cooldown_timer: ResMut<WhirlpoolCooldownTimer>,
 ) {
@@ -107,17 +106,32 @@ pub fn check_whirlpool_collisions(
         return;
     }
 
-    if let Ok((boat_transform, boat_hurtbox)) = boat_query.get_single() {
-        for (whirlpool_transform, whirlpool_hurtbox) in whirlpool_query.iter() {
-            let distance = boat_transform.translation.distance(whirlpool_transform.translation);
-            let collision_distance: f32 = (boat_hurtbox.size.x + whirlpool_hurtbox.size.x) / 2.0;
+    let whirlpool_positions: Vec<(Vec3, f32)> = query_set.p1()
+        .iter()
+        .map(|(transform, hurtbox)| (transform.translation, hurtbox.size.x))
+        .collect();
 
+    if let Ok((mut boat_transform, boat_hurtbox)) = query_set.p0().get_single_mut() {
+        for (whirlpool_pos, whirlpool_size) in whirlpool_positions {
+            let distance = boat_transform.translation.distance(whirlpool_pos);
+            let collision_distance = (boat_hurtbox.size.x + whirlpool_size) / 2.0;
+
+            // Check if boat is within whirlpool's influence
             if distance < collision_distance {
-                println!("Boat hit whirlpool!");
+                println!("Boat caught in whirlpool!");
+                
+                // Calculate direction from boat to whirlpool center
+                let direction = (whirlpool_pos - boat_transform.translation).normalize();
+                
+                // Pull strength increases as boat gets closer to center
+                let pull_strength = 5.0 * (1.0 - distance / collision_distance);
+                
+                // Apply the pull force
+                boat_transform.translation += direction * pull_strength;
+                
                 // Reset the cooldown timer when a collision occurs
                 cooldown_timer.timer.reset();
             }
         }
     }
 }
-
