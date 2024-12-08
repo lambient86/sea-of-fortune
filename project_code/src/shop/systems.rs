@@ -17,38 +17,241 @@ pub fn setup_shop_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..default()
         }, ShopUI))
         .with_children(|parent| {
+            // Background Panel
+            parent.spawn(NodeBundle {
+                style: Style {
+                    width: Val::Px(400.0),
+                    height: Val::Px(600.0),
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::Center,
+                    padding: UiRect::all(Val::Px(20.0)),
+                    margin: UiRect::all(Val::Px(10.0)),
+                    ..default()
+                },
+                background_color: Color::srgb(0.1, 0.1, 0.1).into(),
+                ..default()
+            })
+            .with_children(|panel| {
+                panel.spawn(TextBundle::from_section(
+                    "Shop",
+                    TextStyle {
+                        font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                        font_size: 40.0,
+                        color: Color::WHITE,
+                    },
+                ));
+
+                for (text, button_type) in [
+                    ("Upgrade", ShopButton::Upgrade),
+                    ("Sell", ShopButton::Sell),
+                ] {
+                    panel.spawn((ButtonBundle {
+                        style: Style {
+                            width: Val::Px(150.0),
+                            height: Val::Px(65.0),
+                            margin: UiRect::all(Val::Px(10.0)),
+                            justify_content: JustifyContent::Center,
+                            align_items: AlignItems::Center,
+                            border: UiRect::all(Val::Px(2.0)),
+                            ..default()
+                        },
+                        background_color: Color::srgb(0.15, 0.15, 0.15).into(),
+                        border_color: Color::WHITE.into(),
+                        ..default()
+                    }, button_type))
+                    .with_children(|button| {
+                        button.spawn(TextBundle::from_section(
+                            text,
+                            TextStyle {
+                                font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                                font_size: 24.0,
+                                color: Color::WHITE,
+                            },
+                        ));
+                    });
+                }
+            });
+        });
+}
+
+pub fn update_shop_text(
+    mut text_query: Query<(&mut Text, &Parent)>,
+    button_query: Query<(&ShopButton, &Parent)>,
+    player: Query<&Player>,
+    shop: Res<Shop>,
+) {
+    let player = player.single();
+
+    for (mut text, parent) in text_query.iter_mut() {
+        // Update gold display
+        if text.sections[0].value.starts_with("Gold:") {
+            text.sections[0].value = format!("Gold: {}", player.inventory.money);
+            continue;
+        }
+
+        // Update button texts
+        if let Ok((button, _)) = button_query.get(parent.get()) {
+            match button {
+                ShopButton::UpgradeItem(index) => {
+                    if let Some(shop_item) = shop.items.get(*index) {
+                        if let Some(owned_item) = player.inventory.items.iter()
+                            .find(|i| i.item_type == shop_item.item_type) {
+                            text.sections[0].value = format!("Upgrade {} (Lvl {})", shop_item.name, owned_item.level);
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+}
+
+pub fn rebuild_shop_ui(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    shop: Res<Shop>,
+    player: Query<&Player>,
+    shop_page: Res<ShopPage>,
+    shop_ui_query: Query<Entity, With<ShopUI>>,
+) {
+    // Only rebuild UI when shop page changes
+    if !shop_page.is_changed() {
+        return;
+    }
+
+    let player = player.single();
+    let shop_ui_entity = shop_ui_query.single();
+    let font = asset_server.load("pixel_pirate.ttf");
+
+    commands.entity(shop_ui_entity).despawn_descendants();
+    
+    commands.entity(shop_ui_entity).with_children(|parent| {
+        // Background Panel
+        parent.spawn(NodeBundle {
+            style: Style {
+                width: Val::Px(400.0),
+                height: Val::Px(600.0),
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Center,
+                padding: UiRect::all(Val::Px(20.0)),
+                margin: UiRect::all(Val::Px(10.0)),
+                ..default()
+            },
+            background_color: Color::rgb(0.1, 0.1, 0.1).into(),
+            ..default()
+        })
+        .with_children(|panel| {
             // Title
-            parent.spawn(TextBundle::from_section(
+            panel.spawn(TextBundle::from_section(
                 "Shop",
                 TextStyle {
-                    font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                    font: font.clone(),
                     font_size: 40.0,
                     color: Color::WHITE,
                 },
             ));
 
-            // Buttons
+            // Player's money
+            panel.spawn(TextBundle::from_section(
+                format!("Gold: {}", player.inventory.money),
+                TextStyle {
+                    font: font.clone(),
+                    font_size: 24.0,
+                    color: Color::srgb(1.0, 0.84, 0.0),
+                },
+            ));
+
+            // Shop items based on current page
+            match *shop_page {
+                ShopPage::BuyUpgrade => {
+                    for (index, item) in player.inventory.items.iter().enumerate() {
+                        if matches!(item.item_type, 
+                            ItemType::Sword | ItemType::Pistol | 
+                            ItemType::Dagger | ItemType::Musket) {
+
+                            panel.spawn((ButtonBundle {
+                                style: Style {
+                                    width: Val::Px(250.0),
+                                    height: Val::Px(65.0),
+                                    margin: UiRect::all(Val::Px(10.0)),
+                                    justify_content: JustifyContent::Center,
+                                    align_items: AlignItems::Center,
+                                    border: UiRect::all(Val::Px(2.0)),
+                                    ..default()
+                                },
+                                background_color: Color::srgb(0.15, 0.15, 0.15).into(),
+                                border_color: Color::WHITE.into(),
+                                ..default()
+                            }, ShopButton::UpgradeItem(index)))
+                            .with_children(|button| {
+                                button.spawn(TextBundle::from_section(
+                                    format!("Upgrade {} (Lvl {})\n{} gold", item.name, item.level, item.price),
+                                    TextStyle {
+                                        font: font.clone(),
+                                        font_size: 18.0,
+                                        color: Color::WHITE,
+                                    },
+                                ));
+                            });
+                        }
+                    }
+                },
+                ShopPage::Sell => {
+                    for (index, item) in player.inventory.items.iter().enumerate() {
+                        if item.item_type == ItemType::Loot {
+                            panel.spawn((ButtonBundle {
+                                style: Style {
+                                    width: Val::Px(250.0),
+                                    height: Val::Px(65.0),
+                                    margin: UiRect::all(Val::Px(10.0)),
+                                    justify_content: JustifyContent::Center,
+                                    align_items: AlignItems::Center,
+                                    border: UiRect::all(Val::Px(2.0)),
+                                    ..default()
+                                },
+                                background_color: Color::srgb(0.15, 0.15, 0.15).into(),
+                                border_color: Color::WHITE.into(),
+                                ..default()
+                            }, ShopButton::SellItem(index)))
+                            .with_children(|button| {
+                                button.spawn(TextBundle::from_section(
+                                    format!("Sell {} for {} gold", item.name, item.price / 2),
+                                    TextStyle {
+                                        font: font.clone(),
+                                        font_size: 18.0,
+                                        color: Color::WHITE,
+                                    },
+                                ));
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Page switch buttons
             for (text, button_type) in [
-                ("Buy/Upgrade", ShopButton::Buy),
+                ("Upgrade", ShopButton::Upgrade),
                 ("Sell", ShopButton::Sell),
             ] {
-                parent.spawn((ButtonBundle {
+                panel.spawn((ButtonBundle {
                     style: Style {
                         width: Val::Px(150.0),
                         height: Val::Px(65.0),
                         margin: UiRect::all(Val::Px(10.0)),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
+                        border: UiRect::all(Val::Px(2.0)),
                         ..default()
                     },
                     background_color: Color::srgb(0.15, 0.15, 0.15).into(),
+                    border_color: Color::WHITE.into(),
                     ..default()
                 }, button_type))
-                .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section(
+                .with_children(|button| {
+                    button.spawn(TextBundle::from_section(
                         text,
                         TextStyle {
-                            font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                            font: font.clone(),
                             font_size: 24.0,
                             color: Color::WHITE,
                         },
@@ -56,6 +259,7 @@ pub fn setup_shop_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                 });
             }
         });
+    });
 }
 
 pub fn cleanup_shop_ui(mut commands: Commands, query: Query<Entity, With<ShopUI>>) {
@@ -67,166 +271,38 @@ pub fn cleanup_shop_ui(mut commands: Commands, query: Query<Entity, With<ShopUI>
 pub fn handle_button_interactions(
     mut interaction_query: Query<
         (&Interaction, &ShopButton, &mut BackgroundColor),
-        (Changed<Interaction>, With<Button>),
+        With<Button>,
     >,
     mut shop_events: EventWriter<ShopEvent>,
     mut shop_page: ResMut<ShopPage>,
 ) {
     for (interaction, button, mut color) in interaction_query.iter_mut() {
-        if *interaction == Interaction::Pressed {
-            *color = Color::rgb(0.35, 0.35, 0.35).into();
-            match button {
-                ShopButton::Buy | ShopButton::Upgrade => {
-                    *shop_page = ShopPage::BuyUpgrade;
-                }
-                ShopButton::Sell => {
-                    *shop_page = ShopPage::Sell;
-                }
-                ShopButton::BuyItem(index) => {
-                    shop_events.send(ShopEvent::Buy(*index));
-                }
-                ShopButton::UpgradeItem(index) => {
-                    shop_events.send(ShopEvent::Upgrade(*index));
-                }
-                ShopButton::SellItem(index) => {
-                    shop_events.send(ShopEvent::Sell(*index));
-                }
-            }
-        }
-    }
-}
-
-pub fn update_shop_ui(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    shop: Res<Shop>,
-    player: Query<&Player>,
-    shop_page: Res<ShopPage>,
-    shop_ui_query: Query<Entity, With<ShopUI>>,
-) {
-    let player = player.single();
-    let shop_ui_entity = shop_ui_query.single();
-
-    commands.entity(shop_ui_entity).despawn_descendants();
-    let font = asset_server.load("pixel_pirate.ttf");
-
-    commands.entity(shop_ui_entity).with_children(|parent| {
-        // Title
-        parent.spawn(TextBundle::from_section(
-            "Shop",
-            TextStyle {
-                font: font.clone(),
-                font_size: 40.0,
-                color: Color::WHITE,
-            },
-        ));
-
-        // Player's money
-        parent.spawn(TextBundle::from_section(
-            format!("Gold: {}", player.inventory.money),
-            TextStyle {
-                font: font.clone(),
-                font_size: 24.0,
-                color: Color::srgb(1.0, 0.84, 0.0),
-            },
-        ));
-
-        // Shop items or player's inventory based on the current page
-        match *shop_page {
-            ShopPage::BuyUpgrade => {
-                for (index, item) in shop.items.iter().enumerate() {
-                    let owned_item = player.inventory.items.iter().find(|i| i.item_type == item.item_type);
-                    let (button_text, button_type) = if let Some(owned_item) = owned_item {
-                        (format!("Upgrade {} (Lvl {})", item.name, owned_item.level),
-                         ShopButton::UpgradeItem(index))
-                    } else {
-                        (format!("Buy {}", item.name),
-                         ShopButton::BuyItem(index))
-                    };
-
-                    parent.spawn((ButtonBundle {
-                        style: Style {
-                            width: Val::Px(250.0),
-                            height: Val::Px(65.0),
-                            margin: UiRect::all(Val::Px(10.0)),
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            ..default()
-                        },
-                        background_color: Color::srgb(0.15, 0.15, 0.15).into(),
-                        ..default()
-                    }, button_type))
-                    .with_children(|parent| {
-                        parent.spawn(TextBundle::from_section(
-                            button_text,
-                            TextStyle {
-                                font: font.clone(),
-                                font_size: 18.0,
-                                color: Color::WHITE,
-                            },
-                        ));
-                    });
-                }
-            }
-            ShopPage::Sell => {
-                for (index, item) in player.inventory.items.iter().enumerate() {
-                    if item.item_type == ItemType::Loot {
-                        parent.spawn((ButtonBundle {
-                            style: Style {
-                                width: Val::Px(250.0),
-                                height: Val::Px(65.0),
-                                margin: UiRect::all(Val::Px(10.0)),
-                                justify_content: JustifyContent::Center,
-                                align_items: AlignItems::Center,
-                                ..default()
-                            },
-                            background_color: Color::srgb(0.15, 0.15, 0.15).into(),
-                            ..default()
-                        }, ShopButton::SellItem(index)))
-                        .with_children(|parent| {
-                            parent.spawn(TextBundle::from_section(
-                                format!("Sell {} for {} gold", item.name, item.price / 2),
-                                TextStyle {
-                                    font: font.clone(),
-                                    font_size: 18.0,
-                                    color: Color::WHITE,
-                                },
-                            ));
-                        });
+        match *interaction {
+            Interaction::Pressed => {
+                *color = Color::srgb(0.35, 0.35, 0.35).into();
+                match button {
+                    ShopButton::Buy | ShopButton::Upgrade => {
+                        *shop_page = ShopPage::BuyUpgrade;
+                    }
+                    ShopButton::Sell => {
+                        *shop_page = ShopPage::Sell;
+                    }
+                    ShopButton::UpgradeItem(index) => {
+                        shop_events.send(ShopEvent::Upgrade(*index));
+                    }
+                    ShopButton::SellItem(index) => {
+                        shop_events.send(ShopEvent::Sell(*index));
                     }
                 }
             }
+            Interaction::Hovered => {
+                *color = Color::srgb(0.25, 0.25, 0.25).into();
+            }
+            Interaction::None => {
+                *color = Color::srgb(0.15, 0.15, 0.15).into();
+            }
         }
-
-        // Page switch buttons
-        for (text, button_type) in [
-            ("Buy/Upgrade", ShopButton::Buy),
-            ("Sell", ShopButton::Sell),
-        ] {
-            parent.spawn((ButtonBundle {
-                style: Style {
-                    width: Val::Px(150.0),
-                    height: Val::Px(65.0),
-                    margin: UiRect::all(Val::Px(10.0)),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
-                background_color: Color::srgb(0.15, 0.15, 0.15).into(),
-                ..default()
-            }, button_type))
-            .with_children(|parent| {
-                parent.spawn(TextBundle::from_section(
-                    text,
-                    TextStyle {
-                        font: font.clone(),
-                        font_size: 24.0,
-                        color: Color::WHITE,
-                    },
-                ));
-            });
-        }
-    });
+    }
 }
 
 // Sword Damage and Upgrade Mechanics
@@ -249,52 +325,49 @@ pub fn update_sword_damage(
     }
 }
 
-// Updated to include sword damage and upgrade mechanics
 pub fn handle_shop_events(
     mut shop_events: EventReader<ShopEvent>,
     mut player_query: Query<(&mut Player, &Children)>,
     mut sword_query: Query<&mut Sword>,
-    mut shop: ResMut<Shop>,
+    time: Res<Time>,
+    mut cooldown: ResMut<ShopCooldown>,
 ) {
-    for (mut player, children) in player_query.iter_mut() {
-        for event in shop_events.read() {
-            match event {
-                ShopEvent::Buy(index) => {
-                    if *index < shop.items.len() {
-                        let item = shop.items[*index].clone();
-                        if player.inventory.money >= item.price {
-                            player.inventory.money -= item.price;
-                            let item_type = item.item_type;
-                            player.inventory.add_item(item);
-                            
-                            // Update sword damage if buying a sword
-                            if item_type == ItemType::Sword {
-                                update_sword_for_player(&mut player, children, &mut sword_query);
-                            }
+    if !cooldown.0.finished() {
+        cooldown.0.tick(time.delta());
+        return;
+    }
+
+    for event in shop_events.read() {
+        cooldown.0.reset();
+        
+        let (mut player, children) = player_query.single_mut();
+        
+        match event {
+            ShopEvent::Upgrade(index) => {
+                let item_type = if let Some(item) = player.inventory.items.get(*index) {
+                    let cost = item.price;
+                    if player.inventory.money >= cost {
+                        Some((item.item_type, cost))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+
+                if let Some((item_type, cost)) = item_type {
+                    if player.inventory.find_and_upgrade_item(item_type) {
+                        player.inventory.money -= cost;
+
+                        if item_type == ItemType::Sword {
+                            update_sword_for_player(&mut player, children, &mut sword_query);
                         }
                     }
                 }
-                ShopEvent::Upgrade(index) => {
-                    if *index < shop.items.len() {
-                        let shop_item = &shop.items[*index];
-                        let upgrade_cost = shop_item.price / 2;
-                        
-                        if player.inventory.money >= upgrade_cost {
-                            if player.inventory.find_and_upgrade_item(shop_item.item_type) {
-                                player.inventory.money -= upgrade_cost;
-                                
-                                // Update sword damage if upgrading a sword
-                                if shop_item.item_type == ItemType::Sword {
-                                    update_sword_for_player(&mut player, children, &mut sword_query);
-                                }
-                            }
-                        }
-                    }
-                }
-                ShopEvent::Sell(index) => {
-                    if let Some(item) = player.inventory.remove_item(*index) {
-                        player.inventory.money += item.price / 2;
-                    }
+            }
+            ShopEvent::Sell(index) => {
+                if let Some(item) = player.inventory.remove_item(*index) {
+                    player.inventory.money += item.price / 2;
                 }
             }
         }
