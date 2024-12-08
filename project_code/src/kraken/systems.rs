@@ -6,7 +6,7 @@ use crate::boat::components::Boat;
 use crate::data::gameworld_data::*;
 use crate::kraken::components::*;
 use crate::player::components::*;
-use crate::{create_env, enemies::*, Damage, HostPlayer, UDP};
+use crate::{create_env, enemies::*, Damage, HostPlayer, Server, UDP};
 use crate::{hitbox_system::*, Enemy};
 
 /*  SPAWN_KRAKEN FUNCTION  */
@@ -35,6 +35,7 @@ pub fn kraken_damaged(
     mut commands: Commands,
     mut kraken_query: Query<(&mut Kraken, Entity, &mut Hurtbox, &mut Enemy), With<Kraken>>,
     udp: Res<UDP>,
+    server: Res<Server>,
 ) {
     for (mut kraken, entity, mut hurtbox, mut enemy) in kraken_query.iter_mut() {
         if !hurtbox.colliding {
@@ -51,7 +52,7 @@ pub fn kraken_damaged(
                     },
                 )
                 .as_bytes(),
-                "127.0.0.1:5000",
+                server.addr.clone(),
             )
             .expect("Failed to send [enemy_damaged] packet");
 

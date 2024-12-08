@@ -87,7 +87,9 @@ fn main() {
 
     println!("Ocean size: {}", ocean_map.map.len());
 
-    let result = UdpSocket::bind("127.0.0.1:5000");
+    let result = UdpSocket::bind("192.168.1.159:5000");
+
+    //"71.112.217.220:5000"
 
     if result.is_ok() {
         let udp_socket = result.unwrap();
@@ -124,7 +126,7 @@ fn main() {
             }))
             .run();
     } else {
-        println!("UDP Socket unsuccessfully bound");
+        println!("UDP Socket unsuccessfully bound: {}", result.err().unwrap());
         //3 sec cooldown between attempts
         std::thread::sleep(Duration::new(3, 0));
     }
