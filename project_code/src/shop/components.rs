@@ -60,7 +60,7 @@ impl Default for Shop {
 #[derive(Resource)]
 pub struct ShopCooldown(pub Timer);
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct Inventory {
     pub items: Vec<Item>,
     pub money: u32,

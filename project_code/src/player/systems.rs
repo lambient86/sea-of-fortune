@@ -5,6 +5,8 @@ use crate::controls::*;
 use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
+use crate::components::*;
+use super::components::*;
 
 use crate::shop::components::{Inventory, ItemType, Item};
 use crate::shop::systems::generate_loot_item;
@@ -141,7 +143,15 @@ pub fn spawn_player(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     gameworld_state: Res<State<GameworldState>>,
+    mut player_entities: ResMut<PlayerEntities>,
 ) {
+    if player_entities.players.len() >= 4 {
+        return; // Max players reached
+    }
+
+    let player_id = player_entities.next_id;
+    player_entities.next_id += 1;
+
     //getting sprite info
     let master_handle: Handle<Image> = asset_server.load("s_pirate.png");
     let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(64), 8, 5, None, None);
@@ -157,14 +167,11 @@ pub fn spawn_player(
     let size = Vec2::new(32., 32.);
     let offset = Vec2::new(0., 0.);
 
-    let mut initial_inventory = Inventory::new(100);
-    initial_inventory.add_item(Item::new(ItemType::Dagger, "Dagger".to_string(), 75));
-    initial_inventory.add_item(Item::new(ItemType::Sword, "Sword".to_string(), 100));
-    initial_inventory.add_item(Item::new(ItemType::Pistol, "Pistol".to_string(), 150));
-    initial_inventory.add_item(Item::new(ItemType::Musket, "Musket".to_string(), 200));
+    let inventory = player_entities.saved_inventory.clone()
+        .unwrap_or_else(|| Inventory::new(100));
 
     //setting up player for spawning
-    commands.spawn((
+    let player_entity = commands.spawn((
         SpriteBundle {
             texture: master_handle,
             transform: Transform {
@@ -187,11 +194,12 @@ pub fn spawn_player(
             remaining: Timer::from_seconds(0.75, TimerMode::Once),
         },
         Player {
+            entity: Entity::from_raw(player_id as u32),
             animation_state: SpriteState::Idle,
             timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
             health: PLAYER_MAX_HP,
             max_health: PLAYER_MAX_HP,
-            inventory: initial_inventory,
+            inventory,
             spawn_position,
             weapon: 0,
             aabb: BoundingBox::new(
@@ -207,25 +215,34 @@ pub fn spawn_player(
             iframe: Timer::from_seconds(0.75, TimerMode::Once),
             enemy: false,
         },
-    ));
-}
+    )).id();
 
+    player_entities.players.push(player_entity);
+
+    println!("Player spawned with ID: {}", player_id);
+    println!("Current players: {:?}", player_entities.players);
+}
 /*   SPAWN_WEAPON FUNCTION   */
 /// Spawns the weapon on the player
 pub fn spawn_weapon(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-    player_query: Query<Entity, With<Player>>,
+    player_query: Query<(Entity, &Player)>,
 ) {
-    //getting sprite info
+    let (player_entity, player) = player_query.single();
+    
+    // Get initial weapon (sword)
+    let sword_level = player.inventory.items.iter()
+        .find(|item| item.item_type == ItemType::Sword)
+        .map(|item| item.level)
+        .unwrap_or(0);
+
     let master_handle: Handle<Image> = asset_server.load("s_cutlass.png");
     let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
     let master_layout_handle = texture_atlases.add(master_layout);
 
-    // get player + set weapon as child
-    let player = player_query.single();
-    commands.entity(player).with_children(|parent| {
+    commands.entity(player_entity).with_children(|parent| {
         parent.spawn((
             SpriteBundle {
                 texture: master_handle,
@@ -241,7 +258,8 @@ pub fn spawn_weapon(
                 index: 0,
             },
             Sword {
-                ..Default::default()
+                damage: Sword::default().calculate_damage(sword_level),
+                upgraded: sword_level > 0,
             },
         ));
     });
@@ -249,103 +267,197 @@ pub fn spawn_weapon(
 
 /*   SWAP_WEAPON FUNCTION   */
 /// Switches between the players weapons
-/// * 0 = Sword
-/// * 1 = Musket
 pub fn swap_weapon(
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut player_query: Query<&mut Player>,
     mut commands: Commands,
-    mut player_query: Query<(&mut Player), With<Player>>,
-    mut sword_query: Query<Entity, (With<Sword>, Without<Musket>, Without<Player>)>,
-    mut musket_query: Query<Entity, (With<Musket>, Without<Sword>, Without<Player>)>,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-    mut player_entity_query: Query<Entity, With<Player>>,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mouse_input: Res<ButtonInput<MouseButton>>,
+    player_entity_query: Query<Entity, With<Player>>,
+    player_children_query: Query<&Children, With<Player>>,
+    weapon_query: Query<Entity>,
 ) {
-    for mut player in player_query.iter_mut() {
-        //checking if player wants to switch weapons
-        if get_player_input(PlayerControl::SwapWeapon, &keyboard_input, &mouse_input) == 1. {
-            //switching to the correct weapon
-            if player.weapon == 0 {
-                //switching from sword to musket
-                player.weapon = 1;
-                println!("Switched to weapon 1!");
+    let mut player = player_query.single_mut();
+    let player_entity = player_entity_query.single();
 
-                //despawning sword
-                for sword in &mut sword_query {
-                    commands.entity(sword).despawn();
-                }
+    if keyboard_input.just_pressed(KeyCode::Digit1) {
+        // Switch to sword
+        if player.weapon != 0 {
 
-                /*   spawning musket   */
-                //getting sprite info
-                let master_handle: Handle<Image> = asset_server.load("s_musket.png");
-                let master_layout =
-                    TextureAtlasLayout::from_grid(UVec2::splat(64), 8, 5, None, None);
-                let master_layout_handle = texture_atlases.add(master_layout);
-
-                // get player + set weapon as child
-                let player = player_entity_query.single();
-                commands.entity(player).with_children(|parent| {
-                    parent.spawn((
-                        SpriteBundle {
-                            texture: master_handle,
-                            transform: Transform {
-                                scale: Vec3::splat(1.),
-                                translation: Vec3::new(32., 0.0, 0.0),
-                                ..default()
-                            },
-                            ..default()
-                        },
-                        TextureAtlas {
-                            layout: master_layout_handle,
-                            index: 0,
-                        },
-                        Musket {
-                            damage: 1.,
-                            upgraded: false,
-                        },
-                    ));
-                });
-            } else if player.weapon == 1 {
-                //switching from musket to sword
-                player.weapon = 0;
-                println!("Switched to weapon 0!");
-
-                //despawning musket
-                for musket in &mut musket_query {
-                    commands.entity(musket).despawn();
-                }
-
-                /*    spawning sword    */
-                //getting sprite info
-                let master_handle: Handle<Image> = asset_server.load("s_cutlass.png");
-                let master_layout =
-                    TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
-                let master_layout_handle = texture_atlases.add(master_layout);
-
-                // get player + set weapon as child
-                let player = player_entity_query.single();
-                commands.entity(player).with_children(|parent| {
-                    parent.spawn((
-                        SpriteBundle {
-                            texture: master_handle,
-                            transform: Transform {
-                                scale: Vec3::splat(2.),
-                                translation: Vec3::new(32., 0.0, 0.0),
-                                ..default()
-                            },
-                            ..default()
-                        },
-                        TextureAtlas {
-                            layout: master_layout_handle,
-                            index: 0,
-                        },
-                        Sword {
-                            ..Default::default()
-                        },
-                    ));
-                });
+            if let Ok(children) = player_children_query.get_single() {
+                despawn_weapon_internal(&mut commands, children, &weapon_query);
             }
+
+            player.weapon = 0;
+            println!("Switched to sword!");
+            
+            let sword_level = player.inventory.items.iter()
+                .find(|item| item.item_type == ItemType::Sword)
+                .map(|item| item.level)
+                .unwrap_or(0);
+
+            let master_handle: Handle<Image> = asset_server.load("s_cutlass.png");
+            let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
+            let master_layout_handle = texture_atlases.add(master_layout);
+
+            let player = player_entity_query.single();
+            commands.entity(player).with_children(|parent| {
+                parent.spawn((
+                    SpriteBundle {
+                        texture: master_handle,
+                        transform: Transform {
+                            scale: Vec3::splat(2.),
+                            translation: Vec3::new(32., 0.0, 0.0),
+                            ..default()
+                        },
+                        ..default()
+                    },
+                    TextureAtlas {
+                        layout: master_layout_handle,
+                        index: 0,
+                    },
+                    Sword {
+                        damage: Sword::default().calculate_damage(sword_level),
+                        upgraded: sword_level > 0,
+                    },
+                ));
+            });
+        }
+    } else if keyboard_input.just_pressed(KeyCode::Digit2) {
+        // Switch to musket
+        if player.weapon != 1 {
+
+            if let Ok(children) = player_children_query.get_single() {
+                despawn_weapon_internal(&mut commands, children, &weapon_query);
+            }
+
+            player.weapon = 1;
+            println!("Switched to dagger!");
+            
+            let dagger_level = player.inventory.items.iter()
+                .find(|item| item.item_type == ItemType::Dagger)
+                .map(|item| item.level)
+                .unwrap_or(0);
+
+            let master_handle: Handle<Image> = asset_server.load("s_dagger.png");
+            let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
+            let master_layout_handle = texture_atlases.add(master_layout);
+
+            let player = player_entity_query.single();
+            commands.entity(player).with_children(|parent| {
+                parent.spawn((
+                    SpriteBundle {
+                        texture: master_handle,
+                        transform: Transform {
+                            scale: Vec3::splat(2.),
+                            translation: Vec3::new(32., 0.0, 0.0),
+                            ..default()
+                        },
+                        ..default()
+                    },
+                    TextureAtlas {
+                        layout: master_layout_handle,
+                        index: 0,
+                    },
+                    Dagger {
+                        damage: Dagger::default().calculate_damage(dagger_level),
+                        upgraded: dagger_level > 0,
+                    },
+                ));
+            });
+        }
+    } else if keyboard_input.just_pressed(KeyCode::Digit3) {
+        // Switch to dagger
+        if player.weapon != 2 {
+
+            if let Ok(children) = player_children_query.get_single() {
+                despawn_weapon_internal(&mut commands, children, &weapon_query);
+            }
+
+            player.weapon = 2;
+            println!("Switched to musket!");
+
+            let musket_level = player.inventory.items.iter()
+                .find(|item| item.item_type == ItemType::Musket)
+                .map(|item| item.level)
+                .unwrap_or(0);
+            let master_handle: Handle<Image> = asset_server.load("s_musket.png");
+            let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
+            let master_layout_handle = texture_atlases.add(master_layout);
+
+            let player = player_entity_query.single();
+            commands.entity(player).with_children(|parent| {
+                parent.spawn((
+                    SpriteBundle {
+                        sprite: Sprite {
+                            flip_y: true,
+                            ..default()
+                        },
+                        texture: master_handle,
+                        transform: Transform {
+                            scale: Vec3::splat(2.),
+                            translation: Vec3::new(24., -32., 0.),
+                            ..default()
+                        },
+                        ..default()
+                    },
+                    TextureAtlas {
+                        layout: master_layout_handle,
+                        index: 0,
+                    },
+                    Musket {
+                        damage: Musket::default().calculate_damage(musket_level),
+                        upgraded: musket_level > 0,
+                    }
+                ));
+            });
+        }
+    } else if keyboard_input.just_pressed(KeyCode::Digit4) {
+        // Switch to pistol
+        if player.weapon != 3 {
+
+            if let Ok(children) = player_children_query.get_single() {
+                despawn_weapon_internal(&mut commands, children, &weapon_query);
+            }
+
+            player.weapon = 3;
+            println!("Switched to pistol!");
+            
+            let pistol_level = player.inventory.items.iter()
+                .find(|item| item.item_type == ItemType::Pistol)
+                .map(|item| item.level)
+                .unwrap_or(0);
+
+            let master_handle: Handle<Image> = asset_server.load("s_pistol.png");
+            let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
+            let master_layout_handle = texture_atlases.add(master_layout);
+
+            let player = player_entity_query.single();
+            commands.entity(player).with_children(|parent| {
+                parent.spawn((
+                    SpriteBundle {
+                        sprite: Sprite {
+                            flip_y: true,
+                            ..default()
+                        },
+                        texture: master_handle,
+                        transform: Transform {
+                            scale: Vec3::splat(2.),
+                            translation: Vec3::new(24., -32., 0.),
+                            ..default()
+                        },
+                        ..default()
+                    },
+                    TextureAtlas {
+                        layout: master_layout_handle,
+                        index: 0,
+                    },
+                    Pistol {
+                        damage: Pistol::default().calculate_damage(pistol_level),
+                        upgraded: pistol_level > 0,
+                    },
+                ));
+            });
         }
     }
 }
@@ -353,41 +465,29 @@ pub fn swap_weapon(
 /*   MOVE_WEAPON FUNCITON   */
 /// Move the weapon with the player (reflects where player is facing)
 pub fn move_weapon(
-    mut sword_query: Query<(&mut Transform, &mut Sprite), (With<Sword>, Without<Musket>)>,
-    mut musket_query: Query<(&mut Transform, &mut Sprite), (With<Musket>, Without<Sword>)>,
-    mut player_query: Query<(&mut Player), With<Player>>, // want to get the player with children
+    player_query: Query<(&Player, &Children)>,
+    mut transform_query: Query<(&mut Transform, &mut Sprite)>,
 ) {
-    for player in player_query.iter_mut() {
-        //sword
-        if player.weapon == 0 {
-            for (mut transform, mut sprite) in sword_query.iter_mut() {
+    for (player, children) in player_query.iter() {
+        // For each child (active weapon)
+        for &child in children.iter() {
+            if let Ok((mut transform, mut sprite)) = transform_query.get_mut(child) {
                 let player_direction = player.animation_state;
+                let is_gun = player.weapon >= 2;  // weapons 2 and 3 are guns
 
-                if player_direction == SpriteState::LeftRun
-                    || player_direction == SpriteState::BackwardRun
-                {
-                    transform.translation = Vec3::new(-32., 0., 0.);
+                if player_direction == SpriteState::LeftRun || player_direction == SpriteState::BackwardRun {
+                    transform.translation = if is_gun {
+                        Vec3::new(-24., -32., 0.)
+                    } else {
+                        Vec3::new(-32., 0., 0.)
+                    };
                     sprite.flip_x = true;
-                } else if player_direction == SpriteState::RightRun
-                    || player_direction == SpriteState::ForwardRun
-                {
-                    transform.translation = Vec3::new(32., 0., 0.);
-                    sprite.flip_x = false;
-                }
-            }
-        } else if player.weapon == 1 {
-            for (mut transform, mut sprite) in musket_query.iter_mut() {
-                let player_direction = player.animation_state;
-
-                if player_direction == SpriteState::LeftRun
-                    || player_direction == SpriteState::BackwardRun
-                {
-                    transform.translation = Vec3::new(-32., 0., 0.);
-                    sprite.flip_x = true;
-                } else if player_direction == SpriteState::RightRun
-                    || player_direction == SpriteState::ForwardRun
-                {
-                    transform.translation = Vec3::new(32., 0., 0.);
+                } else if player_direction == SpriteState::RightRun || player_direction == SpriteState::ForwardRun {
+                    transform.translation = if is_gun {
+                        Vec3::new(24., -32., 0.)
+                    } else {
+                        Vec3::new(32., 0., 0.)
+                    };
                     sprite.flip_x = false;
                 }
             }
@@ -457,6 +557,44 @@ pub fn sword_attack(
     }
 }
 
+pub fn dagger_attack(
+    time: Res<Time>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mouse_input: Res<ButtonInput<MouseButton>>,
+    curr_mouse_pos: ResMut<CurrMousePos>,
+    mut commands: Commands,
+    mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown, &Player), With<Player>>,
+) {
+    for (entity, transform, velocity, mut cooldown, player) in player_query.iter_mut() {
+        if !cooldown.remaining.finished() {
+            cooldown.remaining.tick(time.delta());
+            break;
+        }
+
+        if player.weapon == 1 {
+            if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {
+                println!("Player attacked with dagger!");
+                cooldown.remaining = Timer::from_seconds(DAGGER_COOLDOWN, TimerMode::Once);
+
+                let player_position = transform.translation.truncate();
+                let direction = (curr_mouse_pos.0 - player_position).normalize();
+                let hitbox_offset = direction * 25.0; // Shorter range than sword
+                let hitbox_size = Vec2::new(30.0, 45.0); // Smaller hitbox than sword
+
+                create_hitbox(
+                    &mut commands,
+                    entity,
+                    hitbox_size,
+                    hitbox_offset,
+                    Some(0.05), // Faster hitbox duration
+                    PLAYER,
+                    false,
+                    false,
+                );
+            }
+        }
+    }
+}
 /*   MUSKET_ATTACK FUNCTION */
 /// Function that fires the musket if players weapon is set to musket
 pub fn musket_attack(
@@ -484,7 +622,7 @@ pub fn musket_attack(
             break;
         }
 
-        if player.weapon == 1 {
+        if player.weapon == 2 {
             // Checks if the left mouse button is pressed
             if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {
                 println!("Player attacked!");
@@ -542,6 +680,64 @@ pub fn musket_attack(
     }
 }
 
+pub fn pistol_attack(
+    time: Res<Time>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mouse_input: Res<ButtonInput<MouseButton>>,
+    curr_mouse_pos: ResMut<CurrMousePos>,
+    mut commands: Commands,
+    mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown, &Player), With<Player>>,
+    asset_server: Res<AssetServer>,
+) {
+    for (entity, transform, velocity, mut cooldown, player) in player_query.iter_mut() {
+        if !cooldown.remaining.finished() {
+            cooldown.remaining.tick(time.delta());
+            break;
+        }
+
+        if player.weapon == 3 {
+            if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {
+                println!("Player attacked with pistol!");
+                cooldown.remaining = Timer::from_seconds(PISTOL_COOLDOWN, TimerMode::Once);
+
+                let player_position = transform.translation;
+                let original_direction = (Vec3::new(curr_mouse_pos.0.x, curr_mouse_pos.0.y, 0.) - transform.translation).normalize();
+                let angle = original_direction.x.atan2(original_direction.y);
+                let firing_angle = Vec3::new(angle.sin(), angle.cos(), 0.0);
+                let projectile_start_position = player_position + firing_angle * 10.0;
+
+                let hitbox_size = Vec2::new(12., 12.);
+                let offset = Vec2::splat(0.);
+
+                commands.spawn((
+                    SpriteBundle {
+                        texture: asset_server.load("s_cannonball.png"),
+                        transform: Transform {
+                            translation: projectile_start_position,
+                            scale: Vec3::splat(0.6),
+                            ..default()
+                        },
+                        ..default()
+                    },
+                    Musketball,
+                    MusketballLifetime(MUSKETBALL_LIFETIME),
+                    MusketballVelocity {
+                        v: firing_angle * (MUSKETBALL_SPEED), // Slightly slower than musket
+                    },
+                    Hitbox {
+                        size: hitbox_size,
+                        offset: offset,
+                        lifetime: Some(Timer::from_seconds(MUSKETBALL_LIFETIME, TimerMode::Once)),
+                        entity: PLAYER,
+                        projectile: true,
+                        enemy: false,
+                    },
+                ));
+            }
+        }
+    }
+}
+
 /*   MOVE_MUSKETBALL FUNCTION   */
 /// Updates the locations of musket projectiles
 pub fn move_musketball(
@@ -580,32 +776,19 @@ pub fn check_player_health(
     }
 }
 
-/*   DESPAWN_WEAPON FUNCTION   */
-/// Despawns the weapon entity
-/// DEBUG: Will despawn any and all weapons
-pub fn despawn_weapon(
-    mut commands: Commands,
-    sword_query: Query<Entity, With<Sword>>,
-    musket_query: Query<Entity, With<Musket>>,
-) {
-    for entity in sword_query.iter() {
-        commands.entity(entity).despawn();
-    }
-
-    for entity in musket_query.iter() {
-        commands.entity(entity).despawn();
-    }
-}
-
 /*   DESPAWN_PLAYER FUNCTION   */
 /// Despawns the player entity
 /// DEBUG: Will despawn any and all players
-pub fn despawn_player(mut commands: Commands, query: Query<Entity, With<Player>>) {
-    for entity in query.iter() {
+pub fn despawn_player(
+    mut commands: Commands,
+    mut player_entities: ResMut<PlayerEntities>,
+    query: Query<(&Player, Entity)>,
+) {
+    for (player, entity) in query.iter() {
+        player_entities.saved_inventory = Some(player.inventory.clone());
         commands.entity(entity).despawn();
     }
 }
-
 /*   MUSKETBALL_LIFETIME_CHECK FUNCTION   */
 /// Checks the lifetime of a musketball
 pub fn musketball_lifetime_check(
@@ -630,5 +813,17 @@ pub fn musketball_lifetime_check(
 pub fn despawn_musketballs(mut commands: Commands, query: Query<Entity, With<Musketball>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn();
+    }
+}
+
+pub fn despawn_weapon_internal(
+    commands: &mut Commands,
+    children: &Children,
+    weapon_query: &Query<Entity>,
+) {
+    for &child in children.iter() {
+        if let Ok(weapon_entity) = weapon_query.get(child) {
+            commands.entity(weapon_entity).despawn();
+        }
     }
 }

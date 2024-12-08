@@ -19,10 +19,12 @@ impl Plugin for PlayerPlugin {
                 spawn_player,
                 spawn_weapon.after(spawn_player),))
             .add_systems(Update, (    
-                move_player,
+                move_player.after(spawn_player),
                 player_animation.after(move_player),
                 sword_attack,
                 musket_attack,
+                dagger_attack,
+                pistol_attack,
                 check_player_health,
                 musketball_lifetime_check,
                 move_musketball,
@@ -33,11 +35,9 @@ impl Plugin for PlayerPlugin {
                 .run_if(in_state(GameState::Running)))
             .add_systems(OnExit(GameworldState::Island), (
                 despawn_player,
-                despawn_weapon,
                 despawn_musketballs,))
             .add_systems(OnExit(GameworldState::Dungeon), (
                 despawn_player,
-                despawn_weapon,
                 despawn_musketballs,));
     }
 }

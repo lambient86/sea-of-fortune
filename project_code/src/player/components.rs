@@ -12,12 +12,31 @@ pub const MUSKETBALL_SPEED: f32 = 500.;
 pub const MUSKETBALL_LIFETIME: f32 = 6.;
 pub const MAX_ACCEL: f32 = 800.;
 
+pub const SWORD_COOLDOWN: f32 = 0.75;
+pub const MUSKET_COOLDOWN: f32 = 1.5;
+pub const DAGGER_COOLDOWN: f32 = 0.375; // Half of sword cooldown
+pub const PISTOL_COOLDOWN: f32 = 0.75;  // Half of musket cooldown
+
 // Base player stats
 pub const PLAYER_MAX_HP: f32 = 3.;
+
+#[derive(Component)]
+pub struct DespawnWeapon {
+    pub should_despawn: bool,
+}
+
+impl Default for DespawnWeapon {
+    fn default() -> Self {
+        Self {
+            should_despawn: false,
+        }
+    }
+}
 
 /// Struct representing the player
 #[derive(Component)]
 pub struct Player {
+    pub entity: Entity,
     pub animation_state: SpriteState,
     pub timer: Timer,
     pub health: f32,
@@ -26,20 +45,6 @@ pub struct Player {
     pub spawn_position: Vec3,
     pub weapon: i8,
     pub aabb: BoundingBox,
-}
-
-/// Struct representing the sword weapon for the player
-#[derive(Component)]
-pub struct Sword {
-    pub damage: f32,
-    pub upgraded: bool,
-}
-
-/// Struct representing the musket weapon for the player
-#[derive(Component)]
-pub struct Musket {
-    pub damage: f32,
-    pub upgraded: bool,
 }
 
 /// Struct representing the musketball projectile fired by the musket weapon
@@ -54,6 +59,13 @@ pub struct MusketballLifetime(pub f32);
 #[derive(Component)]
 pub struct MusketballVelocity {
     pub v: Vec3,
+}
+
+/// Struct representing the sword weapon for the player
+#[derive(Component)]
+pub struct Sword {
+    pub damage: f32,
+    pub upgraded: bool,
 }
 
 //implementing sword
@@ -87,6 +99,131 @@ impl Sword {
     }
 
     pub fn upgrade_sword(&mut self, level: u32) {
+        self.damage = self.calculate_damage(level);
+        self.upgraded = true;
+    }
+}
+
+/// Struct representing the dagger weapon for the player
+#[derive(Component)]
+pub struct Dagger {
+    pub damage: f32,
+    pub upgraded: bool,
+}
+
+//implementing dagger
+impl Default for Dagger {
+    fn default() -> Dagger {
+        Dagger {
+            damage: 0.5,     // Half of sword's base damage
+            upgraded: false,
+        }
+    }
+}
+
+// Dagger Damage and Upgrade Mechanics
+impl Dagger {
+    pub fn get_base_damage(&self) -> f32 {
+        if self.upgraded {
+            1.0 // Base damage for upgraded dagger (half of sword)
+        } else {
+            0.5 // Base damage for basic dagger
+        }
+    }
+
+    pub fn get_level_multiplier(level: u32) -> f32 {
+        // Each level adds 25% more damage (same as sword)
+        1.0 + (level as f32 * 0.25)
+    }
+
+    pub fn calculate_damage(&self, level: u32) -> f32 {
+        self.get_base_damage() * Self::get_level_multiplier(level)
+    }
+
+    pub fn upgrade_dagger(&mut self, level: u32) {
+        self.damage = self.calculate_damage(level);
+        self.upgraded = true;
+    }
+}
+
+/// Struct representing the musket weapon for the player
+#[derive(Component)]
+pub struct Musket {
+    pub damage: f32,
+    pub upgraded: bool,
+}
+
+impl Default for Musket {
+    fn default() -> Musket {
+        Musket {
+            damage: 1.0,     // Base musket damage
+            upgraded: false,
+        }
+    }
+}
+
+// Musket Damage and Upgrade Mechanics
+impl Musket {
+    pub fn get_base_damage(&self) -> f32 {
+        if self.upgraded {
+            2.0 // Base damage for upgraded musket
+        } else {
+            1.0 // Base damage for basic musket
+        }
+    }
+
+    pub fn get_level_multiplier(level: u32) -> f32 {
+        // Each level adds 25% more damage
+        1.0 + (level as f32 * 0.25)
+    }
+
+    pub fn calculate_damage(&self, level: u32) -> f32 {
+        self.get_base_damage() * Self::get_level_multiplier(level)
+    }
+
+    pub fn upgrade_musket(&mut self, level: u32) {
+        self.damage = self.calculate_damage(level);
+        self.upgraded = true;
+    }
+}
+
+/// Struct representing the pistol weapon for the player
+#[derive(Component)]
+pub struct Pistol {
+    pub damage: f32,
+    pub upgraded: bool,
+}
+
+//implementing pistol
+impl Default for Pistol {
+    fn default() -> Pistol {
+        Pistol {
+            damage: 0.5,     // Half of musket's base damage
+            upgraded: false,
+        }
+    }
+}
+
+// Pistol Damage and Upgrade Mechanics
+impl Pistol {
+    pub fn get_base_damage(&self) -> f32 {
+        if self.upgraded {
+            1.0 // Base damage for upgraded pistol (half of musket)
+        } else {
+            0.5 // Base damage for basic pistol
+        }
+    }
+
+    pub fn get_level_multiplier(level: u32) -> f32 {
+        // Each level adds 25% more damage (same as musket)
+        1.0 + (level as f32 * 0.25)
+    }
+
+    pub fn calculate_damage(&self, level: u32) -> f32 {
+        self.get_base_damage() * Self::get_level_multiplier(level)
+    }
+
+    pub fn upgrade_pistol(&mut self, level: u32) {
         self.damage = self.calculate_damage(level);
         self.upgraded = true;
     }

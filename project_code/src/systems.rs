@@ -13,6 +13,8 @@ use crate::bat::components::Bat;
 use crate::skeleton::components::Skeleton;
 use crate::player::components::Player; 
 
+use crate::components::*;
+
 /*   MOVE_CAMERA FUNCTIONS  */
 /// Updates the cameras position to center the current player
 /// and tracks the player wherever they go
@@ -76,6 +78,7 @@ pub fn setup_gameworld(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 pub fn change_gameworld_state(
     mut next_state: ResMut<NextState<GameworldState>>,
+    mut current_island_type: ResMut<CurrentIslandType>,
     islands_query: Query<&mut Island, With<Island>>,
     dungeon_query: Query<&mut Dungeon, With<Dungeon>>,
     gameworld_state: Res<State<GameworldState>>,
@@ -89,13 +92,16 @@ pub fn change_gameworld_state(
         && *gameworld_state.get() != GameworldState::Island
         && *gameworld_state.get() != GameworldState::Dungeon
     {
-        next_state.set(GameworldState::Ocean);
+        current_island_type.island_type = IslandType::Start;
+        next_state.set(GameworldState::Island);
+        return;
     }
     //  CASE: OCEAN --> ISLAND
     if *gameworld_state.get() == GameworldState::Ocean {
         let boat = boat_query.single_mut();
         for island in islands_query.iter() {
             if island.aabb.aabb.intersects(&boat.aabb.aabb) {
+                current_island_type.island_type = island.island_type;
                 println!("going to the island!");
                 next_state.set(GameworldState::Island);
             }

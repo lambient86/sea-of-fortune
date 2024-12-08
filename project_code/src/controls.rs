@@ -7,7 +7,10 @@ pub enum PlayerControl {
     Down,       //S
     Left,       //A
     Right,      //D
-    SwapWeapon, //F
+    Weapon1,    //1
+    Weapon2,    //2
+    Weapon3,    //3
+    Weapon4,    //4
     Attack,     //Left Mouse Button
     Secondary,  //Right Mouse Button
 }
@@ -37,9 +40,10 @@ impl PlayerControl {
             PlayerControl::Right => {
                 keyboard_input.pressed(KeyCode::KeyD)
             }
-            PlayerControl::SwapWeapon => {
-                keyboard_input.just_pressed(KeyCode::KeyF)
-            }
+            PlayerControl::Weapon1 => keyboard_input.pressed(KeyCode::Digit1),
+            PlayerControl::Weapon2 => keyboard_input.pressed(KeyCode::Digit2),
+            PlayerControl::Weapon3 => keyboard_input.pressed(KeyCode::Digit3),
+            PlayerControl::Weapon4 => keyboard_input.pressed(KeyCode::Digit4),
             PlayerControl::Attack => {
                 mouse_input.pressed(MouseButton::Left)
             }
