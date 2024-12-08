@@ -12,6 +12,20 @@ use crate::Enemy;
 #[derive(Component)]
 pub struct EnemyTag;
 
+#[derive(Component)]
+pub struct Lifetime(pub f32);
+
+//ENTITIES
+pub const PLAYER: i32 = 0;
+pub const BOAT: i32 = 1;
+pub const BAT: i32 = 2;
+pub const KRAKEN: i32 = 3;
+pub const GHOSTSHIP: i32 = 4;
+pub const ROCK: i32 = 5;
+pub const RSKELETON: i32 = 6;
+pub const MSKELETON: i32 = 7;
+pub const WHIRLPOOL: i32 = 8;
+
 pub enum EnemyT {
     Bat(i32),
     Kraken(i32),
@@ -97,9 +111,9 @@ pub fn spawn_enemy(
                 Enemy {
                     id: id,
                     etype: KRAKEN,
-                    translation: transform.translation,
-                    rotation: transform.rotation,
+                    pos: transform.translation,
                     alive: true,
+                    animation_index: 0,
                 },
             ));
         }
@@ -131,9 +145,9 @@ pub fn spawn_enemy(
                 Enemy {
                     id: id,
                     etype: GHOSTSHIP,
-                    translation: transform.translation,
-                    rotation: transform.rotation,
+                    pos: transform.translation,
                     alive: true,
+                    animation_index: 0,
                 },
             ));
         }
@@ -177,7 +191,7 @@ pub fn spawn_enemy(
                     size: Vec2::new(32., 32.), // Adjust as needed
                     offset: Vec2::ZERO,
                     colliding: false,
-                    entity: SKELETON,
+                    entity: RSKELETON,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
                 },

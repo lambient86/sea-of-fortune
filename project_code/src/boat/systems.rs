@@ -3,6 +3,7 @@ use std::thread;
 use crate::boat::components::*;
 use crate::components::BoundingBox;
 use crate::data::gameworld_data::*;
+use crate::enemies::*;
 use crate::player::components::AttackCooldown;
 use crate::{controls::*, create_env, HostPlayer, UDP};
 use crate::{hitbox_system::*, Player};

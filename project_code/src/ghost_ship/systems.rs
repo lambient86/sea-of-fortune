@@ -69,13 +69,13 @@ pub fn spawn_ghostship(
     let transform = Transform::from_xyz(200., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.)
         .with_scale(Vec3::splat(2.0));
 
-    spawn_enemy(
+    /*spawn_enemy(
         &mut commands,
         EnemyT::GhostShip(0),
         transform,
         &asset_server,
         &mut texture_atlases,
-    );
+    );*/
 }
 
 /*   KRAKEN_DAMAGED FUNCTION   */

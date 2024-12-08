@@ -207,7 +207,7 @@ pub fn skeleton_attack(
                 size: Vec2::splat(16.),
                 offset: Vec2::splat(0.),
                 lifetime: Some(Timer::from_seconds(3., TimerMode::Once)),
-                entity: SKELETON,
+                entity: RSKELETON,
                 projectile: true,
                 enemy: true,
             },

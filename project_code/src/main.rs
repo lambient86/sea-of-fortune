@@ -17,6 +17,7 @@ mod transition_box;
 mod wfc;
 
 use bat::BatPlugin;
+use bevy::asset;
 use bevy::{prelude::*, window::PresentMode};
 use boat::components::Boat;
 use boat::systems::*;
@@ -25,10 +26,10 @@ use components::*;
 use controls::*;
 use data::gameworld_data::*;
 use enemies::*;
+use ghost_ship::components::*;
 use ghost_ship::GhostShipPlugin;
-use hitbox_system::HitboxPlugin;
-use hitbox_system::Hurtbox;
-use hitbox_system::BOAT;
+use hitbox_system::*;
+use kraken::components::*;
 use kraken::KrakenPlugin;
 use level::components::*;
 use level::LevelPlugin;
@@ -245,7 +246,110 @@ pub fn update(
                 let mut enemy_found = false;
 
                 for e in enemies.list.iter() {
-                    for (mut transform, mut enemy) in enemy_query.iter_mut() {}
+                    let mut found = false;
+                    for (mut transform, mut enemy) in enemy_query.iter_mut() {
+                        if e.id != enemy.id {
+                            continue;
+                        }
+                        transform.translation = e.pos;
+                    }
+
+                    if !found {
+                        match e.etype {
+                            KRAKEN => {
+                                let transform =
+                                    Transform::from_translation(e.pos).with_scale(Vec3::splat(2.0));
+                                spawn_enemy(
+                                    &mut commands,
+                                    EnemyT::Kraken(e.id),
+                                    transform,
+                                    &asset_server,
+                                    &mut texture_atlases,
+                                )
+                            }
+                            GHOSTSHIP => {
+                                let transform =
+                                    Transform::from_translation(e.pos).with_scale(Vec3::splat(2.0));
+                                spawn_enemy(
+                                    &mut commands,
+                                    EnemyT::GhostShip(e.id),
+                                    transform,
+                                    &asset_server,
+                                    &mut texture_atlases,
+                                )
+                            }
+                            _ => {
+                                println!("Undefined enemy in [update_enemies]");
+                            }
+                        }
+                    }
+                }
+            } else if env.message == "update_projectiles" {
+                let packet: Packet<Projectiles> = serde_json::from_str(&env.packet).unwrap();
+                let projectiles = packet.payload;
+
+                for proj in projectiles.list.iter() {
+                    for (transform, enemy) in enemy_query.iter() {
+                        if proj.owner_id == enemy.id {
+                            match enemy.etype {
+                                KRAKEN => {
+                                    commands.spawn((
+                                    SpriteBundle {
+                                        texture: asset_server.load("s_kraken_spit_1.png"),
+                                        transform: Transform {
+                                            translation: proj.pos,
+                                            scale: Vec3::splat(2.0),
+                                            ..default()
+                                        },
+                                        ..default()
+                                    },
+                                    KrakenProjectile,
+                                    Lifetime(proj.lifetime),
+                                    Velocity {
+                                        v: proj.velocity.v, /* (direction * speed of projectile) */
+                                    },
+                                    Hitbox {
+                                        size: Vec2::splat(60.),
+                                        offset: Vec2::splat(0.),
+                                        lifetime: Some(Timer::from_seconds(5., TimerMode::Once)),
+                                        entity: KRAKEN,
+                                        projectile: true,
+                                        enemy: true,
+                                    },
+                                ));
+                                }
+                                GHOSTSHIP => {
+                                    commands.spawn((
+                                    SpriteBundle {
+                                        texture: asset_server.load("s_cannonball.png"),
+                                        transform: Transform {
+                                            translation: proj.pos,
+                                            scale: Vec3::splat(2.0),
+                                            ..default()
+                                        },
+                                        ..default()
+                                    },
+                                    GhostShipProjectile,
+                                    Lifetime(proj.lifetime),
+                                    Velocity {
+                                        v: proj.velocity.v, /* (direction * speed of projectile) */
+                                    },
+                                    Hitbox {
+                                        size: Vec2::splat(60.),
+                                        offset: Vec2::splat(0.),
+                                        lifetime: Some(Timer::from_seconds(5., TimerMode::Once)),
+                                        entity: GHOSTSHIP,
+                                        projectile: true,
+                                        enemy: true,
+                                    },));
+                                }
+                                _ => {
+                                    println!("Undefined enemy type");
+                                }
+                            }
+                            break;
+                        }
+                    }
                 }
             } else {
                 println!(

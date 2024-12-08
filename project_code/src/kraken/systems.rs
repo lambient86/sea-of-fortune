@@ -19,13 +19,13 @@ pub fn spawn_kraken(
     let transform = Transform::from_xyz(0., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.)
         .with_scale(Vec3::splat(2.0));
 
-    spawn_enemy(
+    /*spawn_enemy(
         &mut commands,
         EnemyT::Kraken(0),
         transform,
         &asset_server,
         &mut texture_atlases,
-    );
+    );*/
 }
 
 /*   KRAKEN_DAMAGED FUNCTION   */

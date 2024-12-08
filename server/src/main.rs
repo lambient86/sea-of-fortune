@@ -33,6 +33,15 @@ fn main() {
     // Creating ocean level
     let ocean_map = OceanMap { map: build_ocean() };
     let projectiles = Projectiles { list: Vec::new() };
+    let mut enemies = Enemies { list: Vec::new() };
+
+    enemies.list.push(Enemy {
+        id: 15,
+        etype: KRAKEN,
+        pos: Vec3::new(0., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.),
+        animation_index: 0,
+        alive: true,
+    });
 
     println!("Ocean size: {}", ocean_map.map.len());
 
@@ -52,7 +61,7 @@ fn main() {
             .insert_resource(ocean_map)
             .insert_resource(Counter::init())
             .insert_resource(Players::init())
-            .insert_resource(Enemies::init())
+            .insert_resource(enemies)
             .insert_resource(projectiles)
             .insert_resource(UDP { socket: udp_socket })
             .add_systems(Update, handle)
@@ -80,7 +89,7 @@ pub fn handle(
     mut players: ResMut<Players>,
     udp: Res<UDP>,
     enemies: Res<Enemies>,
-    projectiles: Res<Projectiles>,
+    mut projectiles: ResMut<Projectiles>,
 ) {
     loop {
         let mut buf = [0; 1024];
@@ -195,6 +204,7 @@ pub fn handle(
                                     player.addr.clone(),
                                 )
                                 .expect("Failed to send [update_projectiles] packet");
+                            projectiles.list.clear();
                         }
                     }
                 } else if env.message == "player_update" {
@@ -269,6 +279,8 @@ pub fn enemy_proj_handle(
                 translation: projectile_start_pos,
                 lifetime: lifetime,
             };
+
+            projectiles.list.push(projectile);
             break;
         }
     }

@@ -3,6 +3,7 @@ use std::ops::Bound;
 use crate::components::BoundingBox;
 use crate::controls::*;
 use crate::data::gameworld_data::*;
+use crate::enemies::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
 

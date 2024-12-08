@@ -22,6 +22,3 @@ pub struct Kraken {
 
 #[derive(Component)]
 pub struct KrakenProjectile;
-
-#[derive(Component)]
-pub struct Lifetime(pub f32);

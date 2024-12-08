@@ -31,9 +31,15 @@ pub const DUNGEON_W_CENTER: f32 = DUNGEON_LEVEL_W / 2.;
 pub const BOUNDS: Vec2 = Vec2::new(OCEAN_LEVEL_W, OCEAN_LEVEL_H);
 
 //Enemy Codes
-pub const KRAKEN: i32 = 2;
-pub const GHOSTSHIP: i32 = 3;
-pub const WHIRLPOOL: i32 = 7;
+pub const PLAYER: i32 = 0;
+pub const BOAT: i32 = 1;
+pub const BAT: i32 = 2;
+pub const KRAKEN: i32 = 3;
+pub const GHOSTSHIP: i32 = 4;
+pub const ROCK: i32 = 5;
+pub const RSKELETON: i32 = 6;
+pub const MSKELETON: i32 = 7;
+pub const WHIRLPOOL: i32 = 8;
 
 //All Enemy constants
 pub const GHOSTSHIP_PROJECTILE_LIFETIME: f32 = 5.;
