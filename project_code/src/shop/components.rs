@@ -5,7 +5,9 @@ use bevy::prelude::*;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ItemType {
     Sword,
-    Gun,
+    Dagger,
+    Musket,
+    Pistol,
     Boat,
     Loot,  // For sellable items from enemies
 }
@@ -45,13 +47,18 @@ impl Default for Shop {
     fn default() -> Self {
         Self {
             items: vec![
-                Item::new(ItemType::Sword, "Steel Sword".to_string(), 100),
-                Item::new(ItemType::Gun, "Pistol".to_string(), 200),
+                Item::new(ItemType::Dagger, "Dagger".to_string(), 75),
+                Item::new(ItemType::Sword, "Sword".to_string(), 100),
+                Item::new(ItemType::Pistol, "Pistol".to_string(), 150),
+                Item::new(ItemType::Musket, "Musket".to_string(), 200),
                 Item::new(ItemType::Boat, "Wooden Boat".to_string(), 500),
             ],
         }
     }
 }
+
+#[derive(Resource)]
+pub struct ShopCooldown(pub Timer);
 
 #[derive(Component)]
 pub struct Inventory {
@@ -93,19 +100,17 @@ impl Inventory {
 #[derive(Component)]
 pub struct ShopUI;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub enum ShopButton {
     Buy,
     Upgrade,
     Sell,
-    BuyItem(usize),
     UpgradeItem(usize),
     SellItem(usize),
 }
 
 #[derive(Event)]
 pub enum ShopEvent {
-    Buy(usize),
     Upgrade(usize),
     Sell(usize),
 }
