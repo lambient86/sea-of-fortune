@@ -6,7 +6,11 @@ use crate::ghost_ship::components::*;
 use crate::hitbox_system::components::*;
 use crate::kraken::components::*;
 use crate::player::components::*;
+use crate::rock::components::*;
 use crate::skeleton::components::*;
+use crate::whirlpool::components::*;
+use crate::whirlpool::components::Lifetime;
+use crate::whirlpool::components::WHIRLPOOL_LIFETIME;
 use crate::Enemy;
 
 #[derive(Component)]
@@ -33,6 +37,7 @@ pub enum EnemyT {
     Rock(i32),
     Skeleton(i32),
     Skel2(i32),
+    Whirlpool(i32),
 }
 
 pub fn spawn_enemy(
@@ -43,6 +48,31 @@ pub fn spawn_enemy(
     texture_atlases: &mut ResMut<Assets<TextureAtlasLayout>>,
 ) {
     match enemy {
+        EnemyT::Whirlpool(id) => {
+            let whirlpool_texture_asset: Handle<Image> = asset_server.load("s_whirlpool.png");
+
+            commands.spawn((
+                SpriteBundle{
+                    texture: whirlpool_texture_asset,
+                    transform,
+                    ..default()
+                },
+                Whirlpool {
+                    rotation_speed: f32::to_radians(90.0),
+                    current_hp: WHIRLPOOL_HP,
+                    max_hp: WHIRLPOOL_HP,
+                },
+                Lifetime(WHIRLPOOL_LIFETIME),
+                Hurtbox {
+                    size: Vec2::new(400., 290.),
+                    offset: Vec2::splat(0.),
+                    colliding: false,
+                    entity: WHIRLPOOL,
+                    iframe: Timer::from_seconds(0.75, TimerMode::Once),
+                    enemy: true,
+                }, 
+            ));
+        },
         EnemyT::Bat(id) => {
             let bat_layout =
                 TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 3, 1, None, None);
@@ -203,8 +233,48 @@ pub fn spawn_enemy(
                 EnemyTag,
             ));
         }
-        EnemyT::Rock(id) => {}
-        EnemyT::Skeleton(id) => {}
+        EnemyT::Rock(id) => {
+            let rock_layout =
+                TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
+
+            commands.spawn((
+                SpriteBundle {
+                    texture: asset_server.load("s_rock.png"),
+                    transform,
+                    ..default()
+                },
+                Rock {
+                    //Setting default stats
+                    current_hp: ROCK_MAX_HP,
+                },
+                TextureAtlas {
+                    layout: texture_atlases.add(rock_layout.clone()),
+                    index: 0,
+                },
+                AnimationTimer::new(Timer::from_seconds(
+                    ROCK_ANIMATION_TIME,
+                    TimerMode::Repeating,
+                )),
+                AnimationFrameCount::new(2),
+                Velocity::new(),
+                Hurtbox {
+                    size: Vec2::splat(50.),
+                    offset: Vec2::splat(0.),
+                    colliding: false,
+                    entity: ROCK,
+                    iframe: Timer::from_seconds(0.75, TimerMode::Once),
+                    enemy: true,
+                },
+                Hitbox {
+                    size: Vec2::splat(40.),
+                    offset: Vec2::splat(0.),
+                    lifetime: Some(Timer::from_seconds(1000000., TimerMode::Repeating)),
+                    projectile: false,
+                    entity: ROCK,
+                    enemy: true,
+                },
+            ));
+        }
         EnemyT::Skel2(id) => {}
     }
 }

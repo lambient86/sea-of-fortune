@@ -39,6 +39,7 @@ pub struct Island {
 pub struct Dungeon {
     pub aabb: BoundingBox,
     pub dungeon_type: IslandType,
+    pub size: Vec2,
 }
 
 #[derive(Component)]

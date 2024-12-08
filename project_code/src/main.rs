@@ -10,11 +10,14 @@ mod kraken;
 mod level;
 mod network;
 mod player;
+mod rock;
 mod shop;
 mod skeleton;
 mod systems;
 mod transition_box;
 mod wfc;
+mod whirlpool;
+mod wind;
 
 use bat::BatPlugin;
 use bevy::asset;
@@ -23,6 +26,9 @@ use boat::components::Boat;
 use boat::systems::*;
 use boat::BoatPlugin;
 use components::*;
+use components::GameState;
+use components::GameworldState;
+use components::SpawnLocations;
 use controls::*;
 use data::gameworld_data::*;
 use enemies::*;
@@ -35,11 +41,16 @@ use level::components::*;
 use level::LevelPlugin;
 use player::components::AttackCooldown;
 use player::systems::*;
+use player::systems::move_player;
+use player::systems::spawn_player;
 use player::PlayerPlugin;
+use rock::RockPlugin;
 use shop::ShopPlugin;
 use skeleton::SkeletonPlugin;
 use systems::*;
 use wfc::WFCPlugin;
+use whirlpool::WhirlpoolPlugin;
+use wind::WindPlugin;
 
 use std::io::ErrorKind;
 use std::net::*;
@@ -151,6 +162,9 @@ fn main() {
         .add_plugins(LevelPlugin)
         .add_plugins(WFCPlugin)
         .add_plugins(GhostShipPlugin)
+        .add_plugins(RockPlugin)
+        .add_plugins(WindPlugin)
+        .add_plugins(WhirlpoolPlugin)
         .add_systems(
             Update,
             move_player_camera.after(move_player).run_if(
@@ -166,9 +180,18 @@ fn main() {
         .add_systems(Update, change_gameworld_state)
         .add_systems(Update, change_game_state)
         .add_systems(Update, update_mouse_pos)
+        .add_systems(Update, check_wall_collisions.after(move_player))
+        .add_systems(
+            OnEnter(GameworldState::Dungeon),
+            handle_dungeon_entry.after(spawn_player),
+        )
+        .add_systems(OnEnter(GameworldState::Dungeon), handle_door_translation)
+        .add_systems(OnEnter(GameworldState::Island), handle_door_translation)
+        .add_systems(Update, update_dungeon_collision)
         .insert_state(GameworldState::MainMenu)
         .insert_state(GameState::Running)
         .add_systems(Last, leave)
+        .insert_resource(SpawnLocations::default())
         .run();
 }
 
