@@ -11,30 +11,26 @@ use crate::skeleton::components::*;
 use crate::whirlpool::components::*;
 use crate::whirlpool::components::Lifetime;
 use crate::whirlpool::components::WHIRLPOOL_LIFETIME;
-use crate::Enemy;
 
-#[derive(Component)]
-pub struct EnemyTag;
-
-pub enum EnemyT {
-    Bat(i32),
-    Kraken(i32),
-    GhostShip(i32),
-    Rock(i32),
-    Skeleton(i32),
-    Skel2(i32),
-    Whirlpool(i32),
+pub enum Enemy {
+    Bat,
+    Kraken,
+    GhostShip,
+    Rock,
+    Skeleton,
+    Skel2,
+    Whirlpool,
 }
 
 pub fn spawn_enemy(
     commands: &mut Commands,
-    enemy: EnemyT,
+    enemy: Enemy,
     transform: Transform,
     asset_server: &Res<AssetServer>,
     texture_atlases: &mut ResMut<Assets<TextureAtlasLayout>>,
 ) {
     match enemy {
-        Enemy::Whirlpool(id) => {
+        Enemy::Whirlpool => {
             let whirlpool_texture_asset: Handle<Image> = asset_server.load("s_whirlpool.png");
 
             commands.spawn((
@@ -59,7 +55,7 @@ pub fn spawn_enemy(
                 }, 
             ));
         },
-        Enemy::Bat(id) => {
+        Enemy::Bat => {
             let bat_layout =
                 TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 3, 1, None, None);
 
@@ -98,7 +94,7 @@ pub fn spawn_enemy(
                 },
             ));
         }
-        EnemyT::Kraken(id) => {
+        Enemy::Kraken => {
             let kraken_texture_handle = asset_server.load("s_kraken.png");
 
             commands.spawn((
@@ -124,16 +120,9 @@ pub fn spawn_enemy(
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
                 },
-                Enemy {
-                    id: id,
-                    etype: KRAKEN,
-                    translation: transform.translation,
-                    rotation: transform.rotation,
-                    alive: true,
-                },
             ));
         }
-        EnemyT::GhostShip(id) => {
+        Enemy::GhostShip => {
             let ghostship_texture_handle = asset_server.load("s_ghost_ship.png");
 
             commands.spawn((
@@ -158,16 +147,9 @@ pub fn spawn_enemy(
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
                 },
-                Enemy {
-                    id: id,
-                    etype: GHOSTSHIP,
-                    translation: transform.translation,
-                    rotation: transform.rotation,
-                    alive: true,
-                },
             ));
         }
-        EnemyT::Skeleton(id) => {
+        Enemy::Skeleton => {
             let skeleton_layout = TextureAtlasLayout::from_grid(
                 UVec2::new(31, 32), // SpriteSheet 1 pixel off, maybe fix later? it works like this though
                 6,                  // Columns
@@ -213,7 +195,7 @@ pub fn spawn_enemy(
                 },
             ));
         }
-        Enemy::Rock(id) => {
+        Enemy::Rock => {
             let rock_layout =
                 TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
 
