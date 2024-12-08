@@ -253,14 +253,23 @@ pub fn update(
                 let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
                 let enemies = packet.payload;
 
-                for e in enemies.list.iter() {
-                    for (mut transform, enemy, entity) in enemy_query.iter_mut() {
-                        if e.id != enemy.id || !enemy.alive {
+                let mut found = false;
+
+                for (mut transform, enemy, entity) in enemy_query.iter_mut() {
+                    for e in enemies.list.iter() {
+                        if e.id != enemy.id || !e.alive {
                             continue;
                         }
-                        transform.translation = e.pos;
+                        //transform.translation = e.pos;
+                        found = true;
+                        break;
+                    }
+                    if !found {
+                        commands.entity(entity).despawn();
                     }
                 }
+
+                for e in enemies.list.iter() {}
             } else if env.message == "update_projectiles" {
                 let packet: Packet<Projectiles> = serde_json::from_str(&env.packet).unwrap();
                 let projectiles = packet.payload;
