@@ -85,9 +85,9 @@ pub fn init_player_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
                 TextBundle::from_section(
                     "Health: 3/3",
                     TextStyle {
-                        font_size: 24.0,
+                        font: asset_server.load("pixel_pirate.ttf"),
+                        font_size: 32.0,
                         color: Color::srgb(242.0, 231.0, 218.0),
-                        ..default()
                     },
                 ),
                 PlayerHPText,
@@ -98,9 +98,9 @@ pub fn init_player_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
                 TextBundle::from_section(
                     "Gold: 0",
                     TextStyle {
-                        font_size: 24.0,
+                        font: asset_server.load("pixel_pirate.ttf"),
+                        font_size: 32.0,
                         color: Color::srgb(242.0, 231.0, 218.0),
-                        ..default()
                     },
                 ),
                 GoldText,
@@ -119,17 +119,18 @@ pub fn init_ship_hud(
         wind: CardinalDirection::EAST,
     });
 
+    let font_handle: Handle<Font> = asset_server.load("pixel_pirate.ttf");
+    // You can add debug checks or print handles
+    println!("Font handle: {:?}", font_handle);
+
     // money and hp container
     commands
         .spawn(NodeBundle {
             style: Style {
-                display: Display::Flex,
-                flex_direction: FlexDirection::Row,
-                justify_content: JustifyContent::SpaceBetween,
                 position_type: PositionType::Absolute,
-                padding: UiRect::all(Val::Px(20.0)),
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
+                left: Val::Px(10.0),
+                top: Val::Px(10.0),
+                flex_direction: FlexDirection::Column,
                 ..default()
             },
             ..default()
@@ -148,7 +149,7 @@ pub fn init_ship_hud(
                         TextBundle::from_section(
                             format!("Health: {}", 100.),
                             TextStyle {
-                                font: asset_server.load("assets/pixel_pirate.ttf"),
+                                font: asset_server.load("pixel_pirate.ttf"),
                                 font_size: 32.0,
                                 color: Color::srgb(242.0, 231.0, 218.0),
                             },
@@ -159,7 +160,7 @@ pub fn init_ship_hud(
                         TextBundle::from_section(
                             format!("Gold: {}", 50.0),
                             TextStyle {
-                                font: asset_server.load("assets/pixel_pirate.ttf"),
+                                font: asset_server.load("pixel_pirate.ttf"),
                                 font_size: 32.0,
                                 color: Color::srgb(242.0, 231.0, 218.0),
                             },
