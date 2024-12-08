@@ -10,12 +10,19 @@ use systems::*;
 pub struct KrakenPlugin;
 
 impl Plugin for KrakenPlugin {
-    /// Builds the kraken plugin
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameworldState::Ocean), spawn_kraken)
+        app
+            // Initialize the spawn timer resource
+            .init_resource::<KrakenSpawnTimer>()
+            
+            // Setup systems
+            .add_systems(OnEnter(GameworldState::Ocean), setup_kraken_timer)
+            
+            // Main game systems
             .add_systems(
                 Update,
                 (
+                    spawn_kraken,
                     kraken_attack,
                     kraken_damaged,
                     move_kraken_projectile,
@@ -25,6 +32,8 @@ impl Plugin for KrakenPlugin {
                     .run_if(in_state(GameworldState::Ocean))
                     .run_if(in_state(GameState::Running)),
             )
+            
+            // Cleanup systems
             .add_systems(
                 OnExit(GameworldState::Ocean),
                 (despawn_all_krakens, despawn_all_kraken_proj),
