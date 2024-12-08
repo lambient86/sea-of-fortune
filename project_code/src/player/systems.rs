@@ -389,21 +389,13 @@ pub fn swap_weapon(
             commands.entity(player).with_children(|parent| {
                 parent.spawn((
                     SpriteBundle {
-                        sprite: Sprite {
-                            flip_y: true,
-                            ..default()
-                        },
                         texture: master_handle,
                         transform: Transform {
-                            scale: Vec3::splat(2.),
-                            translation: Vec3::new(24., -32., 0.),
+                            scale: Vec3::splat(1.),
+                            translation: Vec3::new(40., 0., 0.),
                             ..default()
                         },
                         ..default()
-                    },
-                    TextureAtlas {
-                        layout: master_layout_handle,
-                        index: 0,
                     },
                     Musket {
                         damage: Musket::default().calculate_damage(musket_level),
@@ -436,21 +428,13 @@ pub fn swap_weapon(
             commands.entity(player).with_children(|parent| {
                 parent.spawn((
                     SpriteBundle {
-                        sprite: Sprite {
-                            flip_y: true,
-                            ..default()
-                        },
                         texture: master_handle,
                         transform: Transform {
-                            scale: Vec3::splat(2.),
-                            translation: Vec3::new(24., -32., 0.),
+                            scale: Vec3::splat(1.),
+                            translation: Vec3::new(40., 0., 0.),
                             ..default()
                         },
                         ..default()
-                    },
-                    TextureAtlas {
-                        layout: master_layout_handle,
-                        index: 0,
                     },
                     Pistol {
                         damage: Pistol::default().calculate_damage(pistol_level),
@@ -477,14 +461,14 @@ pub fn move_weapon(
 
                 if player_direction == SpriteState::LeftRun || player_direction == SpriteState::BackwardRun {
                     transform.translation = if is_gun {
-                        Vec3::new(-24., -32., 0.)
+                        Vec3::new(-40., 0., 0.)
                     } else {
                         Vec3::new(-32., 0., 0.)
                     };
                     sprite.flip_x = true;
                 } else if player_direction == SpriteState::RightRun || player_direction == SpriteState::ForwardRun {
                     transform.translation = if is_gun {
-                        Vec3::new(24., -32., 0.)
+                        Vec3::new(40., 0., 0.)
                     } else {
                         Vec3::new(32., 0., 0.)
                     };
