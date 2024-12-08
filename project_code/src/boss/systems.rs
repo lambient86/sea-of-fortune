@@ -5,17 +5,30 @@ use crate::enemies::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
 use crate::boss::components::*;
+use crate::CurrentIslandType;
+use crate::level::components::*;
 
 pub fn spawn_boss(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+    current_island_type: Res<CurrentIslandType>,
 ) {
-    let transform = Transform::from_xyz(0., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.);
+    // Only spawn if we're in a boss dungeon
+    if current_island_type.island_type != IslandType::Boss {
+        return;
+    }
+
+    // Spawn in center of the 25x25 arena
+    // The arena is 25 tiles * (TILE_SIZE * 2) pixels per tile
+    let arena_center_x = 12.0 * (TILE_SIZE as f32 * 2.0); // Center of 25x25 grid
+    let arena_center_y = 12.0 * (TILE_SIZE as f32 * 2.0);
+
+    let transform = Transform::from_xyz(arena_center_x, arena_center_y, 900.);
 
     commands.spawn((
         SpriteBundle {
-            texture: asset_server.load("s_boss.png"), // You'll need this sprite
+            texture: asset_server.load("s_boss.png"),
             transform,
             ..default()
         },
@@ -39,7 +52,7 @@ pub fn spawn_boss(
         AnimationFrameCount::new(2),
         Velocity::new(),
         Hurtbox {
-            size: Vec2::splat(80.), // Larger hitbox than rock
+            size: Vec2::splat(80.),
             offset: Vec2::splat(0.),
             colliding: false,
             entity: BOSS,
@@ -47,7 +60,7 @@ pub fn spawn_boss(
             enemy: true,
         },
         Hitbox {
-            size: Vec2::splat(70.), // Larger hitbox for damage
+            size: Vec2::splat(70.),
             offset: Vec2::splat(0.),
             lifetime: Some(Timer::from_seconds(1000000., TimerMode::Repeating)),
             projectile: false,
