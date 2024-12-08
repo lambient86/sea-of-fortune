@@ -3,11 +3,11 @@ use std::thread;
 use crate::boat::components::*;
 use crate::components::BoundingBox;
 use crate::data::gameworld_data::*;
-use crate::enemies::*;
 use crate::player::components::AttackCooldown;
-use crate::{controls::*, create_env, HostPlayer, UDP};
-use crate::{hitbox_system::*, Player};
 use crate::wind::components::Wind;
+use crate::{controls::*, create_env, HostPlayer, UDP};
+use crate::{enemies::*, Server};
+use crate::{hitbox_system::*, Player};
 use bevy::prelude::*;
 
 /*   MOVE_BOAT FUNCTION   */
@@ -20,12 +20,13 @@ pub fn move_boat(
     mut query: Query<(&mut Boat, &mut Transform)>,
     host: Res<HostPlayer>,
     udp: Res<UDP>,
+    server: Res<Server>,
 ) {
     for (mut boat, mut transform) in query.iter_mut() {
         if boat.id != host.player.id {
             continue;
         }
-        
+
         // getting boat and wind direction
         let boat_direction = transform.rotation * Vec3::Y;
         let wind_direction = wind.direction;
@@ -35,7 +36,7 @@ pub fn move_boat(
         let mag_w = wind_direction.length();
         let mag_b = boat_direction.length();
         let cs = dot / (mag_b * mag_w);
-        
+
         //initializing rotation and movement variables
         let mut rotation_factor = 0.0;
         let mut movement_factor = 0.0;
@@ -89,7 +90,7 @@ pub fn move_boat(
         udp.socket
             .send_to(
                 create_env("player_update".to_string(), boat).as_bytes(),
-                "127.0.0.1:5000",
+                server.addr.clone(),
             )
             .expect("Failed to send [update] packet");
     }

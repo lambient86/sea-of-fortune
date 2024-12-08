@@ -25,10 +25,10 @@ use bevy::{prelude::*, window::PresentMode};
 use boat::components::Boat;
 use boat::systems::*;
 use boat::BoatPlugin;
-use components::*;
 use components::GameState;
 use components::GameworldState;
 use components::SpawnLocations;
+use components::*;
 use controls::*;
 use data::gameworld_data::*;
 use enemies::*;
@@ -40,9 +40,9 @@ use kraken::KrakenPlugin;
 use level::components::*;
 use level::LevelPlugin;
 use player::components::AttackCooldown;
-use player::systems::*;
 use player::systems::move_player;
 use player::systems::spawn_player;
+use player::systems::*;
 use player::PlayerPlugin;
 use rock::RockPlugin;
 use shop::ShopPlugin;
@@ -63,7 +63,7 @@ fn main() {
     println!("Starting Client");
 
     //connect to server
-    let udp_addr = "127.0.0.1:0";
+    let udp_addr = "192.168.1.159:0";
     //let tcp_addr = "127.0.0.1:8000";
 
     let udp_socket = UdpSocket::bind(udp_addr).unwrap();
@@ -75,6 +75,10 @@ fn main() {
 
     let mut ocean = Vec::new();
     let mut player = Player::default();
+
+    let server = Server {
+        addr: "192.168.1.159:5000".to_string(),
+    };
 
     let mut joined = false;
     loop {
@@ -89,7 +93,7 @@ fn main() {
             udp_socket
                 .send_to(
                     create_env("new_player".to_string(), player.clone()).as_bytes(),
-                    "127.0.0.1:5000",
+                    server.addr.clone(),
                 )
                 .expect("Failed to send [new_player] packet");
         }
@@ -140,6 +144,7 @@ fn main() {
         .insert_resource(UDP { socket: udp_socket })
         .insert_resource(Ocean { map: ocean })
         .insert_resource(HostPlayer { player: player })
+        .insert_resource(server)
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Sea of Fortune | Build 0.2".into(),
@@ -205,11 +210,12 @@ pub fn update(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     time: Res<Time>,
+    server: Res<Server>,
 ) {
     udp.socket
         .send_to(
             create_env("update".to_string(), "null".to_string()).as_bytes(),
-            "127.0.0.1:5000",
+            server.addr.clone(),
         )
         .expect("Failed to send [update] packet");
 
@@ -430,6 +436,7 @@ fn leave(
     mut exit_triggered: Local<bool>,
     udp: Res<UDP>,
     player: Res<HostPlayer>,
+    server: Res<Server>,
 ) {
     if !*exit_triggered && exit_events.len() > 0 {
         *exit_triggered = true;
@@ -437,7 +444,7 @@ fn leave(
         udp.socket
             .send_to(
                 create_env("player_leave".to_string(), player.player.clone()).as_bytes(),
-                "127.0.0.1:5000",
+                server.addr.clone(),
             )
             .expect("Failed to send [player_leave]] packet");
     }

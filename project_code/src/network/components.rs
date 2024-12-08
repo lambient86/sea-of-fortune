@@ -131,3 +131,8 @@ pub struct Damage {
 pub struct UDP {
     pub socket: UdpSocket,
 }
+
+#[derive(Resource)]
+pub struct Server {
+    pub addr: String,
+}

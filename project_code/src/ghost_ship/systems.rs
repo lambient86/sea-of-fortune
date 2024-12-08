@@ -4,7 +4,7 @@ use crate::boat::components::Boat;
 use crate::data::gameworld_data::*;
 use crate::ghost_ship::components::*;
 use crate::player::components::*;
-use crate::{create_env, hitbox_system::*, Damage, Enemy, UDP};
+use crate::{create_env, hitbox_system::*, Damage, Enemy, Server, UDP};
 use crate::{enemies::*, HostPlayer};
 
 /*   ROTATE_KRAKEN FUNCTION   */
@@ -85,6 +85,7 @@ pub fn ghostship_damaged(
     mut commands: Commands,
     mut ghostship_query: Query<(&mut GhostShip, Entity, &mut Hurtbox, &mut Enemy)>,
     udp: Res<UDP>,
+    server: Res<Server>,
 ) {
     for (mut ghostship, entity, mut hurtbox, mut enemy) in ghostship_query.iter_mut() {
         if !hurtbox.colliding {
@@ -101,7 +102,7 @@ pub fn ghostship_damaged(
                     },
                 )
                 .as_bytes(),
-                "127.0.0.1:5000",
+                server.addr.clone(),
             )
             .expect("Failed to send [enemy_damaged] packet");
 
