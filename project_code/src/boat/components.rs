@@ -22,10 +22,6 @@ pub struct Boat {
 #[derive(Component)]
 pub struct Cannonball;
 
-/// Struct representation for cannonball projectile lifetime
-#[derive(Component)]
-pub struct Lifetime(pub f32);
-
 /// Struct to maintain last boat position for out of transition spawning
 pub struct BoatLastPosition {
     pub last_pos: Vec2,

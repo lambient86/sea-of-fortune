@@ -1,15 +1,15 @@
+use crate::boat::components::*;
+use crate::data::gameworld_data::*;
+use crate::enemies::*;
+use crate::enemies::*;
+use crate::hitbox_system::Hurtbox;
+use crate::whirlpool::components::*;
 use bevy::math::{vec2, NormedVectorSpace};
 use bevy::prelude::*;
 use bevy::render::texture;
 use bevy::time::Time;
 use rand::random;
-use crate::enemies::*;
-use crate::data::gameworld_data::*;
-use crate::boat::components::*;
-use crate::whirlpool::components::*;
-use crate::whirlpool::components::Lifetime;
 use rand::Rng;
-use crate::hitbox_system::Hurtbox;
 
 #[derive(Resource, Default)]
 pub struct WhirlpoolSpawnTimer {
@@ -24,7 +24,7 @@ pub struct WhirlpoolCooldownTimer {
 pub fn setup_whirlpool_timer(mut commands: Commands) {
     let initial_duration = rand::thread_rng().gen_range(25.0..45.0);
     commands.insert_resource(WhirlpoolSpawnTimer {
-        timer: Timer::from_seconds(initial_duration, TimerMode::Once), 
+        timer: Timer::from_seconds(initial_duration, TimerMode::Once),
     });
 }
 
@@ -40,27 +40,27 @@ pub fn spawn_whirlpool(
 
     if spawn_timer.timer.just_finished() {
         if let Ok(boat_transform) = boat_query.get_single() {
-            // Screen dimensions 
-            let screen_width = WIN_W; 
-            let screen_height = WIN_H; 
-            
+            // Screen dimensions
+            let screen_width = WIN_W;
+            let screen_height = WIN_H;
+
             // Calculate minimum spawn distance to be just outside screen
-            let min_spawn_distance = (screen_width.max(screen_height) / 2.0) + 25.0; 
-            let max_spawn_distance = min_spawn_distance + 50.0; 
-            
+            let min_spawn_distance = (screen_width.max(screen_height) / 2.0) + 25.0;
+            let max_spawn_distance = min_spawn_distance + 50.0;
+
             // Generate random angle
             let angle = random::<f32>() * std::f32::consts::TAU;
-            
+
             // Generate random distance between min and max
             let distance = rand::thread_rng().gen_range(min_spawn_distance..max_spawn_distance);
-            
+
             let offset_x = angle.cos() * distance;
             let offset_y = angle.sin() * distance;
-            
+
             let spawn_pos = Vec3::new(
                 boat_transform.translation.x + offset_x,
                 boat_transform.translation.y + offset_y,
-                0.0
+                0.0,
             );
 
             spawn_enemy(
@@ -72,7 +72,9 @@ pub fn spawn_whirlpool(
             );
 
             let new_duration = rand::thread_rng().gen_range(25.0..45.0);
-            spawn_timer.timer.set_duration(std::time::Duration::from_secs_f32(new_duration));
+            spawn_timer
+                .timer
+                .set_duration(std::time::Duration::from_secs_f32(new_duration));
             spawn_timer.timer.reset();
         }
     }
@@ -109,7 +111,9 @@ pub fn check_whirlpool_collisions(
 
     if let Ok((boat_transform, boat_hurtbox)) = boat_query.get_single() {
         for (whirlpool_transform, whirlpool_hurtbox) in whirlpool_query.iter() {
-            let distance = boat_transform.translation.distance(whirlpool_transform.translation);
+            let distance = boat_transform
+                .translation
+                .distance(whirlpool_transform.translation);
             let collision_distance: f32 = (boat_hurtbox.size.x + whirlpool_hurtbox.size.x) / 2.0;
 
             if distance < collision_distance {
@@ -120,4 +124,3 @@ pub fn check_whirlpool_collisions(
         }
     }
 }
-
