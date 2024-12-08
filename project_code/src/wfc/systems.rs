@@ -5,6 +5,7 @@ use crate::components::BoundingBox;
 
 use crate::level::systems::*;
 use crate::data::gameworld_data::*;
+use crate::wfc::IslandType;
 
 #[derive(Resource)]
 pub struct DungeonTemplates {
@@ -139,9 +140,15 @@ fn extract_patterns(image: &Image, pattern_size: usize) -> Vec<Pattern> {
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-
+    let tile_sheet_path = match dungeon_type.0 { // Access the IslandType inside DungeonType
+        IslandType::Level1 => "ts_dungeon_tiles_1.png",
+        IslandType::Level2 => "ts_dungeon_tiles_2.png",
+        IslandType::Level3 => "ts_dungeon_tiles_3.png",
+        IslandType::Boss => "ts_dungeon_tiles_4.png",
+        _ => "ts_dungeon_tiles_1.png",  // Default to Level1 tileset
+    };
     // load dungeon tiles
-    let bg_dungeon_texture_handle: Handle<Image> = asset_server.load("ts_dungeon_tiles_1.png");
+    let bg_dungeon_texture_handle: Handle<Image> = asset_server.load(tile_sheet_path);
     let dungeon_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 4, 1, None, None);
     let dungeon_layout_handle = texture_atlases.add(dungeon_layout);
 
