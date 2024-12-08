@@ -47,3 +47,18 @@ impl BoundingBox {
         self.aabb = Aabb2d::new(new_position, half_size);
     }
 }
+
+#[derive(Resource)]
+pub struct SpawnLocations {
+    pub player: Vec2,
+    pub door: Vec2,
+}
+
+impl Default for SpawnLocations {
+    fn default() -> Self {
+        Self {
+            player: Vec2::ZERO,
+            door: Vec2::ZERO,
+        }
+    }
+}

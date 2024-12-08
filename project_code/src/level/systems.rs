@@ -271,6 +271,7 @@ pub fn setup_island(
             Dungeon {
                 aabb: BoundingBox::new(Vec3::new(0., 256., 10.).truncate(), Vec2::splat(64.0)),
                 dungeon_type: curr_dungeon_type,
+                size: Vec2::splat(64.0),
             },
         ));
     }

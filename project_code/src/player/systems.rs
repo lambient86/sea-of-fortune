@@ -1,6 +1,6 @@
 use std::ops::Bound;
 
-use crate::components::BoundingBox;
+use crate::components::{BoundingBox, GameworldState, SpawnLocations};
 use crate::controls::*;
 use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
@@ -20,6 +20,7 @@ pub fn move_player(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mouse_input: Res<ButtonInput<MouseButton>>,
     mut player: Query<(&mut Transform, &mut Velocity, &mut Player), With<Player>>,
+    gameworld_state: Res<State<GameworldState>>,
 ) {
     let (mut player_transform, mut player_velocity, mut player) = player.single_mut();
 
@@ -52,10 +53,17 @@ pub fn move_player(
     let change = player_velocity.v * delta_t;
     let mut change_vec = Vec2::splat(0.);
 
+    // Get bounds based on gameworld state
+    let (level_w, level_h) = match gameworld_state.get() {
+        GameworldState::Island => (SAND_LEVEL_W, SAND_LEVEL_H),
+        GameworldState::Dungeon => (DUNGEON_LEVEL_W, DUNGEON_LEVEL_H),
+        _ => return,
+    };
+
     //setting new player x position if within bounds
     let new_position = player_transform.translation + Vec3::new(change.x, 0., 0.);
-    if new_position.x >= -(SAND_LEVEL_W / 2.) + (TILE_SIZE as f32) / 2.
-        && new_position.x <= SAND_LEVEL_W / 2. - (TILE_SIZE as f32) / 2.
+    if new_position.x >= -(level_w / 2.) + (TILE_SIZE as f32) / 2.
+        && new_position.x <= level_w / 2. - (TILE_SIZE as f32) / 2.
     {
         player_transform.translation = new_position;
         change_vec.x = player_transform.translation.x;
@@ -63,15 +71,15 @@ pub fn move_player(
 
     //setting new player y position if within bounds
     let new_pos = player_transform.translation + Vec3::new(0., change.y, 0.);
-    if new_pos.y >= -(SAND_LEVEL_H / 2.) + (TILE_SIZE as f32) / 2.
-        && new_pos.y <= SAND_LEVEL_H / 2. - (TILE_SIZE as f32) / 2.
+    if new_pos.y >= -(level_h / 2.) + (TILE_SIZE as f32) / 2.
+        && new_pos.y <= level_h / 2. - (TILE_SIZE as f32) / 2.
     {
         player_transform.translation = new_pos;
         change_vec.y = player_transform.translation.y;
     }
 
     if change_vec != Vec2::splat(0.) {
-        println!("updating aabb position");
+        // println!("updating aabb position");
         player.aabb.update_position(change_vec);
     }
 }
@@ -132,16 +140,21 @@ pub fn spawn_player(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+    gameworld_state: Res<State<GameworldState>>,
 ) {
     //getting sprite info
     let master_handle: Handle<Image> = asset_server.load("s_pirate.png");
     let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(64), 8, 5, None, None);
     let master_layout_length = master_layout.textures.len();
     let master_layout_handle = texture_atlases.add(master_layout);
-    let spawn_position = Vec3::new(0.0, 0.0, 0.0);
+
+    let spawn_position = match gameworld_state.get() {
+        GameworldState::Dungeon => Vec3::new(-2976.0, -2976.0, 0.0),
+        _ => Vec3::ZERO
+    };
 
     //creating hurtbox for player
-    let size = Vec2::new(40., 60.);
+    let size = Vec2::new(32., 32.);
     let offset = Vec2::new(0., 0.);
 
     let mut initial_inventory = Inventory::new(1000);
