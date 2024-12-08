@@ -4,10 +4,57 @@ use bevy::render::texture;
 
 use crate::boat::components::Boat;
 use crate::data::gameworld_data::*;
+use crate::enemies::*;
 use crate::hitbox_system::*;
 use crate::kraken::components::*;
 use crate::player::components::*;
-use crate::{enemies::*, HostPlayer};
+
+/*   ROTATE_KRAKEN FUNCTION   */
+/// This should be changed to a function called "track_player", which will
+/// be how the kraken knows where to check where the player is for shooting projectiles
+///
+/// WE DON'T NEED TO ROTATE THE KRAKEN! I WILL MAKE A BACK FACING SPRITE IF NEEDED
+pub fn rotate_kraken(
+    time: Res<Time>,
+    mut query: Query<(&Kraken, &mut Transform), Without<Boat>>,
+    player_query: Query<&Transform, With<Boat>>,
+) {
+    // getting player position
+    let player_transform = player_query.single();
+    let player_translation = player_transform.translation.xy();
+
+    for (kraken, mut enemy_transform) in &mut query {
+        //getting kraken's position relative to player position
+        let kraken_position = enemy_transform.translation.xy();
+        let distance_to_player = kraken_position.distance(player_translation);
+
+        //ensuring kraken is close enough to player to attack
+        if distance_to_player > KRAKEN_ATTACK_DIST {
+            break;
+        }
+
+        //getting enemy forward
+        let enemy_forward = (enemy_transform.rotation * Vec3::Y).xy();
+        let to_player = (player_translation - enemy_transform.translation.xy()).normalize();
+        let forward_dot_player = enemy_forward.dot(to_player);
+
+        if (forward_dot_player - 1.0).abs() < f32::EPSILON {
+            continue;
+        }
+
+        let enemy_right = (enemy_transform.rotation * Vec3::X).xy();
+
+        let right_dot_player = enemy_right.dot(to_player);
+
+        let rotation_sign = -f32::copysign(1.0, right_dot_player);
+        let max_angle = forward_dot_player.clamp(-1.0, 1.0).acos();
+
+        let rotation_angle =
+            rotation_sign * (kraken.rotation_speed * time.delta_seconds()).min(max_angle);
+
+        enemy_transform.rotate_z(rotation_angle);
+    }
+}
 
 /*  SPAWN_KRAKEN FUNCTION  */
 /// Spawns a kraken entity in the gameworld
@@ -21,7 +68,7 @@ pub fn spawn_kraken(
 
     spawn_enemy(
         &mut commands,
-        EnemyT::Kraken(0),
+        Enemy::Kraken,
         transform,
         &asset_server,
         &mut texture_atlases,
@@ -75,9 +122,8 @@ pub fn kraken_attack(
     mut commands: Commands,
     time: Res<Time>,
     mut kraken_query: Query<(&Transform, &mut AttackCooldown), With<Kraken>>,
-    player_query: Query<(&Transform, &Boat), With<Boat>>,
+    player_query: Query<&Transform, With<Boat>>,
     asset_server: Res<AssetServer>,
-    host: Res<HostPlayer>,
 ) {
     for (kraken_transform, mut cooldown) in kraken_query.iter_mut() {
         // Attacks only when cooldown is over
@@ -90,36 +136,31 @@ pub fn kraken_attack(
 
         //Gets positions (Vec3) of the entities
         let kraken_translation = kraken_transform.translation;
+        let player_translation = player_query.single().translation;
 
-        for (ptransform, boat) in player_query.iter() {
-            if boat.id != host.player.id {
-                continue;
-            }
-            let player_translation = ptransform.translation;
+        //Gets positions (Vec2) of the entities
+        let player_position = player_translation.xy();
+        let kraken_position = kraken_translation.xy();
 
-            //Gets positions (Vec2) of the entities
-            let player_position = player_translation.xy();
-            let kraken_position = kraken_translation.xy();
+        //Gets distance
+        let distance_to_player = kraken_position.distance(player_position);
 
-            //Gets distance
-            let distance_to_player = kraken_position.distance(player_position);
+        if distance_to_player > KRAKEN_ATTACK_DIST {
+            continue;
+        }
 
-            if distance_to_player > KRAKEN_ATTACK_DIST {
-                continue;
-            }
+        //Gets direction projectile will be going
+        let original_direction = (player_translation - kraken_translation).normalize();
+        let angle = original_direction.x.atan2(original_direction.y);
+        let angle_direction = Vec3::new(angle.sin(), angle.cos(), 0.0).normalize();
 
-            //Gets direction projectile will be going
-            let original_direction = (player_translation - kraken_translation).normalize();
-            let angle = original_direction.x.atan2(original_direction.y);
-            let angle_direction = Vec3::new(angle.sin(), angle.cos(), 0.0).normalize();
+        let projectile_start_position = kraken_translation + angle_direction * 10.0;
 
-            let projectile_start_position = kraken_translation + angle_direction * 10.0;
+        //Sets the projectile texture
+        let kraken_projectile_handle = asset_server.load("s_kraken_spit_1.png");
 
-            //Sets the projectile texture
-            let kraken_projectile_handle = asset_server.load("s_kraken_spit_1.png");
-
-            //Creates Projectile
-            commands.spawn((
+        //Creates Projectile
+        commands.spawn((
             SpriteBundle {
                 texture: kraken_projectile_handle,
                 transform: Transform {
@@ -143,7 +184,6 @@ pub fn kraken_attack(
                 enemy: true,
             },
         ));
-        }
     }
 }
 
@@ -186,38 +226,31 @@ pub fn kraken_proj_lifetime_check(
 pub fn move_kraken(
     time: Res<Time>,
     mut kraken_query: Query<&mut Transform, With<Kraken>>,
-    player_query: Query<(&Transform, &Boat), (With<Boat>, Without<Kraken>)>,
-    host: Res<HostPlayer>,
+    player_query: Query<&Transform, (With<Boat>, Without<Kraken>)>,
 ) {
     for mut transform in kraken_query.iter_mut() {
         //Gets positions (Vec3) of the entities
         let kraken_translation = transform.translation;
+        let player_translation = player_query.single().translation;
 
-        for (ptransform, boat) in player_query.iter() {
-            if boat.id != host.player.id {
-                continue;
-            }
-            let player_translation = ptransform.translation;
+        //Gets positions (Vec2) of the entities
+        let player_position = player_translation.xy();
+        let kraken_position = kraken_translation.xy();
 
-            //Gets positions (Vec2) of the entities
-            let player_position = player_translation.xy();
-            let kraken_position = kraken_translation.xy();
+        //Gets distance
+        let distance_to_player = kraken_position.distance(player_position);
 
-            //Gets distance
-            let distance_to_player = kraken_position.distance(player_position);
-
-            //Check
-            if distance_to_player > KRAKEN_AGRO_RANGE || distance_to_player <= KRAKEN_AGRO_STOP {
-                continue;
-            }
-
-            //Gets direction projectile will be going
-            let direction = (player_translation - kraken_translation).normalize();
-            let velocity = direction * KRAKEN_MOVEMENT_SPEED;
-
-            //Moves kraken
-            transform.translation += velocity * time.delta_seconds();
+        //Check
+        if distance_to_player > KRAKEN_AGRO_RANGE || distance_to_player <= KRAKEN_AGRO_STOP {
+            continue;
         }
+
+        //Gets direction projectile will be going
+        let direction = (player_translation - kraken_translation).normalize();
+        let velocity = direction * KRAKEN_MOVEMENT_SPEED;
+
+        //Moves kraken
+        transform.translation += velocity * time.delta_seconds();
     }
 }
 

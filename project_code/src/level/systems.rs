@@ -51,29 +51,58 @@ pub fn setup_ocean(
     ocean_tile_sheet: Res<OceanTileSheet>,
     game_world_state: Res<State<GameworldState>>,
     island_tile_sheet: Res<IslandTileSheet>,
-    mut ocean: ResMut<Ocean>,
 ) {
     let mut rng = rand::thread_rng();
+    let mut tile_index;
 
     if *game_world_state.get() == GameworldState::Ocean {
         // current state --> ocean
-        for tile in ocean.map.iter_mut() {
-            tile.translation.z = -1.;
-            commands.spawn((
-                SpriteBundle {
-                    texture: ocean_tile_sheet.0.clone(),
-                    transform: Transform {
-                        translation: tile.translation,
-                        ..default()
-                    },
-                    ..default()
-                },
-                TextureAtlas {
-                    layout: ocean_tile_sheet.1.clone(),
-                    index: tile.tile_index,
-                },
-                OceanTile,
-            ));
+
+        let mut w = 0;
+        let mut h = 0;
+        let mut t = Vec3::new(
+            -OCEAN_W_CENTER + TILE_SIZE as f32 / 2.,
+            -OCEAN_H_CENTER + TILE_SIZE as f32 / 2.,
+            -1.0,
+        );
+
+        // spawn background tiles
+        while (h as f32) * (TILE_SIZE as f32) < OCEAN_LEVEL_H {
+            while (w as f32) * (TILE_SIZE as f32) < OCEAN_LEVEL_W {
+                // weigh it so that its mostly dark blue just for aesthetic reasons
+                let rand = rng.gen_range(0..=10);
+                if rand < 9 {
+                    tile_index = 0
+                } else {
+                    tile_index = 1
+                }
+
+                commands
+                    .spawn((
+                        SpriteBundle {
+                            texture: ocean_tile_sheet.0.clone(),
+                            transform: Transform {
+                                translation: t,
+                                ..default()
+                            },
+                            ..default()
+                        },
+                        TextureAtlas {
+                            layout: ocean_tile_sheet.1.clone(),
+                            index: tile_index,
+                        },
+                        OceanTile,
+                    ))
+                    .insert(OceanTile);
+
+                w += 1;
+                t += Vec3::new((TILE_SIZE * 2) as f32, 0., 0.);
+            }
+
+            w = 0;
+            t += Vec3::new(0., (TILE_SIZE * 2) as f32, 0.);
+            t.x = -OCEAN_W_CENTER + (TILE_SIZE * 2) as f32 / 2.0;
+            h += 1;
         }
 
         //spawn 4 islands

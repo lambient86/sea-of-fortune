@@ -1,9 +1,9 @@
 [workspace]
+
 members = [
     "project_code",
     "server",
-    "client1",
-    "client2",
+    "client",
 ]
 
 default-members = [ "project_code" ]

@@ -1,22 +1,8 @@
 use crate::components::BoundingBox;
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
-
-pub const OCEAN_LENGTH: i32 = 15625;
 
 #[derive(Component)]
 pub struct OceanTile;
-
-#[derive(Component, Serialize, Deserialize)]
-pub struct OceanT {
-    pub translation: Vec3,
-    pub tile_index: usize,
-}
-
-#[derive(Resource)]
-pub struct Ocean {
-    pub map: Vec<OceanT>,
-}
 
 #[derive(Component)]
 pub struct SandTile;

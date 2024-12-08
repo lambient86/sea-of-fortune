@@ -83,7 +83,7 @@ pub fn spawn_bat(
 
     spawn_enemy(
         &mut commands,
-        EnemyT::Bat(0),
+        Enemy::Bat,
         transform,
         &asset_server,
         &mut texture_atlases,
@@ -95,7 +95,7 @@ pub fn spawn_bat(
 
     spawn_enemy(
         &mut commands,
-        EnemyT::Bat(0),
+        Enemy::Bat,
         transform,
         &asset_server,
         &mut texture_atlases,

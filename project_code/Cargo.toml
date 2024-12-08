@@ -15,5 +15,3 @@ opt-level = 3
 [dependencies]
 bevy = { version = "0.14", features = ["dynamic_linking", "bevy_gizmos"]}
 rand = "0.8.5"
-serde = "1.0.215"
-serde_json = "1.0"

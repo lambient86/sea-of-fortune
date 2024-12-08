@@ -10,7 +10,6 @@ pub const MAX_ACCEL: f32 = 800.;
 /// in the ocean world
 #[derive(Component)]
 pub struct Boat {
-    pub id: i32,
     pub movement_speed: f32,
     pub rotation_speed: f32,
     pub acceleration: f32,
