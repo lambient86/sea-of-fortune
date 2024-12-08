@@ -241,7 +241,7 @@ pub fn move_skeleton_projectile(
 
         // Animates projectile
 
-        if texture_atlas.index < 8 {
+        if texture_atlas.index < 7 {
             texture_atlas.index += 1;
         } else {
             texture_atlas.index = 0;

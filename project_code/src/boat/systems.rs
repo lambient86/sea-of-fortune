@@ -6,6 +6,7 @@ use crate::data::gameworld_data::*;
 use crate::player::components::AttackCooldown;
 use crate::{controls::*, create_env, HostPlayer, UDP};
 use crate::{hitbox_system::*, Player};
+use crate::wind::components::Wind;
 use bevy::prelude::*;
 
 /*   MOVE_BOAT FUNCTION   */
@@ -14,6 +15,7 @@ pub fn move_boat(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mouse_input: Res<ButtonInput<MouseButton>>,
+    wind: Res<Wind>,
     mut query: Query<(&mut Boat, &mut Transform)>,
     host: Res<HostPlayer>,
     udp: Res<UDP>,
@@ -50,8 +52,8 @@ pub fn move_boat(
 
         //getting movement information
         let movement_dir = transform.rotation * Vec3::Y;
-        let movement_dis = movement_factor * (boat.movement_speed * time.delta_seconds())
-            + (0.5 * boat.acceleration * time.delta_seconds());
+        let movement_dis = movement_factor * (ship.movement_speed * time.delta_seconds() * cs)
+            + (0.5 * ship.acceleration * time.delta_seconds());
         let translation_delta = movement_dir * movement_dis;
 
         //moving the boat
