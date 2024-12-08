@@ -99,6 +99,7 @@ pub struct Velocity {
 pub struct EnemyLists {
     pub new: Enemies,
     pub update: Enemies,
+    pub dead: Enemies,
 }
 
 #[derive(Serialize, Deserialize, Clone)]

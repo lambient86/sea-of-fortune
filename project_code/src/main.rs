@@ -41,6 +41,7 @@ use skeleton::SkeletonPlugin;
 use systems::*;
 use wfc::WFCPlugin;
 
+use std::io::ErrorKind;
 use std::net::*;
 use std::time::Duration;
 
@@ -137,6 +138,7 @@ fn main() {
             }),
             ..default()
         }))
+        .add_systems(Update, update.run_if(in_state(GameworldState::Ocean)))
         .init_resource::<CurrMousePos>()
         .add_systems(Startup, setup_gameworld)
         .add_plugins(PlayerPlugin)
@@ -166,7 +168,6 @@ fn main() {
         .add_systems(Update, update_mouse_pos)
         .insert_state(GameworldState::MainMenu)
         .insert_state(GameState::Running)
-        .add_systems(Update, update.run_if(in_state(GameworldState::Ocean)))
         .add_systems(Last, leave)
         .run();
 }
@@ -253,13 +254,11 @@ pub fn update(
                 let enemies = packet.payload;
 
                 for e in enemies.list.iter() {
-                    let mut found = false;
                     for (mut transform, enemy, entity) in enemy_query.iter_mut() {
                         if e.id != enemy.id || !enemy.alive {
                             continue;
                         }
-                        //transform.translation = e.pos;
-                        found = true;
+                        transform.translation = e.pos;
                     }
                 }
             } else if env.message == "update_projectiles" {
@@ -335,7 +334,6 @@ pub fn update(
                 println!("Received [enemy_dead]");
 
                 for (transform, mut e, entity) in enemy_query.iter_mut() {
-                    println!("E1: {}, E2: {}", e.id, enemy.id);
                     if e.id != enemy.id {
                         continue;
                     }
@@ -386,9 +384,12 @@ pub fn update(
                 );
             }
         }
-        Err(e) => {
-            //println!("Update: Something happened: {}", e);\
-        }
+        Err(e) => match e.kind() {
+            ErrorKind::WouldBlock => {}
+            _ => {
+                println!("Something happened: {}", e)
+            }
+        },
     }
 }
 

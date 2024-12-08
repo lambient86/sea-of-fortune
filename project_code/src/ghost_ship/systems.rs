@@ -105,16 +105,6 @@ pub fn ghostship_damaged(
             )
             .expect("Failed to send [enemy_damaged] packet");
 
-        ghostship.current_hp -= 1.;
-
-        if ghostship.current_hp <= 0. {
-            println!("Ghostship was attacked by player, it is dead :(");
-            commands.entity(entity).despawn();
-            enemy.alive = false;
-        } else {
-            println!("Ghostship was attacked by player");
-        }
-
         hurtbox.colliding = false;
     }
 }

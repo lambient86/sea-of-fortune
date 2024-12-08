@@ -55,16 +55,6 @@ pub fn kraken_damaged(
             )
             .expect("Failed to send [enemy_damaged] packet");
 
-        kraken.current_hp -= 1.;
-
-        if kraken.current_hp <= 0. {
-            println!("Kraken was attacked by player, it is dead :(");
-            commands.entity(entity).despawn();
-            enemy.alive = false;
-        } else {
-            println!("Kraken was attacked by player");
-        }
-
         hurtbox.colliding = false;
     }
 }

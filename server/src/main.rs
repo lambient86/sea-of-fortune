@@ -103,7 +103,11 @@ fn main() {
             .insert_resource(ocean_map)
             .insert_resource(Counter::init())
             .insert_resource(Players::init())
-            .insert_resource(EnemyLists { new, update })
+            .insert_resource(EnemyLists {
+                new,
+                update,
+                dead: Enemies { list: Vec::new() },
+            })
             .insert_resource(projectiles)
             .insert_resource(UDP { socket: udp_socket })
             .insert_resource(cooldowns)
@@ -284,23 +288,20 @@ pub fn handle(
                         Some(index) => {
                             enemies.update.list[index].hp -= attack.dmg;
 
+                            println!(
+                                "Enemy [{}] hp: [{}]",
+                                enemies.update.list[index].id, enemies.update.list[index].hp
+                            );
+
                             if enemies.update.list[index].hp <= 0. {
                                 for player in players.player_array.iter() {
                                     if player.used {
                                         println!(
                                             "Sending enemy [{}] dead to player #{}",
-                                            enemies.update.list[index].id, player.id
+                                            enemies.update.list[index].id, player.addr
                                         );
-                                        udp.socket
-                                            .send_to(
-                                                create_env(
-                                                    "enemy_dead".to_string(),
-                                                    enemies.update.list[index].clone(),
-                                                )
-                                                .as_bytes(),
-                                                player.addr.clone(),
-                                            )
-                                            .expect("Failed to send [enemy_dead] packet");
+                                        let temp = enemies.update.list[index].clone();
+                                        enemies.dead.list.push(temp);
                                     }
                                 }
 
