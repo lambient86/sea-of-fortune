@@ -10,6 +10,7 @@ pub const GHOSTSHIP: i32 = 4;
 pub const ROCK: i32 = 5;
 pub const SKELETON: i32 = 6;
 pub const SKEL2: i32 = 7;
+pub const WHIRLPOOL: i32 = 8;
 
 // Hitbox component: Represents an area that can cause interactions
 #[derive(Component)]
