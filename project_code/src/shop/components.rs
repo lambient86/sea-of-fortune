@@ -68,10 +68,18 @@ pub struct Inventory {
 
 impl Inventory {
     pub fn new(initial_money: u32) -> Self {
-        Self {
+        let mut inventory = Self {
             items: Vec::new(),
             money: initial_money,
-        }
+        };
+        
+        // Add default items
+        inventory.add_item(Item::new(ItemType::Dagger, "Dagger".to_string(), 75));
+        inventory.add_item(Item::new(ItemType::Sword, "Sword".to_string(), 100));
+        inventory.add_item(Item::new(ItemType::Pistol, "Pistol".to_string(), 150));
+        inventory.add_item(Item::new(ItemType::Musket, "Musket".to_string(), 200));
+        
+        inventory
     }
 
     pub fn add_item(&mut self, item: Item) {
