@@ -15,6 +15,8 @@ mod skeleton;
 mod systems;
 mod transition_box;
 mod wfc;
+mod whirlpool;
+mod wind;
 
 use bat::BatPlugin;
 use bevy::{prelude::*, window::PresentMode};
@@ -38,6 +40,8 @@ use shop::ShopPlugin;
 use skeleton::SkeletonPlugin;
 use systems::*;
 use wfc::WFCPlugin;
+use whirlpool::WhirlpoolPlugin;
+use wind::WindPlugin;
 
 fn main() {
     App::new()
@@ -63,6 +67,8 @@ fn main() {
         .add_plugins(WFCPlugin)
         .add_plugins(GhostShipPlugin)
         .add_plugins(RockPlugin)
+        .add_plugins(WindPlugin)
+        .add_plugins(WhirlpoolPlugin)
         .add_systems(
             Update,
             move_player_camera.after(move_player).run_if(
@@ -79,7 +85,10 @@ fn main() {
         .add_systems(Update, change_game_state)
         .add_systems(Update, update_mouse_pos)
         .add_systems(Update, check_wall_collisions.after(move_player))
-        .add_systems(OnEnter(GameworldState::Dungeon), handle_dungeon_entry.after(spawn_player))
+        .add_systems(
+            OnEnter(GameworldState::Dungeon),
+            handle_dungeon_entry.after(spawn_player),
+        )
         .add_systems(OnEnter(GameworldState::Dungeon), handle_door_translation)
         .add_systems(OnEnter(GameworldState::Island), handle_door_translation)
         .add_systems(Update, update_dungeon_collision)
