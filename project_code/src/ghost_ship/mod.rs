@@ -10,12 +10,19 @@ use systems::*;
 pub struct GhostShipPlugin;
 
 impl Plugin for GhostShipPlugin {
-    /// Builds the kraken plugin
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameworldState::Ocean), spawn_ghostship)
+        app
+            // Initialize the spawn timer resource
+            .init_resource::<GhostSpawnTimer>()
+            
+            // Setup systems
+            .add_systems(OnEnter(GameworldState::Ocean), setup_ghost_timer)
+            
+            // Main game systems
             .add_systems(
                 Update,
                 (
+                    spawn_ghostship,
                     rotate_ghostship,
                     ghostship_attack,
                     ghostship_damaged,
@@ -26,6 +33,8 @@ impl Plugin for GhostShipPlugin {
                     .run_if(in_state(GameworldState::Ocean))
                     .run_if(in_state(GameState::Running)),
             )
+            
+            // Cleanup systems
             .add_systems(
                 OnExit(GameworldState::Ocean),
                 (despawn_all_ghostships, despawn_all_ghostship_proj),

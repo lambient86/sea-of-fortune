@@ -4,6 +4,7 @@ use bevy::prelude::*;
 pub const KRAKEN_ANIMATION_TIME: f32 = 0.25;
 pub const KRAKEN_PROJECTILE_LIFETIME: f32 = 5.;
 pub const KRAKEN_PROJECTILE_SPEED: f32 = 175.;
+pub const KRAKEN_LIFETIME: f32 = 120.;
 
 //Bat base stats
 pub const KRAKEN_MAX_HP: f32 = 2.;
