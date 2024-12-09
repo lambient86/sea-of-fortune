@@ -40,7 +40,7 @@ pub fn init_player_hud(mut commands: Commands, asset_server: Res<AssetServer>, _
             // Gold Display
             parent.spawn((
                 TextBundle::from_section(
-                    "Gold: 0",
+                    "Gold: 100",
                     TextStyle {
                         font: asset_server.load("pixel_pirate.ttf"),
                         font_size: 32.0,
@@ -96,7 +96,7 @@ pub fn init_ship_hud(mut commands: Commands, asset_server: Res<AssetServer>, _wi
                 .with_children(|stats_parent| {
                     stats_parent.spawn((
                         TextBundle::from_section(
-                            format!("Health: {}/{}", 3, 3),
+                            format!("Health: {}/{}", 10, 10),
                             TextStyle {
                                 font: font_handle.clone(),
                                 font_size: 32.0,
@@ -107,7 +107,7 @@ pub fn init_ship_hud(mut commands: Commands, asset_server: Res<AssetServer>, _wi
                     ));
                     stats_parent.spawn((
                         TextBundle::from_section(
-                            format!("Gold: {}", 50.0),
+                            format!("Gold: {}", 100),
                             TextStyle {
                                 font: font_handle.clone(),
                                 font_size: 32.0,
@@ -183,8 +183,7 @@ pub fn update_ship_hud(
         if let Ok(player) = player_query.get_single() {
             for (mut text, health, gold) in text_query.iter_mut() {
                 if health.is_some() {
-                    text.sections[0].value =
-                        format!("Health: {}/{}", player.health, player.max_health);
+                    text.sections[0].value = format!("Health: {}/{}", ship.health, ship.max_health);
                 }
                 if gold.is_some() {
                     text.sections[0].value = format!("Gold: {}", player.inventory.money);

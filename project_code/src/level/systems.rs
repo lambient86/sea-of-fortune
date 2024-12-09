@@ -1,6 +1,6 @@
+use crate::components::*;
 use crate::components::{BoundingBox, GameworldState};
 use crate::level::components::*;
-use crate::components::*;
 use bevy::prelude::*;
 
 use crate::data::gameworld_data::*;
@@ -102,7 +102,7 @@ pub fn setup_ocean(
                 t += Vec3::new((TILE_SIZE * 2) as f32, 0., 0.);
             }
 
-            w = 0;
+            w = -128;
             t += Vec3::new(0., (TILE_SIZE * 2) as f32, 0.);
             t.x = -OCEAN_W_CENTER + (TILE_SIZE * 2) as f32 / 2.0;
             h += 1;
@@ -117,25 +117,43 @@ pub fn setup_ocean(
         */
 
         let zone_size = Vec2::new(OCEAN_LEVEL_W / 4.0, OCEAN_LEVEL_H / 4.0);
-        let mut zone_count = 0.0;
         let mut island_type = IslandType::Level1;
+        let mut island_count = 0;
+        let mut zone_count = 0.0;
 
-        // loop through each zone
-        while zone_count < 4.0 {
-            match zone_count {
-                1.0 => island_type = IslandType::Level2,
-                2.0 => island_type = IslandType::Level3,
-                3.0 => island_type = IslandType::Boss,
-                _ => island_type = IslandType::Boss,
-            }
+        let y = -OCEAN_H_CENTER;
 
-            let rand_x = rng.gen_range(-OCEAN_W_CENTER + 64.0..OCEAN_W_CENTER - 64.0);
+        // loop through the number of islands
+        while island_count < 500 {
+            match y as u32 / 120 {
+                0 => {
+                    island_type = IslandType::Level1;
+                    zone_count = 0.0;
+                }
+                1 => {
+                    island_type = IslandType::Level2;
+                    zone_count = 1.0;
+                }
+                2 => {
+                    island_type = IslandType::Level3;
+                    zone_count = 2.0;
+                }
+                3 => {
+                    island_type = IslandType::Boss;
+                    zone_count = 3.0;
+                }
+                _ => {
+                    island_type = IslandType::Boss;
+                    zone_count = 3.0;
+                }
+            };
+
+            let mut rng = rand::thread_rng();
+            // get random y within range
+            let rand_x = rng.gen_range(-OCEAN_W_CENTER + ISLAND_SIZE..OCEAN_W_CENTER - ISLAND_SIZE);
 
             // get random y within range
-            let rand_y = rng.gen_range(
-                -OCEAN_H_CENTER + (zone_count * zone_size.y)
-                    ..(-OCEAN_H_CENTER + ((zone_count * zone_size.y) + zone_size.y)) - 128.0,
-            );
+            let rand_y = rng.gen_range(-OCEAN_H_CENTER + ISLAND_SIZE..OCEAN_H_CENTER - ISLAND_SIZE);
 
             let rand_position = Vec2::new(rand_x, rand_y);
 
@@ -144,7 +162,7 @@ pub fn setup_ocean(
             commands.spawn((
                 SpriteBundle {
                     texture: island_tile_sheet.0.clone(),
-                    transform: Transform::from_xyz(rand_x, rand_y, 10.0),
+                    transform: Transform::from_xyz(rand_x, rand_y, 100.0),
                     ..default()
                 },
                 Island {
@@ -153,7 +171,7 @@ pub fn setup_ocean(
                 },
             ));
 
-            zone_count += 1.0;
+            island_count += 1;
         }
     }
 }
@@ -326,7 +344,7 @@ pub fn setup_dungeon(
             Dungeon {
                 aabb: BoundingBox::new(
                     Vec3::new(-2976.0, -3200.0, 10.0).truncate(),
-                    Vec2::splat(64.0)
+                    Vec2::splat(64.0),
                 ),
                 dungeon_type: current_island_type.island_type,
                 size: Vec2::splat(64.0),
