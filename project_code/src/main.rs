@@ -1,5 +1,6 @@
 mod bat;
 mod boat;
+mod boss;
 mod components;
 mod controls;
 mod data;
@@ -25,6 +26,7 @@ use bevy::{prelude::*, window::PresentMode};
 use boat::components::Boat;
 use boat::systems::*;
 use boat::BoatPlugin;
+use boss::BossPlugin;
 use components::*;
 use controls::*;
 use data::gameworld_data::*;
@@ -168,6 +170,7 @@ fn main() {
         .add_plugins(RockPlugin)
         .add_plugins(WindPlugin)
         .add_plugins(WhirlpoolPlugin)
+        .add_plugins(BossPlugin)
         .add_systems(
             Update,
             move_player_camera.after(move_player).run_if(
