@@ -41,7 +41,112 @@ use wfc::WFCPlugin;
 use whirlpool::WhirlpoolPlugin;
 use wind::WindPlugin;
 
+use std::io::*;
+use std::net::*;
+use std::time::Duration;
+
+use network::components::*;
+use network::systems::*;
+
 fn main() {
+    println!("Starting Client");
+
+    print!("Enter IPv4: ");
+
+    // Flush the stdout to make sure the prompt is displayed before reading input
+    std::io::stdout().flush().unwrap();
+
+    // Create a mutable String to hold the user's input
+    let mut input = String::new();
+
+    // Read a line of input from the user
+    std::io::stdin()
+        .read_line(&mut input)
+        .expect("Failed to read line");
+
+    let trimmed_input = input.trim();
+
+    //connect to server
+    let udp_addr = trimmed_input.to_string() + ":4000";
+    println!("{}", udp_addr);
+    //let tcp_addr = "127.0.0.1:8000";
+
+    //192.168.1.159:4000
+
+    let udp_socket = UdpSocket::bind(udp_addr).unwrap();
+
+    println!(
+        "UDP: Client listening on {}",
+        udp_socket.local_addr().unwrap()
+    );
+
+    let mut ocean = Vec::new();
+    let mut player = Player::default();
+
+    let server = Server {
+        addr: "192.168.1.159:5000".to_string(),
+    };
+
+    let mut joined = false;
+    loop {
+        let mut buf = [0; 1024];
+
+        if !joined {
+            println!("Trying to join world...");
+
+            player.addr = udp_socket.local_addr().unwrap().to_string();
+            println!("Player addr = {}", player.addr);
+
+            udp_socket
+                .send_to(
+                    create_env("new_player".to_string(), player.clone()).as_bytes(),
+                    server.addr.clone(),
+                )
+                .expect("Failed to send [new_player] packet");
+        }
+
+        let result = udp_socket.recv_from(&mut buf);
+
+        match result {
+            Ok((size, src)) => {
+                let env: Envelope = serde_json::from_slice(&buf[..size]).unwrap();
+
+                if env.message.eq("joined_lobby") {
+                    let packet: Packet<i32> = serde_json::from_str(&env.packet).unwrap();
+
+                    let id = packet.payload;
+                    println!("Joined lobby! You are player #{}", id);
+                    player.id = id;
+                    joined = true;
+                } else if env.message.eq("full_lobby") {
+                    panic!("{}", env.packet);
+                } else if env.message.eq("load_ocean") {
+                    let packet: Packet<OceanT> = serde_json::from_str(&env.packet).unwrap();
+
+                    ocean.push(packet.payload);
+                } else {
+                    println!("Recieved invalid packet");
+                }
+
+                if ocean.len() >= OCEAN_LENGTH as usize {
+                    break;
+                }
+            }
+            Err(e) => {
+                eprintln!("Something happened: {}", e);
+            }
+        }
+        if !joined {
+            std::thread::sleep(Duration::from_secs(2));
+        }
+    }
+
+    println!("Ocean map done. Final size: {}", ocean.len());
+
+    if !udp_socket.set_nonblocking(true).is_ok() {
+        panic!("Non blocking wasn't successful; terminating");
+    }
+
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
