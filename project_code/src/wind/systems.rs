@@ -4,8 +4,12 @@ use bevy::prelude::*;
 use rand::Rng;
 
 pub fn init_wind(mut commands: Commands) {
+    let mut rng = rand::thread_rng();
+    let x = rng.gen_range(0.0..360.0);
+    let y = rng.gen_range(0.0..360.0);
+
     commands.insert_resource(Wind {
-        direction: Vec2::new(0.0, 90.0),
+        direction: Vec2::new(x, y),
     });
 }
 

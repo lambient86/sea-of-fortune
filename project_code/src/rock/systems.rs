@@ -6,6 +6,7 @@ use crate::enemies::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
 use crate::rock::components::*;
+use crate::shop::systems::generate_loot_item;
 
 /*  Spawn Rock FUNCTION  */
 /// Spawns a kraken entity in the gameworld
@@ -18,7 +19,7 @@ pub fn spawn_rock(
 
     spawn_enemy(
         &mut commands,
-        Enemy::Rock,
+        EnemyT::Rock,
         transform,
         &asset_server,
         &mut texture_atlases,
@@ -30,20 +31,28 @@ pub fn spawn_rock(
 // player weapon/attack collision) and then takes 1 damage (dies)
 pub fn rock_damaged(
     mut commands: Commands,
-    mut kraken_query: Query<(&mut Rock, Entity, &mut Hurtbox), With<Rock>>,
+    mut rock_query: Query<(&mut Rock, Entity, &mut Hurtbox, &Transform), With<Rock>>,
+    mut player_query: Query<&mut Player>,
 ) {
-    for (mut kraken, entity, mut hurtbox) in kraken_query.iter_mut() {
+    for (mut rock, entity, mut hurtbox, transform) in rock_query.iter_mut() {
         if !hurtbox.colliding {
             continue;
         }
 
-        kraken.current_hp -= 1.;
+        rock.current_hp -= 1.;
 
-        if kraken.current_hp <= 0. {
-            println!("Kraken was attacked by player, it is dead :(");
+        if rock.current_hp <= 0. {
+            println!("Rock was attacked by player, it is dead :(");
+            let loot = generate_loot_item(EnemyT::Rock);
+            if loot.price > 0 {
+                println!("Rock dropped: {}", loot.name);
+                if let Ok(mut player) = player_query.get_single_mut() {
+                    player.inventory.add_item(loot);
+                }
+            }
             commands.entity(entity).despawn();
         } else {
-            println!("Kraken was attacked by player");
+            println!("Rock was attacked by player");
         }
 
         hurtbox.colliding = false;

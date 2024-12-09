@@ -8,9 +8,15 @@ use super::systems::find_spawn_points;
 #[derive(Component)]
 pub struct DebugPathMarker;
 
-
 #[derive(Resource)]
-pub struct DungeonTileSheet(pub Handle<Image>, pub Handle<TextureAtlasLayout>);
+pub struct DungeonTileSheet(
+    pub Handle<Image>,  // Level 1
+    pub Handle<Image>,  // Level 2 
+    pub Handle<Image>,  // Level 3
+    pub Handle<Image>,  // Boss
+    pub Handle<TextureAtlasLayout>
+);
+
 
 #[derive(Component)]
 pub struct Wall;

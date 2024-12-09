@@ -16,10 +16,7 @@ impl Plugin for BoatPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(GameworldState::Ocean),
-            (
-                spawn_boat.after(despawn_player),
-                init_ship_hud.after(spawn_boat),
-            ),
+            (spawn_boat.after(despawn_player),),
         )
         .add_systems(
             Update,

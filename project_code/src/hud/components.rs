@@ -10,14 +10,17 @@ pub struct ShipHPText;
 pub struct GoldText;
 
 #[derive(Component)]
-pub struct WindText;
+pub struct Arrow;
 
 #[derive(Resource)]
 pub struct ShipStats {
     pub hp: f32,
     pub gold: u32,
-    pub wind: CardinalDirection,
+    pub wind_dir: Vec2,
 }
+
+#[derive(Resource)]
+pub struct ArrowTS(pub Handle<Image>);
 
 #[derive(Resource)]
 pub struct PlayerStats {
@@ -26,16 +29,10 @@ pub struct PlayerStats {
 }
 
 #[derive(Component)]
-pub enum CardinalDirection {
-    NORTH,
-    NORTHWEST,
-    WEST,
-    SOUTHWEST,
-    SOUTH,
-    SOUTHEAST,
-    EAST,
-    NORTHEAST,
-}
+pub struct PlayerHUD;
 
 #[derive(Component)]
-pub struct PlayerHUD;
+pub struct ShipHUD;
+
+#[derive(Component)]
+pub struct WindText;
