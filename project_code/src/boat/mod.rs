@@ -4,9 +4,9 @@ pub mod components;
 pub mod systems;
 
 use crate::components::GameState;
-use crate::player::systems::despawn_player;
 use crate::GameworldState;
 use systems::*;
+use crate::player::systems::*;
 
 pub struct BoatPlugin;
 

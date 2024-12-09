@@ -5,6 +5,25 @@ use crate::shop::components::*;
 #[derive(Component)]
 pub struct Background;
 
+#[derive(Resource)]
+pub struct StateTransitionCooldown {
+    pub timer: Timer,
+}
+
+impl Default for StateTransitionCooldown {
+    fn default() -> Self {
+        Self {
+            timer: Timer::from_seconds(1.0, TimerMode::Once),
+        }
+    }
+}
+
+#[derive(Component)]
+pub struct TransitionImmunity {
+    pub timer: Timer,
+}
+
+
 /*   GAMEWORLD STATES   */
 /// Separate from GameState, GameworldState is an enum to represent the different states the gameworld can be in. Depending
 /// on the state of the gameworld, different enemies may spawn, the player controls a different entity (boat or player), etc.
@@ -52,15 +71,15 @@ impl BoundingBox {
 
 #[derive(Resource)]
 pub struct SpawnLocations {
-    pub player: Vec2,
-    pub door: Vec2,
+    pub player: Vec3,
+    pub door: Vec3,
 }
 
 impl Default for SpawnLocations {
     fn default() -> Self {
         Self {
-            player: Vec2::ZERO,
-            door: Vec2::ZERO,
+            player: Vec3::ZERO,
+            door: Vec3::ZERO,
         }
     }
 }

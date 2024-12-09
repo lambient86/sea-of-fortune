@@ -41,8 +41,6 @@ use kraken::KrakenPlugin;
 use level::components::*;
 use level::LevelPlugin;
 use player::components::AttackCooldown;
-use player::systems::move_player;
-use player::systems::spawn_player;
 use player::systems::*;
 use player::PlayerPlugin;
 use rock::RockPlugin;
@@ -189,9 +187,10 @@ fn main() {
         .add_systems(Update, change_game_state)
         .add_systems(Update, update_mouse_pos)
         .add_systems(Update, check_wall_collisions.after(move_player))
+        .add_systems(Update, handle_transition_immunity)
         .add_systems(
             OnEnter(GameworldState::Dungeon),
-            handle_dungeon_entry.after(spawn_player),
+            handle_dungeon_entry.after(initial_spawn_player),
         )
         .add_systems(OnEnter(GameworldState::Dungeon), handle_door_translation)
         .add_systems(OnEnter(GameworldState::Island), handle_door_translation)
@@ -202,6 +201,7 @@ fn main() {
         .add_systems(Last, leave)
         .insert_resource(PlayerEntities::default())
         .insert_resource(CurrentIslandType::default())
+        .insert_resource(StateTransitionCooldown::default())
         .run();
 }
 

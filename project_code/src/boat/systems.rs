@@ -106,52 +106,51 @@ pub fn spawn_boat(
     host: Res<HostPlayer>,
     player_entities: Res<PlayerEntities>,
 ) {
-    if let Some(&player_entity) = player_entities.players.first() {
-        //getting boat sprite info
-        let boat_sheet_handle = asset_server.load("s_basic_ship.png");
-        let boat_layout = TextureAtlasLayout::from_grid(UVec2::splat(100), 2, 2, None, None);
-        let boat_layout_handle = texture_atlases.add(boat_layout);
+    //getting boat sprite info
+    let boat_sheet_handle = asset_server.load("s_basic_ship.png");
+    let boat_layout = TextureAtlasLayout::from_grid(UVec2::splat(100), 2, 2, None, None);
+    let boat_layout_handle = texture_atlases.add(boat_layout);
 
-        //getting hurtbox information
-        let hurtbox_size = Vec2::new(50., 50.);
-        let hurtbox_offset = Vec2::new(0., 0.);
+    //getting hurtbox information
+    let hurtbox_size = Vec2::new(50., 50.);
+    let hurtbox_offset = Vec2::new(0., 0.);
 
-        //spawning boat
-        commands.spawn((
-            SpriteBundle {
-                texture: boat_sheet_handle,
-                transform: Transform {
-                    translation: Vec3::new(0., 0., 900.),
-                    ..default()
-                },
+    //spawning boat
+    commands.spawn((
+        SpriteBundle {
+            texture: boat_sheet_handle,
+            transform: Transform {
+                translation: Vec3::new(0., 0., 900.),
                 ..default()
             },
-            TextureAtlas {
-                layout: boat_layout_handle.clone(),
-                index: 0,
-            },
-            Boat {
-                id: host.player.id,
-                movement_speed: 150.,
-                rotation_speed: f32::to_radians(100.0),
-                acceleration: 0.,
-                aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
-                health: BOAT_MAX_HP,
-                max_health: BOAT_MAX_HP,
-            },
-            AttackCooldown {
-                remaining: Timer::from_seconds(1.5, TimerMode::Once),
-            },
-            Hurtbox {
-                size: hurtbox_size,
-                offset: hurtbox_offset,
-                entity: BOAT,
-                colliding: false,
-                iframe: Timer::from_seconds(0.75, TimerMode::Once),
-                enemy: false,
-            },
-        ));
-    }
+            ..default()
+        },
+        TextureAtlas {
+            layout: boat_layout_handle.clone(),
+            index: 0,
+        },
+        Boat {
+            id: host.player.id,
+            movement_speed: 150.,
+            rotation_speed: f32::to_radians(100.0),
+            acceleration: 0.,
+            aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
+            health: BOAT_MAX_HP,
+            max_health: BOAT_MAX_HP,
+        },
+        AttackCooldown {
+            remaining: Timer::from_seconds(1.5, TimerMode::Once),
+        },
+        Hurtbox {
+            size: hurtbox_size,
+            offset: hurtbox_offset,
+            entity: BOAT,
+            colliding: false,
+            iframe: Timer::from_seconds(0.75, TimerMode::Once),
+            enemy: false,
+        },
+    ));
+
 }
 
 pub fn check_boat_health(

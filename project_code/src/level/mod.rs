@@ -33,7 +33,7 @@ impl Plugin for LevelPlugin {
                 (setup_island, despawn_with::<Background>),
             )
             .add_systems(OnEnter(GameworldState::Dungeon),
-                        (setup_dungeon, despawn_with::<Island>),
+                        (setup_dungeon, despawn_with::<Island>, despawn_with::<OceanDoor>),
             )
             .add_systems(
                 OnExit(GameworldState::Island),
