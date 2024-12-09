@@ -4,6 +4,7 @@ use systems::*;
 
 use crate::components::{Background, GameworldState};
 use crate::player::components::Sword;
+use crate::{create_env, HostPlayer, Server, UDP};
 
 pub mod components;
 pub mod systems;
@@ -16,6 +17,7 @@ impl Plugin for LevelPlugin {
                 OnEnter(GameworldState::Ocean),
                 (
                     setup_ocean,
+                    got_here_late_packet.after(setup_ocean),
                     despawn_with::<Background>,
                     despawn_with::<Sword>,
                     despawn_with::<Dungeon>,
@@ -38,4 +40,13 @@ impl Plugin for LevelPlugin {
                 (despawn_with::<SandTile>, despawn_with::<OceanDoor>),
             );
     }
+}
+
+pub fn got_here_late_packet(udp: Res<UDP>, host: Res<HostPlayer>, server: Res<Server>) {
+    udp.socket
+        .send_to(
+            create_env("got_here_late".to_string(), host.player.clone()).as_bytes(),
+            server.addr.clone(),
+        )
+        .expect("Failed to send [got_here_late] packet");
 }
