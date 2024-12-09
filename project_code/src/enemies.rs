@@ -277,6 +277,7 @@ pub fn spawn_enemy(
                 },
             ));
         }
+
         EnemyT::PoisonSkeleton => {
             let pskeleton_layout = TextureAtlasLayout::from_grid(
                 UVec2::new(31, 32), // SpriteSheet 1 pixel off, maybe fix later? it works like this though

@@ -306,7 +306,9 @@ pub fn update(
                 }
 
                 for e in enemies.list.iter() {}
+            } else if env.message == "update_projectiles" {
             } */else if env.message == "update_projectiles" {
+
                 let packet: Packet<Projectiles> = serde_json::from_str(&env.packet).unwrap();
                 let projectiles = packet.payload;
 
@@ -337,7 +339,6 @@ pub fn update(
                                         entity: KRAKEN,
                                         projectile: true,
                                         enemy: true,
-                                        boat: false,
                                     },
                                 ));
                                 }
@@ -364,7 +365,6 @@ pub fn update(
                                         entity: GHOSTSHIP,
                                         projectile: true,
                                         enemy: true,
-                                        boat: false,
                                     },));
                                 }
                                 _ => {
@@ -423,6 +423,7 @@ pub fn update(
                         }
                     }
                 }
+            } else {
             } */else {
                 println!(
                     "Recieved invalid packet from [{}]: {}",
