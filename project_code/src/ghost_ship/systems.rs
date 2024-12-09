@@ -117,11 +117,12 @@ pub fn ghostship_damaged(
     mut ghostship_query: Query<(&mut GhostShip, Entity, &mut Hurtbox)>,
 ) {
     for (mut ghostship, entity, mut hurtbox) in ghostship_query.iter_mut() {
-        if !hurtbox.colliding {
+        if !hurtbox.colliding.is {
             continue;
         }
 
-        ghostship.current_hp -= 1.;
+        ghostship.current_hp -= hurtbox.colliding.dmg;
+        hurtbox.colliding.dmg = 0.;
 
         if ghostship.current_hp <= 0. {
             println!("Ghostship was attacked by player, it is dead :(");
@@ -130,7 +131,7 @@ pub fn ghostship_damaged(
             println!("Ghostship was attacked by player");
         }
 
-        hurtbox.colliding = false;
+        hurtbox.colliding.is = false;
     }
 }
 
@@ -222,6 +223,7 @@ pub fn ghostship_attack(
                 entity: GHOSTSHIP,
                 projectile: true,
                 enemy: true,
+                dmg: 1.,
             },));
         }
     }

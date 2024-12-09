@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 
+use crate::boss::components::*;
 use crate::data::gameworld_data::*;
 use crate::enemies::*;
 use crate::hitbox_system::*;
-use crate::player::components::*;
-use crate::boss::components::*;
-use crate::CurrentIslandType;
 use crate::level::components::*;
+use crate::player::components::*;
+use crate::CurrentIslandType;
 
 pub fn spawn_boss(
     mut commands: Commands,
@@ -54,7 +54,7 @@ pub fn spawn_boss(
         Hurtbox {
             size: Vec2::splat(80.),
             offset: Vec2::splat(0.),
-            colliding: false,
+            colliding: Collision { is: false, dmg: 0. },
             entity: BOSS,
             iframe: Timer::from_seconds(0.75, TimerMode::Once),
             enemy: true,
@@ -66,6 +66,7 @@ pub fn spawn_boss(
             projectile: false,
             entity: BOSS,
             enemy: true,
+            dmg: 1.,
         },
     ));
 }
@@ -75,11 +76,12 @@ pub fn boss_damaged(
     mut boss_query: Query<(&mut Boss, Entity, &mut Hurtbox), With<Boss>>,
 ) {
     for (mut boss, entity, mut hurtbox) in boss_query.iter_mut() {
-        if !hurtbox.colliding {
+        if !hurtbox.colliding.is {
             continue;
         }
 
-        boss.current_hp -= 1.;
+        boss.current_hp -= hurtbox.colliding.dmg;
+        hurtbox.colliding.dmg = 0.;
 
         if boss.current_hp <= 0. {
             println!("Boss was defeated!");
@@ -88,7 +90,7 @@ pub fn boss_damaged(
             println!("Boss was damaged! HP: {}", boss.current_hp);
         }
 
-        hurtbox.colliding = false;
+        hurtbox.colliding.is = false;
     }
 }
 

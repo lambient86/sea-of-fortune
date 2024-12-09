@@ -17,7 +17,7 @@ impl Plugin for HitboxPlugin {
             (
                 check_hitbox_hurtbox_collisions,
                 update_hitbox_lifetimes, // Add the new system
-                draw_debug_boxes.after(move_boat).after(move_player),
+                                         //draw_debug_boxes.after(move_boat).after(move_player),
             ),
         );
     }
