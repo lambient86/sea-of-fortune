@@ -143,6 +143,7 @@ pub fn spawn_player(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     gameworld_state: Res<State<GameworldState>>,
+    mut player_query: Query<(&mut Transform, Entity), With<Player>>,
     mut player_entities: ResMut<PlayerEntities>,
 ) {
     if player_entities.players.len() >= 4 {
@@ -151,6 +152,18 @@ pub fn spawn_player(
 
     let player_id = player_entities.next_id;
     player_entities.next_id += 1;
+
+    if let Ok((mut transform, _)) = player_query.get_single_mut() {
+        transform.translation.z = 0.0;
+        
+        // Set position based on gameworld state
+        transform.translation = match gameworld_state.get() {
+            GameworldState::Island => Vec3::ZERO,
+            GameworldState::Dungeon => Vec3::new(-2976.0, -2976.0, 0.0),
+            _ => transform.translation
+        };
+        return;
+    }
 
     //getting sprite info
     let master_handle: Handle<Image> = asset_server.load("s_pirate.png");
@@ -222,6 +235,7 @@ pub fn spawn_player(
     println!("Player spawned with ID: {}", player_id);
     println!("Current players: {:?}", player_entities.players);
 }
+
 /*   SPAWN_WEAPON FUNCTION   */
 /// Spawns the weapon on the player
 pub fn spawn_weapon(
@@ -230,39 +244,41 @@ pub fn spawn_weapon(
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     player_query: Query<(Entity, &Player)>,
 ) {
-    let (player_entity, player) = player_query.single();
-    
-    // Get initial weapon (sword)
-    let sword_level = player.inventory.items.iter()
-        .find(|item| item.item_type == ItemType::Sword)
-        .map(|item| item.level)
-        .unwrap_or(0);
+    if let Ok((player_entity, player)) = player_query.get_single() {
+        // Get initial weapon (sword)
+        let sword_level = player.inventory.items.iter()
+            .find(|item| item.item_type == ItemType::Sword)
+            .map(|item| item.level)
+            .unwrap_or(0);
 
-    let master_handle: Handle<Image> = asset_server.load("s_cutlass.png");
-    let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
-    let master_layout_handle = texture_atlases.add(master_layout);
+        let master_handle: Handle<Image> = asset_server.load("s_cutlass.png");
+        let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
+        let master_layout_handle = texture_atlases.add(master_layout);
 
-    commands.entity(player_entity).with_children(|parent| {
-        parent.spawn((
-            SpriteBundle {
-                texture: master_handle,
-                transform: Transform {
-                    scale: Vec3::splat(2.),
-                    translation: Vec3::new(32., 0.0, 0.0),
+        commands.entity(player_entity).with_children(|parent| {
+            parent.spawn((
+                SpriteBundle {
+                    texture: master_handle,
+                    transform: Transform {
+                        scale: Vec3::splat(2.),
+                        translation: Vec3::new(32., 0.0, 0.0),
+                        ..default()
+                    },
                     ..default()
                 },
-                ..default()
-            },
-            TextureAtlas {
-                layout: master_layout_handle,
-                index: 0,
-            },
-            Sword {
-                damage: Sword::default().calculate_damage(sword_level),
-                upgraded: sword_level > 0,
-            },
-        ));
-    });
+                TextureAtlas {
+                    layout: master_layout_handle,
+                    index: 0,
+                },
+                Sword {
+                    damage: Sword::default().calculate_damage(sword_level),
+                    upgraded: sword_level > 0,
+                },
+            ));
+        });
+    }
+    
+    
 }
 
 /*   SWAP_WEAPON FUNCTION   */
@@ -765,14 +781,13 @@ pub fn check_player_health(
 /// DEBUG: Will despawn any and all players
 pub fn despawn_player(
     mut commands: Commands,
-    mut player_entities: ResMut<PlayerEntities>,
-    query: Query<(&Player, Entity)>,
+    mut player_query: Query<&mut Transform, With<Player>>,
 ) {
-    for (player, entity) in query.iter() {
-        player_entities.saved_inventory = Some(player.inventory.clone());
-        commands.entity(entity).despawn();
+    if let Ok(mut transform) = player_query.get_single_mut() {
+        transform.translation.z = 10000.0;
     }
 }
+
 /*   MUSKETBALL_LIFETIME_CHECK FUNCTION   */
 /// Checks the lifetime of a musketball
 pub fn musketball_lifetime_check(
