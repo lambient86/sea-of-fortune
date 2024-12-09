@@ -207,5 +207,25 @@ fn main() {
         .insert_resource(PlayerEntities::default())
         .insert_resource(CurrentIslandType::default())
         .insert_resource(StateTransitionCooldown::default())
+        .add_systems(Last, leave)
         .run();
+}
+
+fn leave(
+    exit_events: EventReader<AppExit>,
+    mut exit_triggered: Local<bool>,
+    udp: Res<UDP>,
+    player: Res<HostPlayer>,
+    server: Res<Server>,
+) {
+    if !*exit_triggered && exit_events.len() > 0 {
+        *exit_triggered = true;
+
+        udp.socket
+            .send_to(
+                create_env("player_leave".to_string(), player.player.clone()).as_bytes(),
+                server.addr.clone(),
+            )
+            .expect("Failed to send [player_leave]] packet");
+    }
 }
