@@ -86,6 +86,7 @@ pub fn move_boat(
             pos: transform.translation,
             rot: transform.rotation,
             used: true,
+            boat: true,
         };
 
         udp.socket
@@ -150,7 +151,6 @@ pub fn spawn_boat(
             enemy: false,
         },
     ));
-
 }
 
 pub fn check_boat_health(
