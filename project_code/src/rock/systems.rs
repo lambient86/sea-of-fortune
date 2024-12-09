@@ -35,11 +35,12 @@ pub fn rock_damaged(
     mut player_query: Query<&mut Player>,
 ) {
     for (mut rock, entity, mut hurtbox, transform) in rock_query.iter_mut() {
-        if !hurtbox.colliding {
+        if !hurtbox.colliding.is {
             continue;
         }
 
-        rock.current_hp -= 1.;
+        rock.current_hp -= hurtbox.colliding.dmg;
+        hurtbox.colliding.dmg = 0.;
 
         if rock.current_hp <= 0. {
             println!("Rock was attacked by player, it is dead :(");
@@ -55,7 +56,7 @@ pub fn rock_damaged(
             println!("Rock was attacked by player");
         }
 
-        hurtbox.colliding = false;
+        hurtbox.colliding.is = false;
     }
 }
 

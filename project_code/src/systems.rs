@@ -4,15 +4,15 @@ use crate::hitbox_system::{Hitbox, Hurtbox};
 use crate::level::components::{Dungeon, IslandType, OceanDoor};
 use crate::player::components::*;
 use crate::{boat::components::*, level::components::Island};
+use bevy::math::bounding::BoundingVolume;
 use bevy::math::bounding::IntersectsVolume;
 use bevy::{prelude::*, window::PresentMode};
-use bevy::math::bounding::BoundingVolume;
 
-use crate::wfc::components::Wall;
 use crate::bat::components::Bat;
-use crate::skeleton::components::Skeleton;
-use crate::player::components::Player; 
+use crate::player::components::Player;
 use crate::rock::components::Rock;
+use crate::skeleton::components::Skeleton;
+use crate::wfc::components::Wall;
 
 use crate::components::*;
 
@@ -104,16 +104,15 @@ pub fn change_gameworld_state(
     query: Query<(Entity, &Transform), (With<Player>, Without<TransitionImmunity>)>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Enter)
-            && *gameworld_state.get() != GameworldState::Ocean
-            && *gameworld_state.get() != GameworldState::Island
-            && *gameworld_state.get() != GameworldState::Dungeon
-        {
-            current_island_type.island_type = IslandType::Start;
-            next_state.set(GameworldState::Island);
-            return;
-        }
+        && *gameworld_state.get() != GameworldState::Ocean
+        && *gameworld_state.get() != GameworldState::Island
+        && *gameworld_state.get() != GameworldState::Dungeon
+    {
+        current_island_type.island_type = IslandType::Start;
+        next_state.set(GameworldState::Island);
+        return;
+    }
     for (entity, transform) in query.iter() {
-        
         //  CASE: OCEAN --> ISLAND
         if *gameworld_state.get() == GameworldState::Ocean {
             let boat = boat_query.single_mut();
@@ -178,23 +177,23 @@ pub fn change_game_state(
 }
 
 pub fn check_wall_collisions(
-    mut entities_query: Query<(&mut Transform, &mut Velocity, &Hurtbox), Or<(With<Player>, With<Bat>, With<Skeleton>, With<Rock>)>>,
+    mut entities_query: Query<
+        (&mut Transform, &mut Velocity, &Hurtbox),
+        Or<(With<Player>, With<Bat>, With<Skeleton>, With<Rock>)>,
+    >,
     walls_query: Query<&BoundingBox, With<Wall>>,
 ) {
     for (mut transform, mut velocity, hurtbox) in entities_query.iter_mut() {
-        let entity_aabb = BoundingBox::new(
-            transform.translation.truncate(),
-            hurtbox.size
-        ).aabb;
+        let entity_aabb = BoundingBox::new(transform.translation.truncate(), hurtbox.size).aabb;
 
         for wall_box in walls_query.iter() {
             if entity_aabb.intersects(&wall_box.aabb) {
                 // Stop movement in collision direction
                 let overlap = entity_aabb.center() - wall_box.aabb.center();
                 let push_direction = overlap.normalize();
-                
+
                 transform.translation += Vec3::new(push_direction.x, push_direction.y, 0.0) * 2.0;
-                
+
                 // Zero out velocity in collision direction
                 if overlap.x.abs() > overlap.y.abs() {
                     velocity.v.x = 0.0;
@@ -213,7 +212,10 @@ pub fn handle_dungeon_entry(
     if *gameworld_state.get() == GameworldState::Dungeon {
         if let Ok(mut transform) = player_query.get_single_mut() {
             transform.translation = Vec3::new(-2976.0, -2976.0, 0.0);
-            println!("Translated player to dungeon spawn: {:?}", transform.translation);
+            println!(
+                "Translated player to dungeon spawn: {:?}",
+                transform.translation
+            );
         }
     }
 }
@@ -227,23 +229,18 @@ pub fn handle_door_translation(
             GameworldState::Dungeon => {
                 transform.translation = Vec3::new(2976.0, 2976.0, 10.0);
                 println!("Translated door to dungeon position");
-            },
+            }
             GameworldState::Island => {
                 transform.translation = Vec3::new(0.0, 256.0, 10.0);
                 println!("Translated door to island position");
-            },
+            }
             _ => {}
         }
     }
 }
 
-pub fn update_dungeon_collision(
-    mut dungeon_query: Query<(&Transform, &mut Dungeon)>,
-) {
+pub fn update_dungeon_collision(mut dungeon_query: Query<(&Transform, &mut Dungeon)>) {
     for (transform, mut dungeon) in dungeon_query.iter_mut() {
-        dungeon.aabb = BoundingBox::new(
-            transform.translation.truncate(),
-            dungeon.size
-        );
+        dungeon.aabb = BoundingBox::new(transform.translation.truncate(), dungeon.size);
     }
 }

@@ -34,7 +34,9 @@ pub fn check_hitbox_hurtbox_collisions(
                     && hitbox_min.y < hurtbox_max.y
                     && hitbox_max.y > hurtbox_min.y
                 {
-                    hurtbox.colliding = true;
+                    hurtbox.colliding.is = true;
+                    hurtbox.colliding.dmg = hitbox.dmg;
+
                     println!("{} collided with {}", hurtbox.entity, hitbox.entity);
                     hurtbox.iframe = Timer::from_seconds(0.75, TimerMode::Once);
 
@@ -118,6 +120,7 @@ pub fn create_hitbox(
     entity_type: i32,
     projectile: bool,
     enemy: bool,
+    dmg: f32,
 ) {
     let lifetime_timer = lifetime.map(|duration| Timer::from_seconds(duration, TimerMode::Once));
     commands.entity(entity).insert(Hitbox {
@@ -127,6 +130,7 @@ pub fn create_hitbox(
         entity: entity_type,
         projectile,
         enemy,
+        dmg,
     });
 }
 
@@ -142,7 +146,7 @@ pub fn create_hurtbox(
         size,
         offset,
         entity: entity_type,
-        colliding: false,
+        colliding: Collision { is: false, dmg: 0. },
         iframe: Timer::from_seconds(1., TimerMode::Once),
         enemy,
     });

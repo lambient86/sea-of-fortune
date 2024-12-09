@@ -112,11 +112,12 @@ pub fn bat_damaged(
     mut player_query: Query<&mut Player>,
 ) {
     for (mut bat, entity, mut hurtbox, transform) in bat_query.iter_mut() {
-        if !hurtbox.colliding {
+        if !hurtbox.colliding.is {
             continue;
         }
 
-        bat.current_hp -= 1.;
+        bat.current_hp -= hurtbox.colliding.dmg;
+        hurtbox.colliding.dmg = 0.;
 
         if bat.current_hp <= 0. {
             println!("Bat was attacked by player, it is dead :(");
@@ -132,7 +133,7 @@ pub fn bat_damaged(
             println!("Bat was attacked by player");
         }
 
-        hurtbox.colliding = false;
+        hurtbox.colliding.is = false;
     }
 }
 
@@ -217,6 +218,7 @@ pub fn bat_attack(
                 entity: BAT,
                 projectile: true,
                 enemy: true,
+                dmg: 1.,
             },
         ));
     }

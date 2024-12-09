@@ -4,9 +4,9 @@ pub mod components;
 pub mod systems;
 
 use crate::components::GameState;
+use crate::player::systems::*;
 use crate::GameworldState;
 use systems::*;
-use crate::player::systems::*;
 
 pub struct BoatPlugin;
 
@@ -24,6 +24,7 @@ impl Plugin for BoatPlugin {
                 boat_attack.after(move_boat),
                 move_cannonball,
                 cannonball_lifetime_check,
+                check_boat_health,
             )
                 .run_if(in_state(GameworldState::Ocean))
                 .run_if(in_state(GameState::Running)),

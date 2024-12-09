@@ -6,30 +6,30 @@ use crate::data::gameworld_data::*;
 use crate::enemies::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
-use crate::shop::systems::*;
-use crate::skeleton::components::*;
+use crate::poison_skeleton::components::Lifetime as PoisonSkeletonLifetime;
+use crate::poison_skeleton::components::*;
 
 /*   ROTATE_skeleton FUNCTION   */
 /// This should be changed to a function called "track_player", which will
 /// be how the skeleton knows where to check where the player is for shooting projectiles
 ///
 /// WE DON'T NEED TO ROTATE THE skeleton! I WILL MAKE A BACK FACING SPRITE IF NEEDED
-pub fn rotate_skeleton(
+pub fn rotate_pskeleton(
     time: Res<Time>,
-    mut query: Query<(&Skeleton, &mut Transform), Without<Player>>,
+    mut query: Query<(&PoisonSkeleton, &mut Transform), Without<Player>>,
     player_query: Query<&Transform, With<Player>>,
 ) {
     // getting player position
     let player_transform = player_query.single();
     let player_translation = player_transform.translation.xy();
 
-    for (skeleton, mut enemy_transform) in &mut query {
+    for (pskeleton, mut enemy_transform) in &mut query {
         //getting skeleton's position relative to player position
-        let skeleton_position = enemy_transform.translation.xy();
-        let distance_to_player = skeleton_position.distance(player_translation);
+        let pskeleton_position = enemy_transform.translation.xy();
+        let distance_to_player = pskeleton_position.distance(player_translation);
 
         //ensuring skeleton is close enough to player to attack
-        if distance_to_player > SKELETON_ATTACK_DIST {
+        if distance_to_player > PSKELETON_ATTACK_DIST {
             break;
         }
 
@@ -50,7 +50,7 @@ pub fn rotate_skeleton(
         let max_angle = forward_dot_player.clamp(-1.0, 1.0).acos();
 
         let rotation_angle =
-            rotation_sign * (skeleton.rotation_speed * time.delta_seconds()).min(max_angle);
+            rotation_sign * (pskeleton.rotation_speed * time.delta_seconds()).min(max_angle);
 
         enemy_transform.rotate_z(rotation_angle);
     }
@@ -58,7 +58,7 @@ pub fn rotate_skeleton(
 
 /*   ANIMATE_SKELETON FUNCTION   */
 /// Animates a skeleton entity
-pub fn animate_skeleton(
+pub fn animate_pskeleton(
     time: Res<Time>,
     mut query: Query<(&mut AnimationTimer, &mut TextureAtlas, &AnimationFrameCount)>,
 ) {
@@ -74,7 +74,7 @@ pub fn animate_skeleton(
 /*  SPAWN_SKELETON FUNCTION  */
 /// Spawns a skeleton entity in the gameworld
 
-pub fn spawn_skeleton(
+pub fn spawn_pskeleton(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
@@ -85,7 +85,7 @@ pub fn spawn_skeleton(
     // Spawning skeleton 1
     spawn_enemy(
         &mut commands,
-        EnemyT::RSkeleton,
+        EnemyT::PoisonSkeleton,
         transform,
         &asset_server,
         &mut texture_atlases,
@@ -95,31 +95,23 @@ pub fn spawn_skeleton(
 /*   Skeleton_DAMAGED FUNCTION   */
 /// Current functionality: Detects when a player is within player attack range (this will later be replaced with
 // player weapon/attack collision) and then takes 1 damage (dies)
-pub fn skeleton_damaged(
+pub fn pskeleton_damaged(
     mut commands: Commands,
-    mut skeleton_query: Query<(&mut Skeleton, Entity, &mut Hurtbox, &Transform), With<Skeleton>>,
-    mut player_query: Query<&mut Player>,
+    mut pskeleton_query: Query<(&mut PoisonSkeleton, Entity, &mut Hurtbox), With<PoisonSkeleton>>,
 ) {
-    for (mut skeleton, entity, mut hurtbox, transform) in skeleton_query.iter_mut() {
+    for (mut pskeleton, entity, mut hurtbox) in pskeleton_query.iter_mut() {
         if !hurtbox.colliding.is {
             continue;
         }
 
-        skeleton.current_hp -= hurtbox.colliding.dmg;
+        pskeleton.current_hp -= hurtbox.colliding.dmg;
         hurtbox.colliding.dmg = 0.;
 
-        if skeleton.current_hp <= 0. {
-            println!("Skeleton was attacked by player, it is dead :(");
-            let loot = generate_loot_item(EnemyT::RSkeleton);
-            if loot.price > 0 {
-                println!("Skeleton dropped: {}", loot.name);
-                if let Ok(mut player) = player_query.get_single_mut() {
-                    player.inventory.add_item(loot);
-                }
-            }
+        if pskeleton.current_hp <= 0. {
+            println!("Poison skeleton was attacked by player, it is dead :(");
             commands.entity(entity).despawn();
         } else {
-            println!("Skeleton was attacked by player");
+            println!("Poison skeleton was attacked by player");
         }
 
         hurtbox.colliding.is = false;
@@ -129,7 +121,7 @@ pub fn skeleton_damaged(
 /*   DESPAWN_ALL_SKELETON FUNCTION   */
 /// Despawns a skeleton entity
 /// DEBUG: Despwans all skeleton entities
-pub fn despawn_all_skeletons(mut commands: Commands, query: Query<Entity, With<Skeleton>>) {
+pub fn despawn_all_pskeletons(mut commands: Commands, query: Query<Entity, With<PoisonSkeleton>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn();
     }
@@ -144,15 +136,15 @@ pub fn despawn_all_skeletons(mut commands: Commands, query: Query<Entity, With<S
 /// * Distance-to-player checking
 /// * Attack cooldown timer
 /// * Projectile shooting
-pub fn skeleton_attack(
+pub fn pskeleton_attack(
     mut commands: Commands,
     time: Res<Time>,
-    mut skeleton_query: Query<(&Transform, &mut AttackCooldown), With<Skeleton>>,
+    mut pskeleton_query: Query<(&Transform, &mut AttackCooldown), With<PoisonSkeleton>>,
     player_query: Query<&Transform, With<Player>>,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    for (skeleton_transform, mut cooldown) in skeleton_query.iter_mut() {
+    for (pskeleton_transform, mut cooldown) in pskeleton_query.iter_mut() {
         // Attacks only when cooldown is over
         cooldown.remaining.tick(time.delta());
         if !cooldown.remaining.just_finished() {
@@ -162,25 +154,25 @@ pub fn skeleton_attack(
         cooldown.remaining = Timer::from_seconds(1.5, TimerMode::Once);
 
         // Gets positions (Vec3) of the entities
-        let skeleton_translation = skeleton_transform.translation;
+        let pskeleton_translation = pskeleton_transform.translation;
         let player_translation = player_query.single().translation;
 
         // Gets positions (Vec2) of the entities
         let player_position = player_translation.xy();
-        let skeleton_position = skeleton_translation.xy();
+        let pskeleton_position = pskeleton_translation.xy();
 
         // Gets distance
-        let distance_to_player = skeleton_position.distance(player_position);
+        let distance_to_player = pskeleton_position.distance(player_position);
 
-        if distance_to_player > SKELETON_ATTACK_DIST {
+        if distance_to_player > PSKELETON_ATTACK_DIST {
             continue;
         }
 
         // Gets direction projectile will be going
-        let original_direction = (player_translation - skeleton_translation).normalize();
+        let original_direction = (player_translation - pskeleton_translation).normalize();
         let angle = original_direction.x.atan2(original_direction.y);
         let angle_direction = Vec3::new(angle.sin(), angle.cos(), 0.0).normalize();
-        let projectile_start_position = skeleton_translation + angle_direction * 10.0; // skeleton_pos + direction * offset wanted
+        let projectile_start_position = pskeleton_translation + angle_direction * 10.0; // skeleton_pos + direction * offset wanted
 
         // Sets the projectile texture
         let layout = texture_atlases.add(TextureAtlasLayout::from_grid(
@@ -206,18 +198,18 @@ pub fn skeleton_attack(
                 layout: layout,
                 index: 0,
             },
-            SkeletonProjectile {
+            PSkeletonProjectile {
                 timer: Timer::from_seconds(0.2, TimerMode::Once),
             },
-            Lifetime(SKELETON_PROJECTILE_LIFETIME),
+            PoisonSkeletonLifetime(PSKELETON_PROJECTILE_LIFETIME),
             Velocity {
-                v: angle_direction.truncate() * SKELETON_PROJECTILE_SPEED, // (direction * speed of projectile)
+                v: angle_direction.truncate() * PSKELETON_PROJECTILE_SPEED, // (direction * speed of projectile)
             },
             Hitbox {
                 size: Vec2::splat(16.),
                 offset: Vec2::splat(0.),
                 lifetime: Some(Timer::from_seconds(3., TimerMode::Once)),
-                entity: SKELETON,
+                entity: PSKELETON,
                 projectile: true,
                 enemy: true,
                 dmg: 1.,
@@ -230,12 +222,12 @@ pub fn skeleton_attack(
 /// Updates the locations of skeleton projectiles
 /// Things to add:
 /// * Collision handling, dealing damage on collision
-pub fn move_skeleton_projectile(
+pub fn move_pskeleton_projectile(
     mut proj_query: Query<(
         &mut Transform,
         &mut Velocity,
         &mut TextureAtlas,
-        &mut SkeletonProjectile,
+        &mut PSkeletonProjectile,
     )>,
     time: Res<Time>,
 ) {
@@ -260,52 +252,31 @@ pub fn move_skeleton_projectile(
     }
 }
 
-/*   SKELETON_PROJ_LIFETIME_CHECK FUNCTION   */
-/// Checks the lifetime left on a skeleton's projectile, and despawns
-/// after the lifetime expires
-pub fn skeleton_proj_lifetime_check(
+pub fn pmove_skeleton(
     time: Res<Time>,
-    mut commands: Commands,
-    mut proj_query: Query<(Entity, &mut Lifetime)>,
+    mut pskeleton_query: Query<&mut Transform, With<PoisonSkeleton>>,
+    player_query: Query<&Transform, (With<Player>, Without<PoisonSkeleton>)>,
 ) {
-    for (entity, mut lifetime) in proj_query.iter_mut() {
-        lifetime.0 -= time.delta_seconds();
-        if lifetime.0 <= 0.0 {
-            commands.entity(entity).despawn();
-
-            /* Debug */
-            //println!("Projectile despawned");
-        }
-    }
-}
-
-/*   MOVE_skeleton FUNCTION   */
-/// Moves the skeleton as long as a player is within agro range
-pub fn move_skeleton(
-    time: Res<Time>,
-    mut skeleton_query: Query<&mut Transform, With<Skeleton>>,
-    player_query: Query<&Transform, (With<Player>, Without<Skeleton>)>,
-) {
-    for mut transform in skeleton_query.iter_mut() {
+    for mut transform in pskeleton_query.iter_mut() {
         //Gets positions (Vec3) of the entities
-        let skeleton_translation = transform.translation;
+        let pskeleton_translation = transform.translation;
         let player_translation = player_query.single().translation;
 
         //Gets positions (Vec2) of the entities
         let player_position = player_translation.xy();
-        let skeleton_position = skeleton_translation.xy();
+        let pskeleton_position = pskeleton_translation.xy();
 
         //Gets distance
-        let distance_to_player = skeleton_position.distance(player_position);
+        let distance_to_player = pskeleton_position.distance(player_position);
 
         //Check
-        if distance_to_player > SKELETON_AGRO_RANGE || distance_to_player <= SKELETON_AGRO_STOP {
+        if distance_to_player > PSKELETON_AGRO_RANGE || distance_to_player <= PSKELETON_AGRO_STOP {
             continue;
         }
 
         //Gets direction projectile will be going
-        let direction = (player_translation - skeleton_translation).normalize();
-        let velocity = direction * SKELETON_MOVEMENT_SPEED;
+        let direction = (player_translation - pskeleton_translation).normalize();
+        let velocity = direction * PSKELETON_MOVEMENT_SPEED;
 
         //Moves skeleton
         transform.translation += velocity * time.delta_seconds();
@@ -314,9 +285,9 @@ pub fn move_skeleton(
 
 /*   DESPAWN_ALL_SKELETON_PROJ   */
 /// Despawns all the skeleton's projectiles
-pub fn despawn_all_skeleton_proj(
+pub fn despawn_all_pskeleton_proj(
     mut commands: Commands,
-    mut proj_query: Query<(Entity, &mut Lifetime)>,
+    mut proj_query: Query<(Entity, &mut PoisonSkeletonLifetime)>,
 ) {
     for (entity, mut lifetime) in proj_query.iter_mut() {
         commands.entity(entity).despawn();

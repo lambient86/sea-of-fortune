@@ -4,6 +4,7 @@ use crate::boat::components::*;
 use crate::components::BoundingBox;
 use crate::components::*;
 use crate::controls::*;
+use crate::enemies::*;
 
 use crate::data::gameworld_data::*;
 use crate::player::components::AttackCooldown;
@@ -136,6 +137,9 @@ pub fn spawn_boat(
             rotation_speed: f32::to_radians(100.0),
             acceleration: 0.,
             aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
+            health: 5.,
+            max_health: 5.,
+            cannon_damage: 1.,
         },
         AttackCooldown {
             remaining: Timer::from_seconds(1.5, TimerMode::Once),
@@ -144,7 +148,7 @@ pub fn spawn_boat(
             size: hurtbox_size,
             offset: hurtbox_offset,
             entity: BOAT,
-            colliding: false,
+            colliding: Collision::default(),
             iframe: Timer::from_seconds(0.75, TimerMode::Once),
             enemy: false,
         },
@@ -213,6 +217,7 @@ pub fn boat_attack(
                     entity: BOAT,
                     projectile: true,
                     enemy: false,
+                    dmg: 1.,
                 },
             ));
         }
@@ -264,5 +269,30 @@ pub fn cannonball_lifetime_check(
 pub fn despawn_cannonballs(mut commands: Commands, query: Query<Entity, With<Cannonball>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn();
+    }
+}
+
+pub fn check_boat_health(
+    mut boat_query: Query<(&mut Boat, Entity, &mut Hurtbox, &mut Transform), With<Boat>>,
+) {
+    for (mut boat, entity, mut hurtbox, mut transform) in boat_query.iter_mut() {
+        if !hurtbox.colliding.is {
+            continue;
+        }
+
+        boat.health -= hurtbox.colliding.dmg;
+        hurtbox.colliding.dmg = 0.;
+
+        if boat.health <= 0. {
+            println!("Boat died... yikes!");
+            transform.translation = Vec3::new(0., 0., 900.);
+            boat.health = boat.max_health;
+            //transform.translation = boat.spawn_position;
+            println!("Boat respawned!");
+        } else {
+            println!("Ouch! Boat was hit... HP: {}", boat.health);
+        }
+
+        hurtbox.colliding.is = false;
     }
 }

@@ -1,6 +1,6 @@
+use crate::components::*;
 use crate::components::{BoundingBox, GameworldState};
 use crate::level::components::*;
-use crate::components::*;
 use bevy::prelude::*;
 
 use crate::data::gameworld_data::*;
@@ -326,7 +326,7 @@ pub fn setup_dungeon(
             Dungeon {
                 aabb: BoundingBox::new(
                     Vec3::new(-2976.0, -3200.0, 10.0).truncate(),
-                    Vec2::splat(64.0)
+                    Vec2::splat(64.0),
                 ),
                 dungeon_type: current_island_type.island_type,
                 size: Vec2::splat(64.0),

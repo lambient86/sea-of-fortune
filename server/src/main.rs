@@ -37,58 +37,6 @@ fn main() {
     let mut update = Enemies { list: Vec::new() };
     let mut cooldowns = Cooldowns { list: Vec::new() };
 
-    new.list.push(Enemy {
-        id: 15,
-        etype: KRAKEN,
-        pos: Vec3::new(0., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.),
-        animation_index: 0,
-        alive: true,
-        hp: KRAKEN_MAX_HP,
-        target_id: -1,
-    });
-
-    update.list.push(Enemy {
-        id: 15,
-        etype: KRAKEN,
-        pos: Vec3::new(0., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.),
-        animation_index: 0,
-        alive: true,
-        hp: KRAKEN_MAX_HP,
-        target_id: -1,
-    });
-
-    cooldowns.list.push(CD {
-        enemy_id: 15,
-        og: 2.5,
-        timer: Timer::new(Duration::from_secs(3), TimerMode::Once),
-    });
-
-    new.list.push(Enemy {
-        id: 16,
-        etype: GHOSTSHIP,
-        pos: Vec3::new(200., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.),
-        animation_index: 0,
-        alive: true,
-        hp: GHOSTSHIP_MAX_HP,
-        target_id: -1,
-    });
-
-    update.list.push(Enemy {
-        id: 16,
-        etype: GHOSTSHIP,
-        pos: Vec3::new(200., -(WIN_H / 1.5) + ((TILE_SIZE as f32) * 1.5), 900.),
-        animation_index: 0,
-        alive: true,
-        hp: GHOSTSHIP_MAX_HP,
-        target_id: -1,
-    });
-
-    cooldowns.list.push(CD {
-        enemy_id: 16,
-        og: 2.5,
-        timer: Timer::new(Duration::from_secs(3), TimerMode::Once),
-    });
-
     println!("Ocean size: {}", ocean_map.map.len());
 
     let result = UdpSocket::bind("0.0.0.0:5000");

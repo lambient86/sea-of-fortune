@@ -7,13 +7,16 @@ mod data;
 mod enemies;
 mod ghost_ship;
 mod hitbox_system;
+mod hud;
 mod kraken;
 mod level;
 mod network;
 mod player;
+mod poison_skeleton;
 mod rock;
 mod shop;
 mod skeleton;
+mod storm;
 mod systems;
 mod transition_box;
 mod wfc;
@@ -35,6 +38,7 @@ use enemies::*;
 use ghost_ship::components::*;
 use ghost_ship::GhostShipPlugin;
 use hitbox_system::*;
+use hud::HUDPlugin;
 use kraken::components::*;
 use kraken::KrakenPlugin;
 use level::components::*;
@@ -42,9 +46,11 @@ use level::LevelPlugin;
 use player::components::AttackCooldown;
 use player::systems::*;
 use player::PlayerPlugin;
+use poison_skeleton::PSkeletonPlugin;
 use rock::RockPlugin;
 use shop::ShopPlugin;
 use skeleton::SkeletonPlugin;
+use storm::StormPlugin;
 use systems::*;
 use wfc::WFCPlugin;
 use whirlpool::WhirlpoolPlugin;
@@ -154,7 +160,6 @@ fn main() {
         }))
         .init_resource::<CurrMousePos>()
         .add_systems(Startup, setup_gameworld)
-        .add_systems(Update, update.run_if(in_state(GameworldState::Ocean)))
         .add_plugins(PlayerPlugin)
         .add_plugins(BoatPlugin)
         .add_plugins(BatPlugin)
@@ -169,6 +174,9 @@ fn main() {
         .add_plugins(WindPlugin)
         .add_plugins(WhirlpoolPlugin)
         .add_plugins(BossPlugin)
+        .add_plugins(HUDPlugin)
+        .add_plugins(PSkeletonPlugin)
+        .add_plugins(StormPlugin)
         .add_systems(
             Update,
             move_player_camera.after(move_player).run_if(
@@ -196,259 +204,8 @@ fn main() {
         .insert_state(GameworldState::MainMenu)
         .insert_state(GameState::Running)
         .insert_resource(SpawnLocations::default())
-        .add_systems(Last, leave)
         .insert_resource(PlayerEntities::default())
         .insert_resource(CurrentIslandType::default())
         .insert_resource(StateTransitionCooldown::default())
         .run();
-}
-
-pub fn update(
-    udp: Res<UDP>,
-    host: Res<HostPlayer>,
-    mut player_query: Query<(&mut Transform, &Boat), With<Boat>>,
-    mut enemy_query: Query<(&mut Transform, &mut Enemy, Entity), (With<EnemyTag>, Without<Boat>)>,
-
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
-    server: Res<Server>,
-) {
-    udp.socket
-        .send_to(
-            create_env("update".to_string(), "null".to_string()).as_bytes(),
-            server.addr.clone(),
-        )
-        .expect("Failed to send [update] packet");
-
-    let mut buf = [0; 1024];
-
-    let result = udp.socket.recv_from(&mut buf);
-
-    match result {
-        Ok((bytes, src)) => {
-            let env: Envelope = serde_json::from_slice(&buf[..bytes]).unwrap();
-
-            if env.message == "update_players" {
-                let packet: Packet<Players> = serde_json::from_str(&env.packet).unwrap();
-                let players = packet.payload;
-
-                for p in players.player_array.iter() {
-                    if p.id == host.player.id || !p.used {
-                        continue;
-                    }
-
-                    let mut boat_found = false;
-
-                    for (mut transform, player) in player_query.iter_mut() {
-                        if player.id == host.player.id {
-                            continue;
-                        }
-                        boat_found = true;
-                        transform.translation = players.player_array[player.id as usize].pos;
-                        transform.rotation = players.player_array[player.id as usize].rot;
-                    }
-
-                    if !boat_found {
-                        //getting boat sprite info
-                        let boat_sheet_handle = asset_server.load("s_basic_ship.png");
-                        let boat_layout =
-                            TextureAtlasLayout::from_grid(UVec2::splat(100), 2, 2, None, None);
-                        let boat_layout_handle = texture_atlases.add(boat_layout);
-
-                        //spawning boat
-                        commands.spawn((
-                            SpriteBundle {
-                                texture: boat_sheet_handle,
-                                transform: Transform {
-                                    translation: Vec3::new(0., 0., 900.),
-                                    ..default()
-                                },
-                                ..default()
-                            },
-                            TextureAtlas {
-                                layout: boat_layout_handle.clone(),
-                                index: 0,
-                            },
-                            Boat {
-                                id: p.id,
-                                movement_speed: 150.,
-                                rotation_speed: f32::to_radians(100.0),
-                                acceleration: 0.,
-                                aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
-                            },
-                        ));
-                    }
-                }
-            } else if env.message == "update_enemies" {
-                let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
-                let enemies = packet.payload;
-
-                let mut found = false;
-
-                for (mut transform, enemy, entity) in enemy_query.iter_mut() {
-                    for e in enemies.list.iter() {
-                        if e.id != enemy.id || !e.alive {
-                            continue;
-                        }
-                        transform.translation = e.pos;
-
-                        found = true;
-                        break;
-                    }
-                    if !found {
-                        commands.entity(entity).despawn();
-                    }
-                }
-
-                for e in enemies.list.iter() {}
-            } else if env.message == "update_projectiles" {
-                let packet: Packet<Projectiles> = serde_json::from_str(&env.packet).unwrap();
-                let projectiles = packet.payload;
-
-                for proj in projectiles.list.iter() {
-                    for (transform, enemy, entity) in enemy_query.iter() {
-                        if proj.owner_id == enemy.id {
-                            match enemy.etype {
-                                KRAKEN => {
-                                    commands.spawn((
-                                    SpriteBundle {
-                                        texture: asset_server.load("s_kraken_spit_1.png"),
-                                        transform: Transform {
-                                            translation: proj.translation,
-                                            scale: Vec3::splat(2.0),
-                                            ..default()
-                                        },
-                                        ..default()
-                                    },
-                                    KrakenProjectile,
-                                    Lifetime(proj.lifetime),
-                                    Velocity {
-                                        v: proj.velocity.v, /* (direction * speed of projectile) */
-                                    },
-                                    Hitbox {
-                                        size: Vec2::splat(60.),
-                                        offset: Vec2::splat(0.),
-                                        lifetime: Some(Timer::from_seconds(5., TimerMode::Once)),
-                                        entity: KRAKEN,
-                                        projectile: true,
-                                        enemy: true,
-                                    },
-                                ));
-                                }
-                                GHOSTSHIP => {
-                                    commands.spawn((
-                                    SpriteBundle {
-                                        texture: asset_server.load("s_cannonball.png"),
-                                        transform: Transform {
-                                            translation: proj.translation,
-                                            scale: Vec3::splat(2.0),
-                                            ..default()
-                                        },
-                                        ..default()
-                                    },
-                                    GhostShipProjectile,
-                                    Lifetime(proj.lifetime),
-                                    Velocity {
-                                        v: proj.velocity.v, /* (direction * speed of projectile) */
-                                    },
-                                    Hitbox {
-                                        size: Vec2::splat(60.),
-                                        offset: Vec2::splat(0.),
-                                        lifetime: Some(Timer::from_seconds(5., TimerMode::Once)),
-                                        entity: GHOSTSHIP,
-                                        projectile: true,
-                                        enemy: true,
-                                    },));
-                                }
-                                _ => {
-                                    println!("Undefined enemy type");
-                                }
-                            }
-                            break;
-                        }
-                    }
-                }
-            } else if env.message == "enemy_dead" {
-                let packet: Packet<Enemy> = serde_json::from_str(&env.packet).unwrap();
-                let enemy = packet.payload;
-                println!("Received [enemy_dead]");
-
-                for (transform, mut e, entity) in enemy_query.iter_mut() {
-                    if e.id != enemy.id {
-                        continue;
-                    }
-                    e.alive = false;
-                    commands.entity(entity).despawn();
-
-                    println!("Enemy [{}] dead", e.id);
-                    break;
-                }
-            } else if env.message == "new_enemies" {
-                let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
-                let enemies = packet.payload;
-
-                for e in enemies.list.iter() {
-                    match e.etype {
-                        KRAKEN => {
-                            let transform =
-                                Transform::from_translation(e.pos).with_scale(Vec3::splat(2.0));
-                            spawn_enemy(
-                                &mut commands,
-                                EnemyT::Kraken(e.id),
-                                transform,
-                                &asset_server,
-                                &mut texture_atlases,
-                            )
-                        }
-                        GHOSTSHIP => {
-                            let transform =
-                                Transform::from_translation(e.pos).with_scale(Vec3::splat(2.0));
-                            spawn_enemy(
-                                &mut commands,
-                                EnemyT::GhostShip(e.id),
-                                transform,
-                                &asset_server,
-                                &mut texture_atlases,
-                            )
-                        }
-                        _ => {
-                            println!("Undefined enemy in [update_enemies]");
-                        }
-                    }
-                }
-            } else {
-                println!(
-                    "Recieved invalid packet from [{}]: {}",
-                    src.ip(),
-                    env.message
-                );
-            }
-        }
-        Err(e) => match e.kind() {
-            ErrorKind::WouldBlock => {}
-            _ => {
-                println!("Something happened: {}", e)
-            }
-        },
-    }
-}
-
-fn leave(
-    exit_events: EventReader<AppExit>,
-    mut exit_triggered: Local<bool>,
-    udp: Res<UDP>,
-    player: Res<HostPlayer>,
-    server: Res<Server>,
-) {
-    if !*exit_triggered && exit_events.len() > 0 {
-        *exit_triggered = true;
-
-        udp.socket
-            .send_to(
-                create_env("player_leave".to_string(), player.player.clone()).as_bytes(),
-                server.addr.clone(),
-            )
-            .expect("Failed to send [player_leave]] packet");
-    }
 }

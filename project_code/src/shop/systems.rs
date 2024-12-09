@@ -1,85 +1,26 @@
 use super::components::*;
+use crate::boat::components::Boat;
 use crate::enemies::*;
+use crate::player;
 use crate::player::components::Player;
 use crate::player::components::Sword;
 use bevy::prelude::*;
 
 pub fn setup_shop_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands
-        .spawn((
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    flex_direction: FlexDirection::Column,
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
+    commands.spawn((
+        NodeBundle {
+            style: Style {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
                 ..default()
             },
-            ShopUI,
-        ))
-        .with_children(|parent| {
-            // Background Panel
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        width: Val::Px(400.0),
-                        height: Val::Px(600.0),
-                        flex_direction: FlexDirection::Column,
-                        align_items: AlignItems::Center,
-                        padding: UiRect::all(Val::Px(20.0)),
-                        margin: UiRect::all(Val::Px(10.0)),
-                        ..default()
-                    },
-                    background_color: Color::srgb(0.1, 0.1, 0.1).into(),
-                    ..default()
-                })
-                .with_children(|panel| {
-                    panel.spawn(TextBundle::from_section(
-                        "Shop",
-                        TextStyle {
-                            font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                            font_size: 40.0,
-                            color: Color::WHITE,
-                        },
-                    ));
-
-                    for (text, button_type) in
-                        [("Upgrade", ShopButton::Upgrade), ("Sell", ShopButton::Sell)]
-                    {
-                        panel
-                            .spawn((
-                                ButtonBundle {
-                                    style: Style {
-                                        width: Val::Px(150.0),
-                                        height: Val::Px(65.0),
-                                        margin: UiRect::all(Val::Px(10.0)),
-                                        justify_content: JustifyContent::Center,
-                                        align_items: AlignItems::Center,
-                                        border: UiRect::all(Val::Px(2.0)),
-                                        ..default()
-                                    },
-                                    background_color: Color::srgb(0.15, 0.15, 0.15).into(),
-                                    border_color: Color::WHITE.into(),
-                                    ..default()
-                                },
-                                button_type,
-                            ))
-                            .with_children(|button| {
-                                button.spawn(TextBundle::from_section(
-                                    text,
-                                    TextStyle {
-                                        font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                                        font_size: 24.0,
-                                        color: Color::WHITE,
-                                    },
-                                ));
-                            });
-                    }
-                });
-        });
+            ..default()
+        },
+        ShopUI,
+    ));
 }
 
 pub fn update_shop_text(
@@ -127,7 +68,6 @@ pub fn rebuild_shop_ui(
     shop_page: Res<ShopPage>,
     shop_ui_query: Query<Entity, With<ShopUI>>,
 ) {
-    // Only rebuild UI when shop page changes
     if !shop_page.is_changed() {
         return;
     }
@@ -175,9 +115,10 @@ pub fn rebuild_shop_ui(
                     },
                 ));
 
-                // Shop items based on current page
+                // Content based on current page
                 match *shop_page {
-                    ShopPage::BuyUpgrade => {
+                    ShopPage::PlayerUpgrades => {
+                        // Weapon upgrades
                         for (index, item) in player.inventory.items.iter().enumerate() {
                             if matches!(
                                 item.item_type,
@@ -218,6 +159,92 @@ pub fn rebuild_shop_ui(
                                         ));
                                     });
                             }
+                        }
+
+                        // Player HP upgrade button
+                        panel
+                            .spawn((
+                                ButtonBundle {
+                                    style: Style {
+                                        width: Val::Px(250.0),
+                                        height: Val::Px(65.0),
+                                        margin: UiRect::all(Val::Px(10.0)),
+                                        justify_content: JustifyContent::Center,
+                                        align_items: AlignItems::Center,
+                                        border: UiRect::all(Val::Px(2.0)),
+                                        ..default()
+                                    },
+                                    background_color: Color::srgb(0.15, 0.15, 0.15).into(),
+                                    border_color: Color::WHITE.into(),
+                                    ..default()
+                                },
+                                ShopButton::UpgradePlayerHealth,
+                            ))
+                            .with_children(|button| {
+                                button.spawn(TextBundle::from_section(
+                                    format!(
+                                        "Upgrade Player Health\n{} gold",
+                                        PLAYER_HEALTH_UPGRADE_COST
+                                    ),
+                                    TextStyle {
+                                        font: font.clone(),
+                                        font_size: 18.0,
+                                        color: Color::WHITE,
+                                    },
+                                ));
+                            });
+                    }
+                    ShopPage::ShipUpgrades => {
+                        for (text, button_type, cost) in [
+                            (
+                                "Boat Speed",
+                                ShopButton::UpgradeBoatSpeed,
+                                BOAT_SPEED_UPGRADE_COST,
+                            ),
+                            (
+                                "Boat Health",
+                                ShopButton::UpgradeBoatHealth,
+                                BOAT_HEALTH_UPGRADE_COST,
+                            ),
+                            (
+                                "Boat Control",
+                                ShopButton::UpgradeBoatRotation,
+                                BOAT_ROTATION_UPGRADE_COST,
+                            ),
+                            (
+                                "Cannon Damage",
+                                ShopButton::UpgradeBoatCannon,
+                                BOAT_CANNON_UPGRADE_COST,
+                            ),
+                        ] {
+                            panel
+                                .spawn((
+                                    ButtonBundle {
+                                        style: Style {
+                                            width: Val::Px(250.0),
+                                            height: Val::Px(65.0),
+                                            margin: UiRect::all(Val::Px(10.0)),
+                                            justify_content: JustifyContent::Center,
+                                            align_items: AlignItems::Center,
+                                            border: UiRect::all(Val::Px(2.0)),
+                                            ..default()
+                                        },
+                                        background_color: Color::srgb(0.15, 0.15, 0.15).into(),
+                                        border_color: Color::WHITE.into(),
+                                        ..default()
+                                    },
+                                    button_type,
+                                ))
+                                .with_children(|button| {
+                                    button.spawn(TextBundle::from_section(
+                                        format!("Upgrade {}\n{} gold", text, cost),
+                                        TextStyle {
+                                            font: font.clone(),
+                                            font_size: 18.0,
+                                            color: Color::WHITE,
+                                        },
+                                    ));
+                                });
                         }
                     }
                     ShopPage::Sell => {
@@ -260,10 +287,12 @@ pub fn rebuild_shop_ui(
                     }
                 }
 
-                // Page switch buttons
-                for (text, button_type) in
-                    [("Upgrade", ShopButton::Upgrade), ("Sell", ShopButton::Sell)]
-                {
+                // Navigation buttons at bottom
+                for (text, button_type) in [
+                    ("Player Upgrades", ShopButton::PlayerUpgrades),
+                    ("Ship Upgrades", ShopButton::ShipUpgrades),
+                    ("Sell Items", ShopButton::Sell),
+                ] {
                     panel
                         .spawn((
                             ButtonBundle {
@@ -313,8 +342,11 @@ pub fn handle_button_interactions(
             Interaction::Pressed => {
                 *color = Color::srgb(0.35, 0.35, 0.35).into();
                 match button {
-                    ShopButton::Buy | ShopButton::Upgrade => {
-                        *shop_page = ShopPage::BuyUpgrade;
+                    ShopButton::PlayerUpgrades => {
+                        *shop_page = ShopPage::PlayerUpgrades;
+                    }
+                    ShopButton::ShipUpgrades => {
+                        *shop_page = ShopPage::ShipUpgrades;
                     }
                     ShopButton::Sell => {
                         *shop_page = ShopPage::Sell;
@@ -324,6 +356,21 @@ pub fn handle_button_interactions(
                     }
                     ShopButton::SellItem(index) => {
                         shop_events.send(ShopEvent::Sell(*index));
+                    }
+                    ShopButton::UpgradePlayerHealth => {
+                        shop_events.send(ShopEvent::UpgradePlayerHealth);
+                    }
+                    ShopButton::UpgradeBoatSpeed => {
+                        shop_events.send(ShopEvent::UpgradeBoatSpeed);
+                    }
+                    ShopButton::UpgradeBoatHealth => {
+                        shop_events.send(ShopEvent::UpgradeBoatHealth);
+                    }
+                    ShopButton::UpgradeBoatRotation => {
+                        shop_events.send(ShopEvent::UpgradeBoatRotation);
+                    }
+                    ShopButton::UpgradeBoatCannon => {
+                        shop_events.send(ShopEvent::UpgradeBoatCannon);
                     }
                 }
             }
@@ -364,6 +411,7 @@ pub fn handle_shop_events(
     mut shop_events: EventReader<ShopEvent>,
     mut player_query: Query<(&mut Player, &Children)>,
     mut sword_query: Query<&mut Sword>,
+    mut boat_query: Query<&mut Boat>,
     time: Res<Time>,
     mut cooldown: ResMut<ShopCooldown>,
 ) {
@@ -376,6 +424,7 @@ pub fn handle_shop_events(
         cooldown.0.reset();
 
         let (mut player, children) = player_query.single_mut();
+        let mut boat = boat_query.single_mut();
 
         match event {
             ShopEvent::Upgrade(index) => {
@@ -403,6 +452,43 @@ pub fn handle_shop_events(
             ShopEvent::Sell(index) => {
                 if let Some(item) = player.inventory.remove_item(*index) {
                     player.inventory.money += item.price / 2;
+                }
+            }
+            ShopEvent::UpgradePlayerHealth => {
+                let health_upgrade_cost = PLAYER_HEALTH_UPGRADE_COST;
+                if player.inventory.money >= health_upgrade_cost {
+                    player.max_health += 1.0;
+                    player.health = player.max_health;
+                    player.inventory.money -= health_upgrade_cost;
+                }
+            }
+            ShopEvent::UpgradeBoatSpeed => {
+                let boat_speed_cost = BOAT_SPEED_UPGRADE_COST;
+                if player.inventory.money >= boat_speed_cost {
+                    boat.movement_speed *= 1.10; // 10% increase
+                    player.inventory.money -= boat_speed_cost;
+                }
+            }
+            ShopEvent::UpgradeBoatHealth => {
+                let boat_health_cost = BOAT_HEALTH_UPGRADE_COST;
+                if player.inventory.money >= boat_health_cost {
+                    boat.max_health += 25.0;
+                    boat.health = boat.max_health;
+                    player.inventory.money -= boat_health_cost;
+                }
+            }
+            ShopEvent::UpgradeBoatRotation => {
+                let boat_rotation_cost = BOAT_ROTATION_UPGRADE_COST;
+                if player.inventory.money >= boat_rotation_cost {
+                    boat.rotation_speed *= 1.05; // 5% increase
+                    player.inventory.money -= boat_rotation_cost;
+                }
+            }
+            ShopEvent::UpgradeBoatCannon => {
+                let boat_cannon_cost = BOAT_CANNON_UPGRADE_COST;
+                if player.inventory.money >= boat_cannon_cost {
+                    boat.cannon_damage *= 1.25; // 25% increase
+                    player.inventory.money -= boat_cannon_cost;
                 }
             }
         }
