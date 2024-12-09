@@ -8,7 +8,7 @@ use crate::{
 
 use super::components::*;
 
-pub fn init_player_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn init_player_hud(mut commands: Commands, asset_server: Res<AssetServer>, _wind: Res<Wind>) {
     commands
         .spawn((
             NodeBundle {
@@ -62,6 +62,12 @@ pub fn init_ship_hud(mut commands: Commands, asset_server: Res<AssetServer>, _wi
     let font_handle: Handle<Font> = asset_server.load("pixel_pirate.ttf");
     let arrow_handle: Handle<Image> = asset_server.load("s_arrow.png");
     commands.insert_resource(ArrowTS(arrow_handle.clone()));
+
+    let dot = Vec2::new(0., 1.).dot(_wind.direction);
+    let mag_w = _wind.direction.length();
+    let mag_b = Vec2::new(0., 1.).length();
+    let cs = dot / (mag_b * mag_w);
+    let angle = cs.acos();
 
     // money and hp container
     commands
@@ -137,6 +143,10 @@ pub fn init_ship_hud(mut commands: Commands, asset_server: Res<AssetServer>, _wi
                             arrow_parent.spawn((
                                 ImageBundle {
                                     image: UiImage::new(arrow_handle),
+                                    transform: Transform {
+                                        rotation: Quat::from_rotation_z(angle), // Rotate around Z-axis
+                                        ..default() // Default other transform values (position, scale)
+                                    },
                                     ..default()
                                 },
                                 Arrow,
@@ -166,19 +176,12 @@ pub fn update_ship_hud(
     ship_query: Query<&Boat>,
     _wind: Res<Wind>,
     mut query: Query<&mut CountdownTimer>,
-    mut text_query: Query<(
-        &mut Text,
-        Option<&ShipHPText>,
-        Option<&GoldText>,
-        Option<&WindText>,
-    )>,
+    mut text_query: Query<(&mut Text, Option<&ShipHPText>, Option<&GoldText>)>,
     mut arrow_q: Query<&mut Transform, With<Arrow>>,
 ) {
-    let curWind = _wind.direction;
-
     if let Ok(ship) = ship_query.get_single() {
         if let Ok(player) = player_query.get_single() {
-            for (mut text, health, gold, wind) in text_query.iter_mut() {
+            for (mut text, health, gold) in text_query.iter_mut() {
                 if health.is_some() {
                     text.sections[0].value =
                         format!("Health: {}/{}", player.health, player.max_health);
@@ -196,6 +199,7 @@ pub fn update_ship_hud(
                             let cs = dot / (mag_b * mag_w);
                             let angle = cs.acos();
 
+                            arrow.rotation = Quat::from_rotation_z(0.0);
                             arrow.rotate_z(angle);
                         }
                     }
