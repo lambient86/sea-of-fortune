@@ -188,7 +188,7 @@ pub fn initial_spawn_player(
     let size = Vec2::new(32., 32.);
     let offset = Vec2::new(0., 0.);
 
-    let inventory = Inventory::new(100);
+    let inventory = Inventory::new(100000);
 
     //setting up player for spawning
     commands.spawn((

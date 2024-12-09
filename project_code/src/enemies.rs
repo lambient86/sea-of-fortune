@@ -348,7 +348,6 @@ pub fn spawn_enemy(
                 },
             ));
         }
-
         EnemyT::PoisonSkeleton => {
             let pskeleton_layout = TextureAtlasLayout::from_grid(
                 UVec2::new(31, 32), // SpriteSheet 1 pixel off, maybe fix later? it works like this though
@@ -361,6 +360,7 @@ pub fn spawn_enemy(
             // Add the texture atlas to the resource
 
             // Spawn the skeleton entity
+            println!("Spawned pskelly");
             commands.spawn((
                 SpriteBundle {
                     texture: asset_server.load("s_poison_skeleton.png"), // This uses the TextureAtlas handle

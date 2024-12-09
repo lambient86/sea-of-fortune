@@ -424,7 +424,6 @@ pub fn handle_shop_events(
         cooldown.0.reset();
 
         let (mut player, children) = player_query.single_mut();
-        let mut boat = boat_query.single_mut();
 
         match event {
             ShopEvent::Upgrade(index) => {
@@ -463,6 +462,7 @@ pub fn handle_shop_events(
                 }
             }
             ShopEvent::UpgradeBoatSpeed => {
+                let mut boat = boat_query.single_mut();
                 let boat_speed_cost = BOAT_SPEED_UPGRADE_COST;
                 if player.inventory.money >= boat_speed_cost {
                     boat.movement_speed *= 1.10; // 10% increase
@@ -470,6 +470,7 @@ pub fn handle_shop_events(
                 }
             }
             ShopEvent::UpgradeBoatHealth => {
+                let mut boat = boat_query.single_mut();
                 let boat_health_cost = BOAT_HEALTH_UPGRADE_COST;
                 if player.inventory.money >= boat_health_cost {
                     boat.max_health += 25.0;
@@ -478,6 +479,7 @@ pub fn handle_shop_events(
                 }
             }
             ShopEvent::UpgradeBoatRotation => {
+                let mut boat = boat_query.single_mut();
                 let boat_rotation_cost = BOAT_ROTATION_UPGRADE_COST;
                 if player.inventory.money >= boat_rotation_cost {
                     boat.rotation_speed *= 1.05; // 5% increase
@@ -485,6 +487,7 @@ pub fn handle_shop_events(
                 }
             }
             ShopEvent::UpgradeBoatCannon => {
+                let mut boat = boat_query.single_mut();
                 let boat_cannon_cost = BOAT_CANNON_UPGRADE_COST;
                 if player.inventory.money >= boat_cannon_cost {
                     boat.cannon_damage *= 1.25; // 25% increase
