@@ -101,11 +101,12 @@ pub fn skeleton_damaged(
     mut player_query: Query<&mut Player>,
 ) {
     for (mut skeleton, entity, mut hurtbox, transform) in skeleton_query.iter_mut() {
-        if !hurtbox.colliding {
+        if !hurtbox.colliding.is {
             continue;
         }
 
-        skeleton.current_hp -= 1.;
+        skeleton.current_hp -= hurtbox.colliding.dmg;
+        hurtbox.colliding.dmg = 0.;
 
         if skeleton.current_hp <= 0. {
             println!("Skeleton was attacked by player, it is dead :(");
@@ -121,7 +122,7 @@ pub fn skeleton_damaged(
             println!("Skeleton was attacked by player");
         }
 
-        hurtbox.colliding = false;
+        hurtbox.colliding.is = false;
     }
 }
 
@@ -219,6 +220,7 @@ pub fn skeleton_attack(
                 entity: SKELETON,
                 projectile: true,
                 enemy: true,
+                dmg: 1.,
             },
             AnimationTimer::new(Timer::from_seconds(0.5, TimerMode::Repeating)),
         ));

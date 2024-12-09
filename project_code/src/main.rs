@@ -16,6 +16,7 @@ mod poison_skeleton;
 mod rock;
 mod shop;
 mod skeleton;
+mod storm;
 mod systems;
 mod transition_box;
 mod wfc;
@@ -49,6 +50,7 @@ use poison_skeleton::PSkeletonPlugin;
 use rock::RockPlugin;
 use shop::ShopPlugin;
 use skeleton::SkeletonPlugin;
+use storm::StormPlugin;
 use systems::*;
 use wfc::WFCPlugin;
 use whirlpool::WhirlpoolPlugin;
@@ -172,6 +174,7 @@ fn main() {
         .add_plugins(RockPlugin)
         .add_plugins(WindPlugin)
         .add_plugins(WhirlpoolPlugin)
+        .add_plugins(StormPlugin)
         .add_plugins(BossPlugin)
         .add_plugins(HUDPlugin)
         .add_systems(
@@ -281,156 +284,14 @@ pub fn update(
                                 rotation_speed: f32::to_radians(100.0),
                                 acceleration: 0.,
                                 aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
-                                health: 200.,
-                                max_health: 200.,
+                                health: 10.,
+                                max_health: 10.,
+                                cannon_damage: 1.,
                             },
                         ));
                     }
                 }
-            }
-            /*else if env.message == "update_enemies" {
-                let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
-                let enemies = packet.payload;
-
-                let mut found = false;
-
-                for (mut transform, enemy, entity) in enemy_query.iter_mut() {
-                    for e in enemies.list.iter() {
-                        if e.id != enemy.id || !e.alive {
-                            continue;
-                        }
-                        transform.translation = e.pos;
-
-                        found = true;
-                        break;
-                    }
-                    if !found {
-                        commands.entity(entity).despawn();
-                    }
-                }
-
-                for e in enemies.list.iter() {}
-            } else if env.message == "update_projectiles" {
-            } */
-            else if env.message == "update_projectiles" {
-                let packet: Packet<Projectiles> = serde_json::from_str(&env.packet).unwrap();
-                let projectiles = packet.payload;
-
-                for proj in projectiles.list.iter() {
-                    for (transform, enemy, entity) in enemy_query.iter() {
-                        if proj.owner_id == enemy.id {
-                            match enemy.etype {
-                                KRAKEN => {
-                                    commands.spawn((
-                                    SpriteBundle {
-                                        texture: asset_server.load("s_kraken_spit_1.png"),
-                                        transform: Transform {
-                                            translation: proj.translation,
-                                            scale: Vec3::splat(2.0),
-                                            ..default()
-                                        },
-                                        ..default()
-                                    },
-                                    KrakenProjectile,
-                                    Lifetime(proj.lifetime),
-                                    Velocity {
-                                        v: proj.velocity.v, /* (direction * speed of projectile) */
-                                    },
-                                    Hitbox {
-                                        size: Vec2::splat(60.),
-                                        offset: Vec2::splat(0.),
-                                        lifetime: Some(Timer::from_seconds(5., TimerMode::Once)),
-                                        entity: KRAKEN,
-                                        projectile: true,
-                                        enemy: true,
-                                    },
-                                ));
-                                }
-                                GHOSTSHIP => {
-                                    commands.spawn((
-                                    SpriteBundle {
-                                        texture: asset_server.load("s_cannonball.png"),
-                                        transform: Transform {
-                                            translation: proj.translation,
-                                            scale: Vec3::splat(2.0),
-                                            ..default()
-                                        },
-                                        ..default()
-                                    },
-                                    GhostShipProjectile,
-                                    Lifetime(proj.lifetime),
-                                    Velocity {
-                                        v: proj.velocity.v, /* (direction * speed of projectile) */
-                                    },
-                                    Hitbox {
-                                        size: Vec2::splat(60.),
-                                        offset: Vec2::splat(0.),
-                                        lifetime: Some(Timer::from_seconds(5., TimerMode::Once)),
-                                        entity: GHOSTSHIP,
-                                        projectile: true,
-                                        enemy: true,
-                                    },));
-                                }
-                                _ => {
-                                    println!("Undefined enemy type");
-                                }
-                            }
-                            break;
-                        }
-                    }
-                }
-            } else if env.message == "enemy_dead" {
-                let packet: Packet<Enemy> = serde_json::from_str(&env.packet).unwrap();
-                let enemy = packet.payload;
-                println!("Received [enemy_dead]");
-
-                for (transform, mut e, entity) in enemy_query.iter_mut() {
-                    if e.id != enemy.id {
-                        continue;
-                    }
-                    e.alive = false;
-                    commands.entity(entity).despawn();
-
-                    println!("Enemy [{}] dead", e.id);
-                    break;
-                }
-            }
-            /*else if env.message == "new_enemies" {
-                let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
-                let enemies = packet.payload;
-
-                for e in enemies.list.iter() {
-                    match e.etype {
-                        KRAKEN => {
-                            let transform =
-                                Transform::from_translation(e.pos).with_scale(Vec3::splat(2.0));
-                            spawn_enemy(
-                                &mut commands,
-                                EnemyT::Kraken(e.id),
-                                transform,
-                                &asset_server,
-                                &mut texture_atlases,
-                            )
-                        }
-                        GHOSTSHIP => {
-                            let transform =
-                                Transform::from_translation(e.pos).with_scale(Vec3::splat(2.0));
-                            spawn_enemy(
-                                &mut commands,
-                                EnemyT::GhostShip(e.id),
-                                transform,
-                                &asset_server,
-                                &mut texture_atlases,
-                            )
-                        }
-                        _ => {
-                            println!("Undefined enemy in [update_enemies]");
-                        }
-                    }
-                }
             } else {
-            } */
-            else {
                 println!(
                     "Recieved invalid packet from [{}]: {}",
                     src.ip(),
