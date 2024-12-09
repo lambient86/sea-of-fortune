@@ -137,6 +137,8 @@ pub fn spawn_boat(
                 rotation_speed: f32::to_radians(100.0),
                 acceleration: 0.,
                 aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
+                health: BOAT_MAX_HP,
+                max_health: BOAT_MAX_HP,
             },
             AttackCooldown {
                 remaining: Timer::from_seconds(1.5, TimerMode::Once),
@@ -150,6 +152,29 @@ pub fn spawn_boat(
                 enemy: false,
             },
         ));
+    }
+}
+
+pub fn check_boat_health(
+    mut boat_query: Query<(&mut Boat, Entity, &mut Hurtbox, &mut Transform), With<Boat>>,
+) {
+    for (mut boat, entity, mut hurtbox, mut transform) in boat_query.iter_mut() {
+        if !hurtbox.colliding {
+            continue;
+        }
+
+        boat.health -= 1.;
+
+        if boat.health <= 0. {
+            println!("Boat died... yikes!");
+            boat.health = boat.max_health;
+            //transform.translation = boat.spawn_position;
+            println!("Boat respawned!");
+        } else {
+            println!("Ouch! Boat was hit.");
+        }
+
+        hurtbox.colliding = false;
     }
 }
 
