@@ -22,8 +22,6 @@ pub struct Hitbox {
     pub lifetime: Option<Timer>,
     pub projectile: bool,
 
-    pub boat: bool,
-
     pub entity: i32,
     pub enemy: bool,
 }
@@ -34,8 +32,6 @@ pub struct Hurtbox {
     pub size: Vec2,
     pub offset: Vec2,
     pub colliding: bool,
-
-    pub boat: bool,
 
     pub iframe: Timer,
     pub entity: i32,

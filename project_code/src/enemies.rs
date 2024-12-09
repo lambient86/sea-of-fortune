@@ -6,9 +6,9 @@ use crate::ghost_ship::components::*;
 use crate::hitbox_system::components::*;
 use crate::kraken::components::*;
 use crate::player::components::*;
+use crate::poison_skeleton::components::*;
 use crate::rock::components::*;
 use crate::skeleton::components::*;
-use crate::poison_skeleton::components::*;
 use crate::whirlpool::components::*;
 use crate::Enemy;
 
@@ -25,7 +25,7 @@ pub enum EnemyT {
     Rock,
     RSkeleton,
     Whirlpool(i32),
-    PoisonSkeleton
+    PoisonSkeleton,
 }
 
 pub fn spawn_enemy(
@@ -107,7 +107,6 @@ pub fn spawn_enemy(
                     entity: BAT,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
-                    boat: false,
                 },
             ));
         }
@@ -136,7 +135,6 @@ pub fn spawn_enemy(
                     entity: KRAKEN,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
-                    boat: false,
                 },
                 Enemy {
                     id,
@@ -174,7 +172,6 @@ pub fn spawn_enemy(
                     entity: GHOSTSHIP,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
-                    boat: false,
                 },
                 Enemy {
                     id,
@@ -231,7 +228,6 @@ pub fn spawn_enemy(
                     entity: SKELETON,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
-                    boat: false,
                 },
             ));
         }
@@ -324,6 +320,5 @@ pub fn spawn_enemy(
                 },
             ));
         }
-        EnemyT::MSkeleton => {}
     }
 }
