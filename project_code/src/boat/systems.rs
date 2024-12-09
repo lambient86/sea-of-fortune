@@ -85,7 +85,6 @@ pub fn move_boat(
             addr: host.player.addr.clone(),
             pos: transform.translation,
             rot: transform.rotation,
-            boat: true,
             used: true,
         };
 
@@ -150,7 +149,6 @@ pub fn spawn_boat(
                 colliding: false,
                 iframe: Timer::from_seconds(0.75, TimerMode::Once),
                 enemy: false,
-                boat: true;
             },
         ));
     }
