@@ -278,8 +278,9 @@ pub fn update(
                                 rotation_speed: f32::to_radians(100.0),
                                 acceleration: 0.,
                                 aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
-                                health: 200.,
-                                max_health: 200.,
+                                health: 10.,
+                                max_health: 10.,
+                                cannon_damage: 1.,
                             },
                         ));
                     }
