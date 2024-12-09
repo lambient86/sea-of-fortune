@@ -43,7 +43,7 @@ pub fn rock_damaged(
 
         if rock.current_hp <= 0. {
             println!("Rock was attacked by player, it is dead :(");
-            let loot = generate_loot_item(Enemy::Rock);
+            let loot = generate_loot_item(EnemyT::Rock);
             if loot.price > 0 {
                 println!("Rock dropped: {}", loot.name);
                 if let Ok(mut player) = player_query.get_single_mut() {

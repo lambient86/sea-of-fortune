@@ -120,7 +120,7 @@ pub fn bat_damaged(
 
         if bat.current_hp <= 0. {
             println!("Bat was attacked by player, it is dead :(");
-            let loot = generate_loot_item(Enemy::Bat);
+            let loot = generate_loot_item(EnemyT::Bat);
             if loot.price > 0 {
                 println!("Bat dropped: {}", loot.name);
                 if let Ok(mut player) = player_query.get_single_mut() {
