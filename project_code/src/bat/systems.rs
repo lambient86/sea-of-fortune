@@ -6,6 +6,7 @@ use crate::data::gameworld_data::*;
 use crate::enemies::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
+use crate::shop::systems::generate_loot_item;
 
 /*   ROTATE_BAT FUNCTION   */
 /// This should be changed to a function called "track_player", which will
@@ -107,9 +108,10 @@ pub fn spawn_bat(
 // player weapon/attack collision) and then takes 1 damage (dies)
 pub fn bat_damaged(
     mut commands: Commands,
-    mut bat_query: Query<(&mut Bat, Entity, &mut Hurtbox), With<Bat>>,
+    mut bat_query: Query<(&mut Bat, Entity, &mut Hurtbox, &Transform), With<Bat>>,
+    mut player_query: Query<&mut Player>,
 ) {
-    for (mut bat, entity, mut hurtbox) in bat_query.iter_mut() {
+    for (mut bat, entity, mut hurtbox, transform) in bat_query.iter_mut() {
         if !hurtbox.colliding {
             continue;
         }
@@ -118,6 +120,13 @@ pub fn bat_damaged(
 
         if bat.current_hp <= 0. {
             println!("Bat was attacked by player, it is dead :(");
+            let loot = generate_loot_item(Enemy::Bat);
+            if loot.price > 0 {
+                println!("Bat dropped: {}", loot.name);
+                if let Ok(mut player) = player_query.get_single_mut() {
+                    player.inventory.add_item(loot);
+                }
+            }
             commands.entity(entity).despawn();
         } else {
             println!("Bat was attacked by player");

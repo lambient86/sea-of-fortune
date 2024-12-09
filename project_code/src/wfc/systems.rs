@@ -5,6 +5,7 @@ use crate::components::BoundingBox;
 
 use crate::level::systems::*;
 use crate::data::gameworld_data::*;
+use crate::enemies::*;
 
 #[derive(Resource)]
 pub struct DungeonTemplates {
@@ -256,14 +257,30 @@ pub fn generate_dungeon(
     mut wfc_state: Option<ResMut<WFCState>>,
     settings: Res<WFCSettings>,
     dungeon_tile_sheet: Res<DungeonTileSheet>,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     if let Some(mut wfc_state) = wfc_state {
         for attempt in 0..20 {
             // First create guaranteed path between spawn and door
             let mut grid = vec![TileType::Wall; settings.output_width * settings.output_height];
-            create_path(&mut grid, settings.output_width, settings.spawn_area, settings.door_area);
+            create_path(
+                &mut grid, 
+                settings.output_width, 
+                settings.spawn_area, 
+                settings.door_area,
+                &mut commands,
+                &asset_server,
+                &mut texture_atlases
+            );
             spawn_debug_path_markers(&mut commands, &grid, settings.output_width);
 
+            // Store the path positions for later enemy spawning
+            let path_positions: Vec<(usize, usize)> = grid.iter()
+                .enumerate()
+                .filter(|(_, &tile)| tile == TileType::Ground)
+                .map(|(i, _)| (i % settings.output_width, i / settings.output_width))
+                .collect();
             
             // Then run WFC on remaining tiles
             wfc_state.initialize(settings.output_width, settings.output_height);
@@ -291,7 +308,53 @@ pub fn generate_dungeon(
                         .map(|chunk| chunk.to_vec())
                         .collect();
                     
+                    // Spawn the dungeon tiles
                     spawn_dungeon_tiles(&mut commands, &dungeon, &dungeon_tile_sheet);
+
+                    // Now spawn enemies along the stored path positions
+                    let mut rng = rand::thread_rng();
+                    let mut steps = 0;
+
+                    for (x, y) in path_positions {
+                        steps += 1;
+                        // Skip first 10 steps to avoid spawn area
+                        if steps > 10 {
+                            let world_x = -(settings.output_width as f32) * TILE_SIZE as f32 
+                                + (x as f32 * TILE_SIZE as f32 * 2.0) + TILE_SIZE as f32;
+                            let world_y = -(settings.output_width as f32) * TILE_SIZE as f32 
+                                + (y as f32 * TILE_SIZE as f32 * 2.0) + TILE_SIZE as f32;
+                            
+                            let transform = Transform::from_xyz(world_x, world_y, 900.0)
+                                .with_scale(Vec3::splat(2.0));
+
+                            // Roll for each enemy type
+                            if rng.gen_bool(0.01) { // 1% chance for skeleton
+                                spawn_enemy(
+                                    &mut commands,
+                                    Enemy::Skeleton,
+                                    transform,
+                                    &asset_server,
+                                    &mut texture_atlases,
+                                );
+                            } else if rng.gen_bool(0.01) { // 1% chance for bat
+                                spawn_enemy(
+                                    &mut commands,
+                                    Enemy::Bat,
+                                    transform,
+                                    &asset_server,
+                                    &mut texture_atlases,
+                                );
+                            } else if rng.gen_bool(0.0025) { // 0.25% chance for rock
+                                spawn_enemy(
+                                    &mut commands,
+                                    Enemy::Rock,
+                                    transform,
+                                    &asset_server,
+                                    &mut texture_atlases,
+                                );
+                            }
+                        }
+                    }
                     return;
                 }
             }
@@ -299,11 +362,15 @@ pub fn generate_dungeon(
     }
 }
 
+
 fn create_path(
     grid: &mut Vec<TileType>,
     width: usize,
     start: (usize, usize),
-    end: (usize, usize)
+    end: (usize, usize),
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    texture_atlases: &mut ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let mut rng = rand::thread_rng();
     let mut current = start;
@@ -311,25 +378,20 @@ fn create_path(
     while current != end {
         grid[current.1 * width + current.0] = TileType::Ground;
         
-        // Randomly choose whether to move horizontally or vertically
+        // Path creation logic
         if current.0 != end.0 && current.1 != end.1 {
             if rng.gen_bool(0.5) {
-                // Move horizontally
                 current.0 = if end.0 > current.0 { current.0 + 1 } else { current.0 - 1 };
             } else {
-                // Move vertically
                 current.1 = if end.1 > current.1 { current.1 + 1 } else { current.1 - 1 };
             }
         } else if current.0 != end.0 {
-            // Must move horizontally
             current.0 = if end.0 > current.0 { current.0 + 1 } else { current.0 - 1 };
         } else {
-            // Must move vertically
             current.1 = if end.1 > current.1 { current.1 + 1 } else { current.1 - 1 };
         }
     }
     
-    // Set final position
     grid[end.1 * width + end.0] = TileType::Ground;
 }
 

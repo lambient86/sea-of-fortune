@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use crate::shop::components::Item;
 
 //constants
 pub const SKELETON_ANIMATION_TIME: f32 = 0.4;
@@ -27,3 +28,13 @@ pub struct SkeletonProjectile {
 
 #[derive(Component)]
 pub struct Lifetime(pub f32);
+
+#[derive(Component)]
+pub struct Loot;
+
+#[derive(Bundle)]
+pub struct LootBundle {
+    pub item: Item,
+    pub sprite_bundle: SpriteBundle,
+    pub marker: Loot,
+}

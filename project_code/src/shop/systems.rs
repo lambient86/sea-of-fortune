@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use super::components::*;
 use crate::player::components::Player;
 use crate::player::components::Sword;
+use crate::enemies::*;
 
 pub fn setup_shop_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
@@ -391,7 +392,11 @@ fn update_sword_for_player(
     }
 }
 
-pub fn generate_loot_item() -> Item {
-    // temporary
-    Item::new(ItemType::Loot, "Bat Wing".to_string(), 50)
+pub fn generate_loot_item(enemy_type: Enemy) -> Item {
+    match enemy_type {
+        Enemy::Skeleton => Item::new(ItemType::Loot, "Bone".to_string(), 100),
+        Enemy::Bat => Item::new(ItemType::Loot, "Bat Wing".to_string(), 100),
+        Enemy::Rock => Item::new(ItemType::Loot, "Rock Shard".to_string(), 150),
+        _ => Item::new(ItemType::Loot, "Nothing".to_string(), 0),
+    }
 }
