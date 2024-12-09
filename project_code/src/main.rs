@@ -197,6 +197,7 @@ fn main() {
         .insert_state(GameworldState::MainMenu)
         .insert_state(GameState::Running)
         .insert_resource(SpawnLocations::default())
+        .add_systems(Last, leave)
         .run();
 }
 
