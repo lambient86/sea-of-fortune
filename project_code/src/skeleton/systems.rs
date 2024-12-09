@@ -85,7 +85,7 @@ pub fn spawn_skeleton(
     // Spawning skeleton 1
     spawn_enemy(
         &mut commands,
-        Enemy::Skeleton,
+        EnemyT::RSkeleton,
         transform,
         &asset_server,
         &mut texture_atlases,

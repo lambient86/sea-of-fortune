@@ -27,9 +27,6 @@ pub struct SkeletonProjectile {
 }
 
 #[derive(Component)]
-pub struct Lifetime(pub f32);
-
-#[derive(Component)]
 pub struct Loot;
 
 #[derive(Bundle)]

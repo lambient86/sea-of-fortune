@@ -1,4 +1,6 @@
 use super::components::*;
+use crate::components::*;
+use crate::level::components::*;
 use bevy::prelude::*;
 use rand::Rng;
 use crate::components::BoundingBox;
@@ -135,28 +137,48 @@ fn extract_patterns(image: &Image, pattern_size: usize) -> Vec<Pattern> {
     println!("Final unique patterns: {}", final_patterns.len());
 
     final_patterns
-}pub fn load_dungeon(
+}
+
+pub fn load_dungeon(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-
-    // load dungeon tiles
-    let bg_dungeon_texture_handle: Handle<Image> = asset_server.load("ts_dungeon_tiles_1.png");
+    // Load all dungeon tilesets
+    let dungeon_1_handle = asset_server.load("ts_dungeon_tiles_1.png");
+    let dungeon_2_handle = asset_server.load("ts_dungeon_tiles_2.png");
+    let dungeon_3_handle = asset_server.load("ts_dungeon_tiles_3.png");
+    let dungeon_boss_handle = asset_server.load("ts_dungeon_tiles_4.png");
+    
     let dungeon_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 4, 1, None, None);
     let dungeon_layout_handle = texture_atlases.add(dungeon_layout);
 
-    // store tilesheets and handles
-    commands.insert_resource(DungeonTileSheet(bg_dungeon_texture_handle, dungeon_layout_handle));
+    commands.insert_resource(DungeonTileSheet(
+        dungeon_1_handle,
+        dungeon_2_handle,
+        dungeon_3_handle,
+        dungeon_boss_handle,
+        dungeon_layout_handle
+    ));
 }
 
 fn spawn_dungeon_tiles(
     commands: &mut Commands,
     dungeon: &Vec<Vec<TileType>>,
     dungeon_tile_sheet: &Res<DungeonTileSheet>,
+    current_island_type: &Res<CurrentIslandType>,
 ) {
     let height = dungeon.len();
     let width = dungeon[0].len();
+
+    // Select correct tileset based on island type
+    let texture_handle = match current_island_type.island_type {
+        IslandType::Level1 => dungeon_tile_sheet.0.clone(),
+        IslandType::Level2 => dungeon_tile_sheet.1.clone(),
+        IslandType::Level3 => dungeon_tile_sheet.2.clone(),
+        IslandType::Boss => dungeon_tile_sheet.3.clone(),
+        IslandType::Start => dungeon_tile_sheet.0.clone(), // Fallback
+    };
 
     let mut t = Vec3::new(
         -(width as f32) * TILE_SIZE as f32 + (TILE_SIZE * 2) as f32 / 2.,
@@ -170,7 +192,7 @@ fn spawn_dungeon_tiles(
             
             let mut entity = commands.spawn((
                 SpriteBundle {
-                    texture: dungeon_tile_sheet.0.clone(),
+                    texture: texture_handle.clone(),
                     transform: Transform {
                         translation: t,
                         scale: Vec3::splat(1.0),
@@ -179,28 +201,26 @@ fn spawn_dungeon_tiles(
                     ..default()
                 },
                 TextureAtlas {
-                    layout: dungeon_tile_sheet.1.clone(),
+                    layout: dungeon_tile_sheet.4.clone(), // Layout handle is now at index 4
                     index: match tile_type {
-                        TileType::Wall => 0,  // Wall tile from tileset
-                        TileType::Ground => 1, // Floor tile from tileset
-                        TileType::Void => 2,   // Empty/void tile from tileset
-                        TileType::Hole => 3,   // Hole/pit tile from tileset
+                        TileType::Wall => 0,
+                        TileType::Ground => 1,
+                        TileType::Void => 2,
+                        TileType::Hole => 3,
                     },
                 },
                 Tile { tile_type },
             ));
 
-            // Add collision for walls
             if tile_type == TileType::Wall {
                 entity.insert((
                     Wall,
                     BoundingBox::new(
-                        Vec2::new(t.x, t.y), // Use exact tile position
-                        Vec2::new(TILE_SIZE as f32 * 0.8, TILE_SIZE as f32 * 0.8) // Slightly smaller than visual tile
+                        Vec2::new(t.x, t.y),
+                        Vec2::new(TILE_SIZE as f32 * 0.8, TILE_SIZE as f32 * 0.8)
                     ),
                 ));
             }
-            
             
             t += Vec3::new((TILE_SIZE * 2) as f32, 0., 0.);
         }
@@ -259,6 +279,7 @@ pub fn generate_dungeon(
     dungeon_tile_sheet: Res<DungeonTileSheet>,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+    current_island_type: Res<CurrentIslandType>,
 ) {
     if let Some(mut wfc_state) = wfc_state {
         for attempt in 0..20 {

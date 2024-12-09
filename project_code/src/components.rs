@@ -1,4 +1,6 @@
 use bevy::{math::bounding::Aabb2d, prelude::*};
+use crate::level::components::IslandType;
+use crate::shop::components::*;
 
 #[derive(Component)]
 pub struct Background;
@@ -59,6 +61,39 @@ impl Default for SpawnLocations {
         Self {
             player: Vec2::ZERO,
             door: Vec2::ZERO,
+        }
+    }
+}
+
+// GLOBAL PLAYER ENTITIES
+#[derive(Resource)]
+pub struct PlayerEntities {
+    pub players: Vec<Entity>,
+    pub next_id: u8,
+    pub current_entity: Option<Entity>,
+    pub saved_inventory: Option<Inventory>,  // Add this
+}
+
+impl Default for PlayerEntities {
+    fn default() -> Self {
+        Self {
+            players: Vec::with_capacity(4),
+            next_id: 1,
+            current_entity: None,
+            saved_inventory: None,
+        }
+    }
+}
+
+#[derive(Resource)]
+pub struct CurrentIslandType {
+    pub island_type: IslandType,
+}
+
+impl Default for CurrentIslandType {
+    fn default() -> Self {
+        Self {
+            island_type: IslandType::Level1
         }
     }
 }
