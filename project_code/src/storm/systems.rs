@@ -1,45 +1,41 @@
 use crate::boat::components::*;
 use crate::data::gameworld_data::*;
 use crate::enemies::*;
-use crate::hitbox_system::Hurtbox;
-use crate::whirlpool::components::Lifetime;
-use crate::whirlpool::components::*;
-use bevy::math::{vec2, NormedVectorSpace};
 use bevy::prelude::*;
-use bevy::render::texture;
-use bevy::time::Time;
-use rand::random;
 use rand::Rng;
+use crate::storm::components::Storm;
+use crate::Hurtbox;
+use crate::player::components::Player;
 
 #[derive(Resource, Default)]
-pub struct WhirlpoolSpawnTimer {
+pub struct StormSpawnTimer {
     pub timer: Timer,
 }
 
 #[derive(Resource, Default)]
-pub struct WhirlpoolCooldownTimer {
+pub struct StormDamageCooldownTimer {
     pub timer: Timer,
 }
 
-pub fn setup_whirlpool_timer(mut commands: Commands) {
-    let initial_duration = rand::thread_rng().gen_range(25.0..35.0);
-    commands.insert_resource(WhirlpoolSpawnTimer {
+pub fn setup_storm_timer(mut commands: Commands) {
+    let initial_duration = rand::thread_rng().gen_range(30.0..35.0);
+    commands.insert_resource(StormSpawnTimer {
         timer: Timer::from_seconds(initial_duration, TimerMode::Once),
     });
 }
 
-pub fn setup_whirlpool_cooldown(mut commands: Commands) {
-    commands.insert_resource(WhirlpoolCooldownTimer {
-        timer: Timer::from_seconds(1.0, TimerMode::Once),  // Set to 1 second cooldown
+pub fn setup_storm_damage_cooldown(mut commands: Commands) {
+    commands.insert_resource(StormDamageCooldownTimer {
+        timer: Timer::from_seconds(1.0, TimerMode::Once),
     });
 }
 
-pub fn spawn_whirlpool(
+pub fn spawn_storm(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     time: Res<Time>,
-    mut spawn_timer: ResMut<WhirlpoolSpawnTimer>,
+    mut spawn_timer: ResMut<StormSpawnTimer>,
     boat_query: Query<&Transform, With<Boat>>,
 ) {
     spawn_timer.timer.tick(time.delta());
@@ -53,7 +49,7 @@ pub fn spawn_whirlpool(
             let spawn_y = rng.gen_range(-(OCEAN_LEVEL_H / 2.0)..(OCEAN_LEVEL_H / 2.0));
 
             // Ensure minimum distance from boat
-            let min_distance = 300.0; // Minimum distance from boat
+            let min_distance = 500.0; // Larger minimum distance since storms are bigger
             let boat_pos = Vec2::new(boat_transform.translation.x, boat_transform.translation.y);
             let spawn_pos = Vec2::new(spawn_x, spawn_y);
 
@@ -68,13 +64,14 @@ pub fn spawn_whirlpool(
 
             spawn_enemy(
                 &mut commands,
-                EnemyT::Whirlpool(0),
+                EnemyT::Storm(0),
                 Transform::from_translation(spawn_pos),
                 &asset_server,
                 &mut texture_atlases,
             );
 
-            let new_duration = rng.gen_range(25.0..35.0);
+            // Set next spawn timer
+            let new_duration = rng.gen_range(30.0..35.0);
             spawn_timer
                 .timer
                 .set_duration(std::time::Duration::from_secs_f32(new_duration));
@@ -83,28 +80,13 @@ pub fn spawn_whirlpool(
     }
 }
 
-pub fn despawn_whirlpool_system(
-    mut commands: Commands,
-    time: Res<Time>,
-    mut lifetime_query: Query<(Entity, &mut Lifetime), With<Whirlpool>>,
-) {
-    // Update lifetimes
-    for (entity, mut lifetime) in lifetime_query.iter_mut() {
-        lifetime.0 -= time.delta_seconds();
-        // If lifetime expired, despawn individually
-        if lifetime.0 <= 0.0 {
-            commands.entity(entity).despawn_recursive();
-        }
-    }
-}
-
-pub fn check_whirlpool_collisions(
+pub fn storm_damage_system(
     mut query_set: ParamSet<(
         Query<(&mut Transform, &Hurtbox, &mut Boat), With<Boat>>,
-        Query<(&Transform, &Hurtbox), With<Whirlpool>>,
+        Query<(&Transform, &Hurtbox), With<Storm>>,
     )>,
     time: Res<Time>,
-    mut cooldown_timer: ResMut<WhirlpoolCooldownTimer>,
+    mut cooldown_timer: ResMut<StormDamageCooldownTimer>,
 ) {
     // Tick the cooldown timer
     cooldown_timer.timer.tick(time.delta());
@@ -114,38 +96,32 @@ pub fn check_whirlpool_collisions(
         return;
     }
 
-    let whirlpool_positions: Vec<(Vec3, f32)> = query_set
+    let storm_positions: Vec<(Vec3, f32)> = query_set
         .p1()
         .iter()
         .map(|(transform, hurtbox)| (transform.translation, hurtbox.size.x))
         .collect();
 
     if let Ok((mut boat_transform, boat_hurtbox, mut boat)) = query_set.p0().get_single_mut() {
-        for (whirlpool_pos, whirlpool_size) in whirlpool_positions {
-            let distance = boat_transform.translation.distance(whirlpool_pos);
-            let collision_distance = (boat_hurtbox.size.x + whirlpool_size) / 2.0;
+        for (storm_pos, storm_size) in storm_positions {
+            let distance = boat_transform.translation.distance(storm_pos);
+            let collision_distance = (boat_hurtbox.size.x + storm_size) / 2.0;
 
-            // Check if boat is within whirlpool's influence
+            // Check if boat is within storm's influence
             if distance < collision_distance {
-                println!("Boat caught in whirlpool!");
+                println!("Boat caught in storm!");
 
-                boat.health -= 1.0;
-                println!("Whirlpool damaged boat! Current health: {}", boat.health);
+                // Calculate direction from boat to storm center
+                let direction = (storm_pos - boat_transform.translation).normalize();
+
+                // Apply damage to the boat
+                boat.health -= 5.0;
+                println!("Storm damaged boat! Current health: {}", boat.health);
 
                 // Check if boat is destroyed
                 if boat.health <= 0.0 {
-                    println!("Boat destroyed by whirlpool!");
-                    boat_transform.translation = Vec3::new(0., 0., 900.);
+                    println!("Boat destroyed by storm!");
                 }
-
-                // Calculate direction from boat to whirlpool center
-                let direction = (whirlpool_pos - boat_transform.translation).normalize();
-
-                // Pull strength increases as boat gets closer to center
-                let pull_strength = 2.0 * (1.0 - distance / collision_distance);
-
-                // Apply the pull force
-                boat_transform.translation += direction * pull_strength;
 
                 // Reset the cooldown timer when a collision occurs
                 cooldown_timer.timer.reset();
