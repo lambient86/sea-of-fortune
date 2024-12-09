@@ -5,8 +5,10 @@ pub mod systems;
 
 use crate::components::GameState;
 use crate::player::systems::despawn_player;
+
 use crate::GameworldState;
 use systems::*;
+use crate::player::systems::*;
 
 pub struct BoatPlugin;
 
@@ -15,7 +17,7 @@ impl Plugin for BoatPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(GameworldState::Ocean),
-            spawn_boat.after(despawn_player),
+            (spawn_boat.after(despawn_player),),
         )
         .add_systems(
             Update,
@@ -24,6 +26,7 @@ impl Plugin for BoatPlugin {
                 boat_attack.after(move_boat),
                 move_cannonball,
                 cannonball_lifetime_check,
+                check_boat_health,
             )
                 .run_if(in_state(GameworldState::Ocean))
                 .run_if(in_state(GameState::Running)),

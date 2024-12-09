@@ -19,6 +19,7 @@ mod transition_box;
 mod wfc;
 mod whirlpool;
 mod wind;
+mod storm;
 
 use bat::BatPlugin;
 use bevy::asset;
@@ -51,6 +52,7 @@ use systems::*;
 use wfc::WFCPlugin;
 use whirlpool::WhirlpoolPlugin;
 use wind::WindPlugin;
+use storm::StormPlugin;
 
 use std::io::ErrorKind;
 use std::net::*;
@@ -170,6 +172,7 @@ fn main() {
         .add_plugins(RockPlugin)
         .add_plugins(WindPlugin)
         .add_plugins(WhirlpoolPlugin)
+        .add_plugins(StormPlugin)
         .add_plugins(BossPlugin)
         .add_systems(
             Update,
@@ -276,11 +279,13 @@ pub fn update(
                                 rotation_speed: f32::to_radians(100.0),
                                 acceleration: 0.,
                                 aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
+                                health: 200.,
+                                max_health: 200.,
                             },
                         ));
                     }
                 }
-            } else if env.message == "update_enemies" {
+            } /*else if env.message == "update_enemies" {
                 let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
                 let enemies = packet.payload;
 
@@ -302,7 +307,7 @@ pub fn update(
                 }
 
                 for e in enemies.list.iter() {}
-            } else if env.message == "update_projectiles" {
+            } */else if env.message == "update_projectiles" {
                 let packet: Packet<Projectiles> = serde_json::from_str(&env.packet).unwrap();
                 let projectiles = packet.payload;
 
@@ -417,13 +422,13 @@ pub fn update(
                         }
                     }
                 }
-            } else {
+            } /*else {
                 println!(
                     "Recieved invalid packet from [{}]: {}",
                     src.ip(),
                     env.message
                 );
-            }
+            }*/
         }
         Err(e) => match e.kind() {
             ErrorKind::WouldBlock => {}
