@@ -1,4 +1,8 @@
-// In src/shop/components.rs
+pub const PLAYER_HEALTH_UPGRADE_COST: u32 = 200;
+pub const BOAT_SPEED_UPGRADE_COST: u32 = 250;
+pub const BOAT_HEALTH_UPGRADE_COST: u32 = 300;
+pub const BOAT_ROTATION_UPGRADE_COST: u32 = 200;
+pub const BOAT_CANNON_UPGRADE_COST: u32 = 350;
 
 use bevy::prelude::*;
 
@@ -8,8 +12,12 @@ pub enum ItemType {
     Dagger(f32),
     Musket(f32),
     Pistol(f32),
-    Boat,
-    Loot, // For sellable items from enemies
+    Loot,
+    PlayerHealth,
+    BoatSpeed,
+    BoatHealth,
+    BoatRotation,
+    BoatCannon,
 }
 
 #[derive(Clone, Debug, Component)]
@@ -51,7 +59,15 @@ impl Default for Shop {
                 Item::new(ItemType::Sword(1.), "Sword".to_string(), 100),
                 Item::new(ItemType::Pistol(0.5), "Pistol".to_string(), 150),
                 Item::new(ItemType::Musket(1.), "Musket".to_string(), 200),
-                Item::new(ItemType::Boat, "Wooden Boat".to_string(), 500),
+                Item::new(ItemType::PlayerHealth, "Player HP Upgrade".to_string(), 500),
+                Item::new(ItemType::BoatSpeed, "Boat Speed Upgrade".to_string(), 500),
+                Item::new(ItemType::BoatHealth, "Boat HP Upgrade".to_string(), 500),
+                Item::new(
+                    ItemType::BoatRotation,
+                    "Boat Control Upgrade".to_string(),
+                    500,
+                ),
+                Item::new(ItemType::BoatCannon, "Boat Damage Upgrade".to_string(), 500),
             ],
         }
     }
@@ -74,10 +90,10 @@ impl Inventory {
         };
 
         // Add default items
-        inventory.add_item(Item::new(ItemType::Dagger, "Dagger".to_string(), 75));
-        inventory.add_item(Item::new(ItemType::Sword, "Sword".to_string(), 100));
-        inventory.add_item(Item::new(ItemType::Pistol, "Pistol".to_string(), 150));
-        inventory.add_item(Item::new(ItemType::Musket, "Musket".to_string(), 200));
+        inventory.add_item(Item::new(ItemType::Dagger(0.5), "Dagger".to_string(), 75));
+        inventory.add_item(Item::new(ItemType::Sword(1.), "Sword".to_string(), 100));
+        inventory.add_item(Item::new(ItemType::Pistol(0.5), "Pistol".to_string(), 150));
+        inventory.add_item(Item::new(ItemType::Musket(1.), "Musket".to_string(), 200));
 
         inventory
     }
@@ -110,27 +126,38 @@ pub struct ShopUI;
 
 #[derive(Component, Debug)]
 pub enum ShopButton {
-    Buy,
-    Upgrade,
+    PlayerUpgrades,
+    ShipUpgrades,
     Sell,
     UpgradeItem(usize),
     SellItem(usize),
+    UpgradePlayerHealth,
+    UpgradeBoatSpeed,
+    UpgradeBoatHealth,
+    UpgradeBoatRotation,
+    UpgradeBoatCannon,
 }
 
 #[derive(Event)]
 pub enum ShopEvent {
     Upgrade(usize),
     Sell(usize),
+    UpgradePlayerHealth,
+    UpgradeBoatSpeed,
+    UpgradeBoatHealth,
+    UpgradeBoatRotation,
+    UpgradeBoatCannon,
 }
 
 #[derive(Resource, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ShopPage {
-    BuyUpgrade,
+    PlayerUpgrades,
+    ShipUpgrades,
     Sell,
 }
 
 impl Default for ShopPage {
     fn default() -> Self {
-        ShopPage::BuyUpgrade
+        ShopPage::PlayerUpgrades
     }
 }

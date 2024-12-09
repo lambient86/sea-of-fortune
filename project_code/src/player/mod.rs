@@ -3,9 +3,9 @@ use bevy::prelude::*;
 pub mod components;
 pub mod systems;
 
-use systems::*;
-use crate::GameworldState;
 use crate::components::GameState;
+use crate::GameworldState;
+use systems::*;
 
 pub struct PlayerPlugin;
 
@@ -33,14 +33,17 @@ impl Plugin for PlayerPlugin {
                 move_musketball,
                 move_weapon.after(move_player),
                 swap_weapon,
-                )
+            )
                 .run_if(in_state(GameworldState::Island).or_else(in_state(GameworldState::Dungeon)))
-                .run_if(in_state(GameState::Running)))
-            .add_systems(OnExit(GameworldState::Island), (
-                despawn_player,
-                despawn_musketballs,))
-            .add_systems(OnExit(GameworldState::Dungeon), (
-                despawn_player,
-                despawn_musketballs,));
+                .run_if(in_state(GameState::Running)),
+        )
+        .add_systems(
+            OnExit(GameworldState::Island),
+            (despawn_player, despawn_musketballs),
+        )
+        .add_systems(
+            OnExit(GameworldState::Dungeon),
+            (despawn_player, despawn_musketballs),
+        );
     }
 }
