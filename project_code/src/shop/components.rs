@@ -4,12 +4,12 @@ use bevy::prelude::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ItemType {
-    Sword,
-    Dagger,
-    Musket,
-    Pistol,
+    Sword(f32),
+    Dagger(f32),
+    Musket(f32),
+    Pistol(f32),
     Boat,
-    Loot,  // For sellable items from enemies
+    Loot, // For sellable items from enemies
 }
 
 #[derive(Clone, Debug, Component)]
@@ -33,7 +33,7 @@ impl Item {
     pub fn upgrade(&mut self) {
         if self.level < 5 {
             self.level += 1;
-            self.price += self.price / 2;  // Increase price by 50% for each upgrade
+            self.price += self.price / 2; // Increase price by 50% for each upgrade
         }
     }
 }
@@ -47,10 +47,10 @@ impl Default for Shop {
     fn default() -> Self {
         Self {
             items: vec![
-                Item::new(ItemType::Dagger, "Dagger".to_string(), 75),
-                Item::new(ItemType::Sword, "Sword".to_string(), 100),
-                Item::new(ItemType::Pistol, "Pistol".to_string(), 150),
-                Item::new(ItemType::Musket, "Musket".to_string(), 200),
+                Item::new(ItemType::Dagger(0.5), "Dagger".to_string(), 75),
+                Item::new(ItemType::Sword(1.), "Sword".to_string(), 100),
+                Item::new(ItemType::Pistol(0.5), "Pistol".to_string(), 150),
+                Item::new(ItemType::Musket(1.), "Musket".to_string(), 200),
                 Item::new(ItemType::Boat, "Wooden Boat".to_string(), 500),
             ],
         }
@@ -72,13 +72,13 @@ impl Inventory {
             items: Vec::new(),
             money: initial_money,
         };
-        
+
         // Add default items
         inventory.add_item(Item::new(ItemType::Dagger, "Dagger".to_string(), 75));
         inventory.add_item(Item::new(ItemType::Sword, "Sword".to_string(), 100));
         inventory.add_item(Item::new(ItemType::Pistol, "Pistol".to_string(), 150));
         inventory.add_item(Item::new(ItemType::Musket, "Musket".to_string(), 200));
-        
+
         inventory
     }
 

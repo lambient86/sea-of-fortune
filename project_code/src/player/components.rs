@@ -1,5 +1,5 @@
-use crate::{components::BoundingBox, shop::components::Inventory};
 use crate::network::components::HostPlayer;
+use crate::{components::BoundingBox, shop::components::Inventory};
 use bevy::prelude::*;
 
 /// The speed at which the player accelerates
@@ -16,16 +16,15 @@ pub const MAX_ACCEL: f32 = 800.;
 pub const SWORD_COOLDOWN: f32 = 0.75;
 pub const MUSKET_COOLDOWN: f32 = 1.5;
 pub const DAGGER_COOLDOWN: f32 = 0.375; // Half of sword cooldown
-pub const PISTOL_COOLDOWN: f32 = 0.75;  // Half of musket cooldown
+pub const PISTOL_COOLDOWN: f32 = 0.75; // Half of musket cooldown
 
 // Base player stats
 pub const PLAYER_MAX_HP: f32 = 3.;
 
 #[derive(Component)]
 pub struct PlayerVisibility {
-    pub visible: bool
+    pub visible: bool,
 }
-
 
 #[derive(Component)]
 pub struct DespawnWeapon {
@@ -74,6 +73,12 @@ pub struct SwordSwooshAnimation {
     pub active: bool,
 }
 
+pub enum Weapons {
+    Sword(Sword),
+    Dagger(Dagger),
+    Musket(Musket),
+    Pistol(Pistol),
+}
 
 /// Struct representing the sword weapon for the player
 #[derive(Component)]
@@ -129,7 +134,7 @@ pub struct Dagger {
 impl Default for Dagger {
     fn default() -> Dagger {
         Dagger {
-            damage: 0.5,     // Half of sword's base damage
+            damage: 0.5, // Half of sword's base damage
             upgraded: false,
         }
     }
@@ -170,7 +175,7 @@ pub struct Musket {
 impl Default for Musket {
     fn default() -> Musket {
         Musket {
-            damage: 1.0,     // Base musket damage
+            damage: 1.0, // Base musket damage
             upgraded: false,
         }
     }
@@ -212,7 +217,7 @@ pub struct Pistol {
 impl Default for Pistol {
     fn default() -> Pistol {
         Pistol {
-            damage: 0.5,     // Half of musket's base damage
+            damage: 0.5, // Half of musket's base damage
             upgraded: false,
         }
     }

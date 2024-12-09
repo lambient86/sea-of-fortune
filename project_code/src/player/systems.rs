@@ -220,7 +220,10 @@ pub fn initial_spawn_player(
             max_health: PLAYER_MAX_HP,
             inventory,
             spawn_position,
-            weapon: 0,
+            weapon: Weapons::Sword(Sword {
+                damage: 1.,
+                upgraded: false,
+            }),
             aabb: BoundingBox::new(
                 Vec2::new(spawn_position.x, spawn_position.y),
                 Vec2::splat(PLAYER_SIZE / 2.0),
@@ -229,7 +232,7 @@ pub fn initial_spawn_player(
         Hurtbox {
             size,
             offset,
-            colliding: false,
+            colliding: Collision { is: false, dmg: 0. },
             entity: PLAYER,
             iframe: Timer::from_seconds(0.75, TimerMode::Once),
             enemy: false,
@@ -306,7 +309,9 @@ pub fn swap_weapon(
                 despawn_weapon_internal(&mut commands, children, &weapon_query);
             }
 
-            player.weapon = 0;
+            player.weapon = Weapons::Sword(Sword {
+                damage:
+            });
             println!("Switched to sword!");
 
             let sword_level = player
@@ -542,52 +547,56 @@ pub fn sword_attack(
         }
 
         //checking if weapon is sword
-        if player.weapon == 0 {
-            // Checks if the left mouse button is pressed
-            if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {
-                println!("Player attacked!");
-                let mouse_pos = curr_mouse_pos.0;
-                println!("Mouse world coords {} {}", mouse_pos.x, mouse_pos.y);
-                cooldown.remaining = Timer::from_seconds(0.75, TimerMode::Once);
+        match &player.weapon {
+            Weapons::Sword(weapon) => {
+                // Checks if the left mouse button is pressed
+                if get_player_input(PlayerControl::Attack, &keyboard_input, &mouse_input) == 1. {
+                    println!("Player attacked!");
+                    let mouse_pos = curr_mouse_pos.0;
+                    println!("Mouse world coords {} {}", mouse_pos.x, mouse_pos.y);
+                    cooldown.remaining = Timer::from_seconds(0.75, TimerMode::Once);
 
-                // Player position
-                let player_position = transform.translation.truncate();
+                    // Player position
+                    let player_position = transform.translation.truncate();
 
-                // Calculate direction from player position to mouse position
-                let direction = (mouse_pos - player_position).normalize();
-                // Calculate hitbox offset based on direction
-                let hitbox_offset = direction * 50.0; // Distance from the player to the hitbox
+                    // Calculate direction from player position to mouse position
+                    let direction = (mouse_pos - player_position).normalize();
+                    // Calculate hitbox offset based on direction
+                    let hitbox_offset = direction * 50.0; // Distance from the player to the hitbox
 
-                // Define the size of the hitbox
-                let hitbox_size = Vec2::new(40.0, 60.0);
+                    // Define the size of the hitbox
+                    let hitbox_size = Vec2::new(40.0, 60.0);
 
-                // Create the hitbox
-                create_hitbox(
-                    &mut commands,
-                    entity,
-                    hitbox_size,
-                    hitbox_offset,
-                    Some(0.1),
-                    PLAYER,
-                    false,
-                    false,
-                );
+                    // Create the hitbox
+                    create_hitbox(
+                        &mut commands,
+                        entity,
+                        hitbox_size,
+                        hitbox_offset,
+                        Some(0.1),
+                        PLAYER,
+                        false,
+                        false,
+                        weapon.damage,
+                    );
 
-                commands.spawn((
-                    SpriteBundle {
-                        texture: asset_server.load("s_sword_swipe_bigger.png"), // Replace with your swoosh sprite path
-                        transform: Transform::from_translation(
-                            transform.translation + direction.extend(0.1) * 50.0,
-                        )
-                        .with_rotation(Quat::from_rotation_z(direction.angle_between(Vec2::X))),
-                        ..default()
-                    },
-                    SwordSwooshAnimation {
-                        timer: Timer::from_seconds(0.05, TimerMode::Once), // Adjust duration as needed
-                        active: true,
-                    },
-                ));
+                    commands.spawn((
+                        SpriteBundle {
+                            texture: asset_server.load("s_sword_swipe_bigger.png"), // Replace with your swoosh sprite path
+                            transform: Transform::from_translation(
+                                transform.translation + direction.extend(0.1) * 50.0,
+                            )
+                            .with_rotation(Quat::from_rotation_z(direction.angle_between(Vec2::X))),
+                            ..default()
+                        },
+                        SwordSwooshAnimation {
+                            timer: Timer::from_seconds(0.05, TimerMode::Once), // Adjust duration as needed
+                            active: true,
+                        },
+                    ));
+                }
             }
+            _ => {}
         }
     }
 }

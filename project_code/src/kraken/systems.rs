@@ -114,11 +114,12 @@ pub fn kraken_damaged(
     mut kraken_query: Query<(&mut Kraken, Entity, &mut Hurtbox), With<Kraken>>,
 ) {
     for (mut kraken, entity, mut hurtbox) in kraken_query.iter_mut() {
-        if !hurtbox.colliding {
+        if !hurtbox.colliding.is {
             continue;
         }
 
-        kraken.current_hp -= 1.;
+        kraken.current_hp -= hurtbox.colliding.dmg;
+        hurtbox.colliding.dmg = 0.;
 
         if kraken.current_hp <= 0. {
             println!("Kraken was attacked by player, it is dead :(");
@@ -127,7 +128,7 @@ pub fn kraken_damaged(
             println!("Kraken was attacked by player");
         }
 
-        hurtbox.colliding = false;
+        hurtbox.colliding.is = false;
     }
 }
 
@@ -219,6 +220,7 @@ pub fn kraken_attack(
                 entity: KRAKEN,
                 projectile: true,
                 enemy: true,
+                dmg: 1.,
             },
         ));
         }

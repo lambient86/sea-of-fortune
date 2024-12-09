@@ -146,7 +146,7 @@ pub fn spawn_boat(
             size: hurtbox_size,
             offset: hurtbox_offset,
             entity: BOAT,
-            colliding: false,
+            colliding: Collision { is: false, dmg: 0. },
             iframe: Timer::from_seconds(0.75, TimerMode::Once),
             enemy: false,
         },
@@ -157,11 +157,12 @@ pub fn check_boat_health(
     mut boat_query: Query<(&mut Boat, Entity, &mut Hurtbox, &mut Transform), With<Boat>>,
 ) {
     for (mut boat, entity, mut hurtbox, mut transform) in boat_query.iter_mut() {
-        if !hurtbox.colliding {
+        if !hurtbox.colliding.is {
             continue;
         }
 
-        boat.health -= 1.;
+        boat.health -= hurtbox.colliding.dmg;
+        hurtbox.colliding.dmg = 0.;
 
         if boat.health <= 0. {
             println!("Boat died... yikes!");
@@ -173,7 +174,7 @@ pub fn check_boat_health(
             println!("Ouch! Boat was hit... HP: {}", boat.health);
         }
 
-        hurtbox.colliding = false;
+        hurtbox.colliding.is = false;
     }
 }
 
@@ -185,10 +186,10 @@ pub fn boat_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     curr_mouse_pos: ResMut<CurrMousePos>,
     time: Res<Time>,
-    mut boat_query: Query<(&Transform, &mut AttackCooldown), With<Boat>>,
+    mut boat_query: Query<(&Transform, &mut AttackCooldown, &Boat), With<Boat>>,
     asset_server: Res<AssetServer>,
 ) {
-    for (boat_transform, mut cooldown) in boat_query.iter_mut() {
+    for (boat_transform, mut cooldown, boat) in boat_query.iter_mut() {
         // checking cooldown
         if !cooldown.remaining.finished() {
             cooldown.remaining.tick(time.delta());
@@ -239,6 +240,7 @@ pub fn boat_attack(
                     entity: BOAT,
                     projectile: true,
                     enemy: false,
+                    dmg: boat.cannon_damage,
                 },
             ));
         }

@@ -24,6 +24,8 @@ pub struct Hitbox {
 
     pub entity: i32,
     pub enemy: bool,
+
+    pub dmg: f32,
 }
 
 // Hurtbox component: Represents an area that can receive interactions
@@ -31,9 +33,20 @@ pub struct Hitbox {
 pub struct Hurtbox {
     pub size: Vec2,
     pub offset: Vec2,
-    pub colliding: bool,
+    pub colliding: Collision,
 
     pub iframe: Timer,
     pub entity: i32,
     pub enemy: bool,
+}
+
+pub struct Collision {
+    pub is: bool,
+    pub dmg: f32,
+}
+
+impl Collision {
+    pub fn default(self) -> Collision {
+        Collision { is: false, dmg: 0. }
+    }
 }
