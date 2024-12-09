@@ -117,7 +117,6 @@ pub fn spawn_boat(
         let hurtbox_size = Vec2::new(50., 50.);
         let hurtbox_offset = Vec2::new(0., 0.);
 
-        
         //spawning boat
         commands.spawn((
             SpriteBundle {
@@ -133,7 +132,7 @@ pub fn spawn_boat(
                 index: 0,
             },
             Boat {
-                owner: player_entity,
+                id: host.player.id,
                 movement_speed: 150.,
                 rotation_speed: f32::to_radians(100.0),
                 acceleration: 0.,
