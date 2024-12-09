@@ -58,7 +58,6 @@ pub fn spawn_enemy(
                     entity: WHIRLPOOL,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
-                    boat: false;
                 },
                 Enemy {
                     id,
@@ -275,7 +274,6 @@ pub fn spawn_enemy(
                     projectile: false,
                     entity: ROCK,
                     enemy: true,
-                    boat: false,
                 },
             ));
         }
@@ -322,7 +320,6 @@ pub fn spawn_enemy(
                     entity: PSKELETON,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
-                    boat: false,
                 },
             ));
         }
