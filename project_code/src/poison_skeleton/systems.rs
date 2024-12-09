@@ -6,9 +6,8 @@ use crate::data::gameworld_data::*;
 use crate::enemies::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
-use crate::poison_skeleton::components::*;
 use crate::poison_skeleton::components::Lifetime as PoisonSkeletonLifetime;
-
+use crate::poison_skeleton::components::*;
 
 /*   ROTATE_skeleton FUNCTION   */
 /// This should be changed to a function called "track_player", which will
@@ -101,11 +100,12 @@ pub fn pskeleton_damaged(
     mut pskeleton_query: Query<(&mut PoisonSkeleton, Entity, &mut Hurtbox), With<PoisonSkeleton>>,
 ) {
     for (mut pskeleton, entity, mut hurtbox) in pskeleton_query.iter_mut() {
-        if !hurtbox.colliding {
+        if !hurtbox.colliding.is {
             continue;
         }
 
-        pskeleton.current_hp -= 1.;
+        pskeleton.current_hp -= hurtbox.colliding.dmg;
+        hurtbox.colliding.dmg = 0.;
 
         if pskeleton.current_hp <= 0. {
             println!("Poison skeleton was attacked by player, it is dead :(");
@@ -114,7 +114,7 @@ pub fn pskeleton_damaged(
             println!("Poison skeleton was attacked by player");
         }
 
-        hurtbox.colliding = false;
+        hurtbox.colliding.is = false;
     }
 }
 
@@ -212,6 +212,7 @@ pub fn pskeleton_attack(
                 entity: PSKELETON,
                 projectile: true,
                 enemy: true,
+                dmg: 1.,
             },
             AnimationTimer::new(Timer::from_seconds(0.5, TimerMode::Repeating)),
         ));
@@ -281,7 +282,6 @@ pub fn pmove_skeleton(
         transform.translation += velocity * time.delta_seconds();
     }
 }
-
 
 /*   DESPAWN_ALL_SKELETON_PROJ   */
 /// Despawns all the skeleton's projectiles

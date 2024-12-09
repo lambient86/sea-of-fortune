@@ -109,7 +109,7 @@ pub fn spawn_enemy(
                 Hurtbox {
                     size: Vec2::new(400., 290.),
                     offset: Vec2::splat(0.),
-                    colliding: false,
+                    colliding: Collision::default(),
                     entity: WHIRLPOOL,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
@@ -158,7 +158,7 @@ pub fn spawn_enemy(
                 Hurtbox {
                     size: Vec2::splat(25.),
                     offset: Vec2::splat(0.),
-                    colliding: false,
+                    colliding: Collision::default(),
                     entity: BAT,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
@@ -186,7 +186,7 @@ pub fn spawn_enemy(
                 Hurtbox {
                     size: Vec2::new(160., 90.),
                     offset: Vec2::splat(0.),
-                    colliding: false,
+                    colliding: Collision::default(),
                     entity: KRAKEN,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
@@ -223,7 +223,7 @@ pub fn spawn_enemy(
                 Hurtbox {
                     size: Vec2::new(160., 90.),
                     offset: Vec2::splat(0.),
-                    colliding: false,
+                    colliding: Collision::default(),
                     entity: GHOSTSHIP,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
@@ -279,7 +279,7 @@ pub fn spawn_enemy(
                 Hurtbox {
                     size: Vec2::new(32., 32.), // Adjust as needed
                     offset: Vec2::ZERO,
-                    colliding: false,
+                    colliding: Collision::default(),
                     entity: SKELETON,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
@@ -313,7 +313,7 @@ pub fn spawn_enemy(
                 Hurtbox {
                     size: Vec2::splat(50.),
                     offset: Vec2::splat(0.),
-                    colliding: false,
+                    colliding: Collision::default(),
                     entity: ROCK,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
@@ -325,6 +325,7 @@ pub fn spawn_enemy(
                     projectile: false,
                     entity: ROCK,
                     enemy: true,
+                    dmg: 1.,
                 },
             ));
         }
@@ -368,7 +369,7 @@ pub fn spawn_enemy(
                 Hurtbox {
                     size: Vec2::new(32., 32.), // Adjust as needed
                     offset: Vec2::ZERO,
-                    colliding: false,
+                    colliding: Collision::default(),
                     entity: PSKELETON,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,

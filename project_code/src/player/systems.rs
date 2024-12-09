@@ -229,7 +229,7 @@ pub fn initial_spawn_player(
         Hurtbox {
             size,
             offset,
-            colliding: false,
+            colliding: Collision { is: false, dmg: 0. },
             entity: PLAYER,
             iframe: Timer::from_seconds(0.75, TimerMode::Once),
             enemy: false,
@@ -571,6 +571,7 @@ pub fn sword_attack(
                     PLAYER,
                     false,
                     false,
+                    2.,
                 );
 
                 commands.spawn((
@@ -638,10 +639,11 @@ pub fn dagger_attack(
                     entity,
                     hitbox_size,
                     hitbox_offset,
-                    Some(0.05), // Faster hitbox duration
+                    Some(0.1),
                     PLAYER,
                     false,
                     false,
+                    2.,
                 );
             }
         }
@@ -725,6 +727,7 @@ pub fn musket_attack(
                         entity: PLAYER,
                         projectile: true,
                         enemy: false,
+                        dmg: 2.,
                     },
                 ));
             }
@@ -788,6 +791,7 @@ pub fn pistol_attack(
                         entity: PLAYER,
                         projectile: true,
                         enemy: false,
+                        dmg: 2.,
                     },
                 ));
             }
@@ -815,11 +819,12 @@ pub fn check_player_health(
     gameworld_state: Res<State<GameworldState>>,
 ) {
     for (mut player, entity, mut hurtbox, mut transform) in player_query.iter_mut() {
-        if !hurtbox.colliding {
+        if !hurtbox.colliding.is {
             continue;
         }
 
-        player.health -= 1.;
+        player.health -= hurtbox.colliding.dmg;
+        hurtbox.colliding.dmg = 0.;
 
         if player.health <= 0. {
             println!("Player died... yikes!");
@@ -836,7 +841,7 @@ pub fn check_player_health(
             println!("Ouch! Player was hit.");
         }
 
-        hurtbox.colliding = false;
+        hurtbox.colliding.is = false;
     }
 }
 

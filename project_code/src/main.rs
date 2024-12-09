@@ -345,6 +345,7 @@ pub fn update(
                                         entity: KRAKEN,
                                         projectile: true,
                                         enemy: true,
+                                        dmg: 0.,
                                     },
                                 ));
                                 }
@@ -371,6 +372,7 @@ pub fn update(
                                         entity: GHOSTSHIP,
                                         projectile: true,
                                         enemy: true,
+                                        dmg: 0.,
                                     },));
                                 }
                                 _ => {

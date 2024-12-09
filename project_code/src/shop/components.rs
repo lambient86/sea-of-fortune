@@ -9,9 +9,9 @@ use bevy::prelude::*;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ItemType {
     Sword,
-    Pistol,
     Dagger,
     Musket,
+    Pistol,
     Loot,
     PlayerHealth,
     BoatSpeed,
@@ -41,7 +41,7 @@ impl Item {
     pub fn upgrade(&mut self) {
         if self.level < 5 {
             self.level += 1;
-            self.price += self.price / 2;  // Increase price by 50% for each upgrade
+            self.price += self.price / 2; // Increase price by 50% for each upgrade
         }
     }
 }
@@ -62,7 +62,11 @@ impl Default for Shop {
                 Item::new(ItemType::PlayerHealth, "Player HP Upgrade".to_string(), 500),
                 Item::new(ItemType::BoatSpeed, "Boat Speed Upgrade".to_string(), 500),
                 Item::new(ItemType::BoatHealth, "Boat HP Upgrade".to_string(), 500),
-                Item::new(ItemType::BoatRotation, "Boat Control Upgrade".to_string(), 500),
+                Item::new(
+                    ItemType::BoatRotation,
+                    "Boat Control Upgrade".to_string(),
+                    500,
+                ),
                 Item::new(ItemType::BoatCannon, "Boat Damage Upgrade".to_string(), 500),
             ],
         }
@@ -84,13 +88,13 @@ impl Inventory {
             items: Vec::new(),
             money: initial_money,
         };
-        
+
         // Add default items
         inventory.add_item(Item::new(ItemType::Dagger, "Dagger".to_string(), 75));
         inventory.add_item(Item::new(ItemType::Sword, "Sword".to_string(), 100));
         inventory.add_item(Item::new(ItemType::Pistol, "Pistol".to_string(), 150));
         inventory.add_item(Item::new(ItemType::Musket, "Musket".to_string(), 200));
-        
+
         inventory
     }
 
@@ -134,8 +138,6 @@ pub enum ShopButton {
     UpgradeBoatCannon,
 }
 
-
-
 #[derive(Event)]
 pub enum ShopEvent {
     Upgrade(usize),
@@ -150,7 +152,7 @@ pub enum ShopEvent {
 #[derive(Resource, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ShopPage {
     PlayerUpgrades,
-    ShipUpgrades, 
+    ShipUpgrades,
     Sell,
 }
 
