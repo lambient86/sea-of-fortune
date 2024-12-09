@@ -11,10 +11,10 @@ mod kraken;
 mod level;
 mod network;
 mod player;
+mod poison_skeleton;
 mod rock;
 mod shop;
 mod skeleton;
-mod poison_skeleton;
 mod systems;
 mod transition_box;
 mod wfc;
@@ -43,10 +43,10 @@ use level::LevelPlugin;
 use player::components::AttackCooldown;
 use player::systems::*;
 use player::PlayerPlugin;
+use poison_skeleton::PSkeletonPlugin;
 use rock::RockPlugin;
 use shop::ShopPlugin;
 use skeleton::SkeletonPlugin;
-use poison_skeleton::PSkeletonPlugin;
 use systems::*;
 use wfc::WFCPlugin;
 use whirlpool::WhirlpoolPlugin;
@@ -284,7 +284,8 @@ pub fn update(
                         ));
                     }
                 }
-            } /*else if env.message == "update_enemies" {
+            }
+            /*else if env.message == "update_enemies" {
                 let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
                 let enemies = packet.payload;
 
@@ -307,8 +308,8 @@ pub fn update(
 
                 for e in enemies.list.iter() {}
             } else if env.message == "update_projectiles" {
-            } */else if env.message == "update_projectiles" {
-
+            } */
+            else if env.message == "update_projectiles" {
                 let packet: Packet<Projectiles> = serde_json::from_str(&env.packet).unwrap();
                 let projectiles = packet.payload;
 
@@ -390,7 +391,8 @@ pub fn update(
                     println!("Enemy [{}] dead", e.id);
                     break;
                 }
-            } /*else if env.message == "new_enemies" {
+            }
+            /*else if env.message == "new_enemies" {
                 let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
                 let enemies = packet.payload;
 
@@ -424,7 +426,8 @@ pub fn update(
                     }
                 }
             } else {
-            } */else {
+            } */
+            else {
                 println!(
                     "Recieved invalid packet from [{}]: {}",
                     src.ip(),
