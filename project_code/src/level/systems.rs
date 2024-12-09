@@ -125,7 +125,7 @@ pub fn setup_ocean(
 
         // loop through the number of islands
         while island_count < 500 {
-            match y as u32 / 120 {
+            match island_count as u32 / 120 {
                 0 => {
                     island_type = IslandType::Level1;
                     zone_count = 0.0;
