@@ -6,8 +6,8 @@ use crate::data::gameworld_data::*;
 use crate::enemies::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
-use crate::skeleton::components::*;
 use crate::shop::systems::*;
+use crate::skeleton::components::*;
 
 /*   ROTATE_skeleton FUNCTION   */
 /// This should be changed to a function called "track_player", which will
@@ -109,7 +109,7 @@ pub fn skeleton_damaged(
 
         if skeleton.current_hp <= 0. {
             println!("Skeleton was attacked by player, it is dead :(");
-            let loot = generate_loot_item(Enemy::Skeleton);
+            let loot = generate_loot_item(EnemyT::RSkeleton);
             if loot.price > 0 {
                 println!("Skeleton dropped: {}", loot.name);
                 if let Ok(mut player) = player_query.get_single_mut() {
