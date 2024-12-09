@@ -20,6 +20,3 @@ pub struct GhostShip {
 
 #[derive(Component)]
 pub struct GhostShipProjectile;
-
-#[derive(Component)]
-pub struct Lifetime(pub f32);

@@ -9,32 +9,37 @@ use crate::player::components::*;
 use crate::rock::components::*;
 use crate::skeleton::components::*;
 use crate::whirlpool::components::*;
-use crate::whirlpool::components::Lifetime;
-use crate::whirlpool::components::WHIRLPOOL_LIFETIME;
+use crate::Enemy;
 
-pub enum Enemy {
+#[derive(Component)]
+pub struct EnemyTag;
+
+#[derive(Component)]
+pub struct Lifetime(pub f32);
+
+pub enum EnemyT {
     Bat,
-    Kraken,
-    GhostShip,
+    Kraken(i32),
+    GhostShip(i32),
     Rock,
-    Skeleton,
-    Skel2,
-    Whirlpool,
+    RSkeleton,
+    MSkeleton,
+    Whirlpool(i32),
 }
 
 pub fn spawn_enemy(
     commands: &mut Commands,
-    enemy: Enemy,
+    enemy: EnemyT,
     transform: Transform,
     asset_server: &Res<AssetServer>,
     texture_atlases: &mut ResMut<Assets<TextureAtlasLayout>>,
 ) {
     match enemy {
-        Enemy::Whirlpool => {
+        EnemyT::Whirlpool(id) => {
             let whirlpool_texture_asset: Handle<Image> = asset_server.load("s_whirlpool.png");
 
             commands.spawn((
-                SpriteBundle{
+                SpriteBundle {
                     texture: whirlpool_texture_asset,
                     transform,
                     ..default()
@@ -52,10 +57,20 @@ pub fn spawn_enemy(
                     entity: WHIRLPOOL,
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
-                }, 
+                },
+                Enemy {
+                    id,
+                    etype: WHIRLPOOL,
+                    pos: transform.translation,
+                    animation_index: 0,
+                    hp: WHIRLPOOL_HP,
+                    alive: true,
+                    target_id: -1,
+                },
+                EnemyTag,
             ));
-        },
-        Enemy::Bat => {
+        }
+        EnemyT::Bat => {
             let bat_layout =
                 TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 3, 1, None, None);
 
@@ -94,7 +109,7 @@ pub fn spawn_enemy(
                 },
             ));
         }
-        Enemy::Kraken => {
+        EnemyT::Kraken(id) => {
             let kraken_texture_handle = asset_server.load("s_kraken.png");
 
             commands.spawn((
@@ -120,9 +135,19 @@ pub fn spawn_enemy(
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
                 },
+                Enemy {
+                    id,
+                    etype: KRAKEN,
+                    pos: transform.translation,
+                    animation_index: 0,
+                    hp: KRAKEN_MAX_HP,
+                    alive: true,
+                    target_id: -1,
+                },
+                EnemyTag,
             ));
         }
-        Enemy::GhostShip => {
+        EnemyT::GhostShip(id) => {
             let ghostship_texture_handle = asset_server.load("s_ghost_ship.png");
 
             commands.spawn((
@@ -147,9 +172,19 @@ pub fn spawn_enemy(
                     iframe: Timer::from_seconds(0.75, TimerMode::Once),
                     enemy: true,
                 },
+                Enemy {
+                    id,
+                    etype: GHOSTSHIP,
+                    pos: transform.translation,
+                    animation_index: 0,
+                    hp: GHOSTSHIP_MAX_HP,
+                    alive: true,
+                    target_id: -1,
+                },
+                EnemyTag,
             ));
         }
-        Enemy::Skeleton => {
+        EnemyT::RSkeleton => {
             let skeleton_layout = TextureAtlasLayout::from_grid(
                 UVec2::new(31, 32), // SpriteSheet 1 pixel off, maybe fix later? it works like this though
                 6,                  // Columns
@@ -195,7 +230,7 @@ pub fn spawn_enemy(
                 },
             ));
         }
-        Enemy::Rock => {
+        EnemyT::Rock => {
             let rock_layout =
                 TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE * 2), 2, 1, None, None);
 
@@ -237,6 +272,6 @@ pub fn spawn_enemy(
                 },
             ));
         }
-        Enemy::Skel2 => {}
+        EnemyT::MSkeleton => {}
     }
 }

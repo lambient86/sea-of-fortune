@@ -10,7 +10,7 @@ pub const MAX_ACCEL: f32 = 800.;
 /// in the ocean world
 #[derive(Component)]
 pub struct Boat {
-    pub owner: Entity,
+    pub id: i32,
     pub movement_speed: f32,
     pub rotation_speed: f32,
     pub acceleration: f32,
@@ -21,10 +21,6 @@ pub struct Boat {
 /// boat
 #[derive(Component)]
 pub struct Cannonball;
-
-/// Struct representation for cannonball projectile lifetime
-#[derive(Component)]
-pub struct Lifetime(pub f32);
 
 /// Struct to maintain last boat position for out of transition spawning
 pub struct BoatLastPosition {

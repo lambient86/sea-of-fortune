@@ -19,6 +19,6 @@ impl Plugin for RockPlugin {
                     .run_if(in_state(GameworldState::Dungeon))
                     .run_if(in_state(GameState::Running)),
             )
-            .add_systems(OnExit(GameworldState::Ocean), (despawn_all_rocks));
+            .add_systems(OnExit(GameworldState::Dungeon), (despawn_all_rocks));
     }
 }

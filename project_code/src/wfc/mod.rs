@@ -7,6 +7,7 @@ use systems::*;
 use crate::components::{Background, GameworldState};
 use crate::level::components::*;
 use crate::level::systems::*;
+use crate::handle_door_translation;
 
 pub struct WFCPlugin;
 
