@@ -46,7 +46,7 @@ pub struct Collision {
 }
 
 impl Collision {
-    pub fn default(self) -> Collision {
+    pub fn default() -> Collision {
         Collision { is: false, dmg: 0. }
     }
 }

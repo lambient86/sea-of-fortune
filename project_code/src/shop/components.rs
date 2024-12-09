@@ -8,10 +8,10 @@ use bevy::prelude::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ItemType {
-    Sword(f32),
-    Dagger(f32),
-    Musket(f32),
-    Pistol(f32),
+    Sword,
+    Dagger,
+    Musket,
+    Pistol,
     Loot,
     PlayerHealth,
     BoatSpeed,
@@ -55,10 +55,10 @@ impl Default for Shop {
     fn default() -> Self {
         Self {
             items: vec![
-                Item::new(ItemType::Dagger(0.5), "Dagger".to_string(), 75),
-                Item::new(ItemType::Sword(1.), "Sword".to_string(), 100),
-                Item::new(ItemType::Pistol(0.5), "Pistol".to_string(), 150),
-                Item::new(ItemType::Musket(1.), "Musket".to_string(), 200),
+                Item::new(ItemType::Dagger, "Dagger".to_string(), 75),
+                Item::new(ItemType::Sword, "Sword".to_string(), 100),
+                Item::new(ItemType::Pistol, "Pistol".to_string(), 150),
+                Item::new(ItemType::Musket, "Musket".to_string(), 200),
                 Item::new(ItemType::PlayerHealth, "Player HP Upgrade".to_string(), 500),
                 Item::new(ItemType::BoatSpeed, "Boat Speed Upgrade".to_string(), 500),
                 Item::new(ItemType::BoatHealth, "Boat HP Upgrade".to_string(), 500),
@@ -90,10 +90,10 @@ impl Inventory {
         };
 
         // Add default items
-        inventory.add_item(Item::new(ItemType::Dagger(0.5), "Dagger".to_string(), 75));
-        inventory.add_item(Item::new(ItemType::Sword(1.), "Sword".to_string(), 100));
-        inventory.add_item(Item::new(ItemType::Pistol(0.5), "Pistol".to_string(), 150));
-        inventory.add_item(Item::new(ItemType::Musket(1.), "Musket".to_string(), 200));
+        inventory.add_item(Item::new(ItemType::Dagger, "Dagger".to_string(), 75));
+        inventory.add_item(Item::new(ItemType::Sword, "Sword".to_string(), 100));
+        inventory.add_item(Item::new(ItemType::Pistol, "Pistol".to_string(), 150));
+        inventory.add_item(Item::new(ItemType::Musket, "Musket".to_string(), 200));
 
         inventory
     }
