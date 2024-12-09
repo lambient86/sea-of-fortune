@@ -10,9 +10,8 @@ use bevy::{prelude::*, window::PresentMode};
 
 use crate::bat::components::Bat;
 use crate::player::components::Player;
-use crate::skeleton::components::Skeleton;
-use crate::player::components::Player; 
 use crate::rock::components::Rock;
+use crate::skeleton::components::Skeleton;
 use crate::wfc::components::Wall;
 
 use crate::components::*;
@@ -180,7 +179,10 @@ pub fn change_game_state(
 }
 
 pub fn check_wall_collisions(
-    mut entities_query: Query<(&mut Transform, &mut Velocity, &Hurtbox), Or<(With<Player>, With<Bat>, With<Skeleton>, With<Rock>)>>,
+    mut entities_query: Query<
+        (&mut Transform, &mut Velocity, &Hurtbox),
+        Or<(With<Player>, With<Bat>, With<Skeleton>, With<Rock>)>,
+    >,
     walls_query: Query<&BoundingBox, With<Wall>>,
 ) {
     for (mut transform, mut velocity, hurtbox) in entities_query.iter_mut() {
