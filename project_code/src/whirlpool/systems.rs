@@ -1,15 +1,15 @@
+use crate::boat::components::*;
+use crate::data::gameworld_data::*;
+use crate::enemies::*;
+use crate::hitbox_system::Hurtbox;
+use crate::whirlpool::components::Lifetime;
+use crate::whirlpool::components::*;
 use bevy::math::{vec2, NormedVectorSpace};
 use bevy::prelude::*;
 use bevy::render::texture;
 use bevy::time::Time;
 use rand::random;
-use crate::enemies::*;
-use crate::data::gameworld_data::*;
-use crate::boat::components::*;
-use crate::whirlpool::components::*;
-use crate::whirlpool::components::Lifetime;
 use rand::Rng;
-use crate::hitbox_system::Hurtbox;
 
 #[derive(Resource, Default)]
 pub struct WhirlpoolSpawnTimer {
@@ -24,7 +24,7 @@ pub struct WhirlpoolCooldownTimer {
 pub fn setup_whirlpool_timer(mut commands: Commands) {
     let initial_duration = rand::thread_rng().gen_range(25.0..35.0);
     commands.insert_resource(WhirlpoolSpawnTimer {
-        timer: Timer::from_seconds(initial_duration, TimerMode::Once), 
+        timer: Timer::from_seconds(initial_duration, TimerMode::Once),
     });
 }
 
@@ -41,16 +41,16 @@ pub fn spawn_whirlpool(
     if spawn_timer.timer.just_finished() {
         if let Ok(boat_transform) = boat_query.get_single() {
             let mut rng = rand::thread_rng();
-            
+
             // Generate random coordinates within the ocean bounds
-            let spawn_x = rng.gen_range(-(OCEAN_LEVEL_W/2.0)..(OCEAN_LEVEL_W/2.0));
-            let spawn_y = rng.gen_range(-(OCEAN_LEVEL_H/2.0)..(OCEAN_LEVEL_H/2.0));
-            
+            let spawn_x = rng.gen_range(-(OCEAN_LEVEL_W / 2.0)..(OCEAN_LEVEL_W / 2.0));
+            let spawn_y = rng.gen_range(-(OCEAN_LEVEL_H / 2.0)..(OCEAN_LEVEL_H / 2.0));
+
             // Ensure minimum distance from boat
             let min_distance = 300.0; // Minimum distance from boat
             let boat_pos = Vec2::new(boat_transform.translation.x, boat_transform.translation.y);
             let spawn_pos = Vec2::new(spawn_x, spawn_y);
-            
+
             // If too close to boat, adjust the position
             let spawn_pos = if (spawn_pos - boat_pos).length() < min_distance {
                 let direction = (spawn_pos - boat_pos).normalize();
@@ -62,14 +62,16 @@ pub fn spawn_whirlpool(
 
             spawn_enemy(
                 &mut commands,
-                Enemy::Whirlpool,
+                EnemyT::Whirlpool(0),
                 Transform::from_translation(spawn_pos),
                 &asset_server,
                 &mut texture_atlases,
             );
 
             let new_duration = rng.gen_range(25.0..35.0);
-            spawn_timer.timer.set_duration(std::time::Duration::from_secs_f32(new_duration));
+            spawn_timer
+                .timer
+                .set_duration(std::time::Duration::from_secs_f32(new_duration));
             spawn_timer.timer.reset();
         }
     }
@@ -93,7 +95,7 @@ pub fn despawn_whirlpool_system(
 pub fn check_whirlpool_collisions(
     mut query_set: ParamSet<(
         Query<(&mut Transform, &Hurtbox), With<Boat>>,
-        Query<(&Transform, &Hurtbox), With<Whirlpool>>
+        Query<(&Transform, &Hurtbox), With<Whirlpool>>,
     )>,
     time: Res<Time>,
     mut cooldown_timer: ResMut<WhirlpoolCooldownTimer>,
@@ -106,7 +108,8 @@ pub fn check_whirlpool_collisions(
         return;
     }
 
-    let whirlpool_positions: Vec<(Vec3, f32)> = query_set.p1()
+    let whirlpool_positions: Vec<(Vec3, f32)> = query_set
+        .p1()
         .iter()
         .map(|(transform, hurtbox)| (transform.translation, hurtbox.size.x))
         .collect();
@@ -119,16 +122,16 @@ pub fn check_whirlpool_collisions(
             // Check if boat is within whirlpool's influence
             if distance < collision_distance {
                 println!("Boat caught in whirlpool!");
-                
+
                 // Calculate direction from boat to whirlpool center
                 let direction = (whirlpool_pos - boat_transform.translation).normalize();
-                
+
                 // Pull strength increases as boat gets closer to center
                 let pull_strength = 5.0 * (1.0 - distance / collision_distance);
-                
+
                 // Apply the pull force
                 boat_transform.translation += direction * pull_strength;
-                
+
                 // Reset the cooldown timer when a collision occurs
                 cooldown_timer.timer.reset();
             }

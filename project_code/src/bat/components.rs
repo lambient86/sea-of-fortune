@@ -22,6 +22,3 @@ pub struct Bat {
 
 #[derive(Component)]
 pub struct BatProjectile;
-
-#[derive(Component)]
-pub struct Lifetime(pub f32);

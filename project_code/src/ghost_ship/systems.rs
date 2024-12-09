@@ -2,10 +2,10 @@ use bevy::prelude::*;
 
 use crate::boat::components::Boat;
 use crate::data::gameworld_data::*;
-use crate::enemies::*;
 use crate::ghost_ship::components::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
+use crate::{enemies::*, HostPlayer};
 use rand::Rng;
 
 #[derive(Resource, Default)]
@@ -28,42 +28,47 @@ pub fn setup_ghost_timer(mut commands: Commands) {
 pub fn rotate_ghostship(
     time: Res<Time>,
     mut query: Query<(&GhostShip, &mut Transform), Without<Boat>>,
-    player_query: Query<&Transform, With<Boat>>,
+    player_query: Query<(&Transform, &Boat), With<Boat>>,
+    host: Res<HostPlayer>,
 ) {
     // getting player position
-    let player_transform = player_query.single();
-    let player_translation = player_transform.translation.xy();
 
     for (ghostship, mut enemy_transform) in &mut query {
-        //getting kraken's position relative to player position
-        let ghostship_position = enemy_transform.translation.xy();
-        let distance_to_player = ghostship_position.distance(player_translation);
+        for (transform, boat) in player_query.iter() {
+            if boat.id != host.player.id {
+                continue;
+            }
+            let player_translation = transform.translation.xy();
+            //getting kraken's position relative to player position
+            let ghostship_position = enemy_transform.translation.xy();
+            let distance_to_player = ghostship_position.distance(player_translation);
 
-        //ensuring kraken is close enough to player to attack
-        if distance_to_player > GHOSTSHIP_ATTACK_DIST {
-            break;
+            //ensuring kraken is close enough to player to attack
+            if distance_to_player > GHOSTSHIP_ATTACK_DIST {
+                break;
+            }
+
+            //getting enemy forward
+            let enemy_forward = (enemy_transform.rotation * Vec3::Y).xy();
+            let to_player = (player_translation - enemy_transform.translation.xy()).normalize();
+            let forward_dot_player = enemy_forward.dot(to_player);
+
+            if (forward_dot_player - 1.0).abs() < f32::EPSILON {
+                continue;
+            }
+
+            let enemy_right = (enemy_transform.rotation * Vec3::X).xy();
+
+            let right_dot_player = enemy_right.dot(to_player);
+
+            let rotation_sign = -f32::copysign(1.0, right_dot_player);
+            let max_angle = forward_dot_player.clamp(-1.0, 1.0).acos();
+
+            let rotation_angle =
+                rotation_sign * (ghostship.rotation_speed * time.delta_seconds()).min(max_angle);
+
+            enemy_transform.rotate_z(rotation_angle);
         }
-
-        //getting enemy forward
-        let enemy_forward = (enemy_transform.rotation * Vec3::Y).xy();
-        let to_player = (player_translation - enemy_transform.translation.xy()).normalize();
-        let forward_dot_player = enemy_forward.dot(to_player);
-
-        if (forward_dot_player - 1.0).abs() < f32::EPSILON {
-            continue;
-        }
-
-        let enemy_right = (enemy_transform.rotation * Vec3::X).xy();
-
-        let right_dot_player = enemy_right.dot(to_player);
-
-        let rotation_sign = -f32::copysign(1.0, right_dot_player);
-        let max_angle = forward_dot_player.clamp(-1.0, 1.0).acos();
-
-        let rotation_angle =
-            rotation_sign * (ghostship.rotation_speed * time.delta_seconds()).min(max_angle);
-
-        enemy_transform.rotate_z(rotation_angle);
     }
 }
 
@@ -72,28 +77,24 @@ pub fn rotate_ghostship(
 pub fn spawn_ghostship(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,time: Res<Time>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+    time: Res<Time>,
     mut spawn_timer: ResMut<GhostSpawnTimer>,
 ) {
     spawn_timer.timer.tick(time.delta());
 
     if spawn_timer.timer.just_finished() {
         // Generate random coordinates within world bounds
-        let spawn_x = rand::thread_rng().gen_range(-OCEAN_LEVEL_W/2.0..OCEAN_LEVEL_W/2.0);
-        let spawn_y = rand::thread_rng().gen_range(-OCEAN_LEVEL_H/2.0..OCEAN_LEVEL_H/2.0);
-        
-        let spawn_pos = Vec3::new(
-            spawn_x,
-            spawn_y,
-            900.0
-        );
+        let spawn_x = rand::thread_rng().gen_range(-OCEAN_LEVEL_W / 2.0..OCEAN_LEVEL_W / 2.0);
+        let spawn_y = rand::thread_rng().gen_range(-OCEAN_LEVEL_H / 2.0..OCEAN_LEVEL_H / 2.0);
 
-        let transform = Transform::from_translation(spawn_pos)
-            .with_scale(Vec3::splat(2.0));
+        let spawn_pos = Vec3::new(spawn_x, spawn_y, 900.0);
+
+        let transform = Transform::from_translation(spawn_pos).with_scale(Vec3::splat(2.0));
 
         spawn_enemy(
             &mut commands,
-            Enemy::GhostShip,
+            EnemyT::GhostShip(0),
             transform,
             &asset_server,
             &mut texture_atlases,
@@ -101,7 +102,9 @@ pub fn spawn_ghostship(
 
         // Set new random duration for next spawn
         let new_duration = rand::thread_rng().gen_range(30.0..60.0);
-        spawn_timer.timer.set_duration(std::time::Duration::from_secs_f32(new_duration));
+        spawn_timer
+            .timer
+            .set_duration(std::time::Duration::from_secs_f32(new_duration));
         spawn_timer.timer.reset();
     }
 }
@@ -153,8 +156,9 @@ pub fn ghostship_attack(
     mut commands: Commands,
     time: Res<Time>,
     mut ghostship_query: Query<(&Transform, &mut AttackCooldown), With<GhostShip>>,
-    player_query: Query<&Transform, With<Boat>>,
+    player_query: Query<(&Transform, &Boat), With<Boat>>,
     asset_server: Res<AssetServer>,
+    host: Res<HostPlayer>,
 ) {
     for (ghostship_transform, mut cooldown) in ghostship_query.iter_mut() {
         // Attacks only when cooldown is over
@@ -167,31 +171,36 @@ pub fn ghostship_attack(
 
         //Gets positions (Vec3) of the entities
         let ghostship_translation = ghostship_transform.translation;
-        let player_translation = player_query.single().translation;
 
-        //Gets positions (Vec2) of the entities
-        let player_position = player_translation.xy();
-        let ghostship_position = ghostship_translation.xy();
+        for (ptransform, boat) in player_query.iter() {
+            if boat.id != host.player.id {
+                continue;
+            }
+            let player_translation = ptransform.translation;
 
-        //Gets distance
-        let distance_to_player = ghostship_position.distance(player_position);
+            //Gets positions (Vec2) of the entities
+            let player_position = player_translation.xy();
+            let ghostship_position = ghostship_translation.xy();
 
-        if distance_to_player > GHOSTSHIP_ATTACK_DIST {
-            continue;
-        }
+            //Gets distance
+            let distance_to_player = ghostship_position.distance(player_position);
 
-        //Gets direction projectile will be going
-        let original_direction = (player_translation - ghostship_translation).normalize();
-        let angle = original_direction.x.atan2(original_direction.y);
-        let angle_direction = Vec3::new(angle.sin(), angle.cos(), 0.0).normalize();
+            if distance_to_player > GHOSTSHIP_ATTACK_DIST {
+                continue;
+            }
 
-        let projectile_start_position = ghostship_translation + angle_direction * 10.0;
+            //Gets direction projectile will be going
+            let original_direction = (player_translation - ghostship_translation).normalize();
+            let angle = original_direction.x.atan2(original_direction.y);
+            let angle_direction = Vec3::new(angle.sin(), angle.cos(), 0.0).normalize();
 
-        //Sets the projectile texture
-        let ghostship_projectile_handle = asset_server.load("s_cannonball.png");
+            let projectile_start_position = ghostship_translation + angle_direction * 10.0;
 
-        //Creates Projectile
-        commands.spawn((
+            //Sets the projectile texture
+            let ghostship_projectile_handle = asset_server.load("s_cannonball.png");
+
+            //Creates Projectile
+            commands.spawn((
             SpriteBundle {
                 texture: ghostship_projectile_handle,
                 transform: Transform {
@@ -213,8 +222,8 @@ pub fn ghostship_attack(
                 entity: GHOSTSHIP,
                 projectile: true,
                 enemy: true,
-            },
-        ));
+            },));
+        }
     }
 }
 
@@ -257,31 +266,40 @@ pub fn ghostship_proj_lifetime_check(
 pub fn move_ghostship(
     time: Res<Time>,
     mut ghostship_query: Query<&mut Transform, With<GhostShip>>,
-    player_query: Query<&Transform, (With<Boat>, Without<GhostShip>)>,
+    player_query: Query<(&Transform, &Boat), (With<Boat>, Without<GhostShip>)>,
+    host: Res<HostPlayer>,
 ) {
     for mut transform in ghostship_query.iter_mut() {
         //Gets positions (Vec3) of the entities
         let ghostship_translation = transform.translation;
-        let player_translation = player_query.single().translation;
 
-        //Gets positions (Vec2) of the entities
-        let player_position = player_translation.xy();
-        let ghostship_position = ghostship_translation.xy();
+        for (ptransform, boat) in player_query.iter() {
+            if boat.id != host.player.id {
+                continue;
+            }
+            let player_translation = ptransform.translation;
 
-        //Gets distance
-        let distance_to_player = ghostship_position.distance(player_position);
+            //Gets positions (Vec2) of the entities
+            let player_position = player_translation.xy();
+            let ghostship_position = ghostship_translation.xy();
 
-        //Check
-        if distance_to_player > GHOSTSHIP_AGRO_RANGE || distance_to_player <= GHOSTSHIP_AGRO_STOP {
-            continue;
+            //Gets distance
+            let distance_to_player = ghostship_position.distance(player_position);
+
+            //Check
+            if distance_to_player > GHOSTSHIP_AGRO_RANGE
+                || distance_to_player <= GHOSTSHIP_AGRO_STOP
+            {
+                continue;
+            }
+
+            //Gets direction projectile will be going
+            let direction = (player_translation - ghostship_translation).normalize();
+            let velocity = direction * GHOSTSHIP_MOVEMENT_SPEED;
+
+            //Moves kraken
+            transform.translation += velocity * time.delta_seconds();
         }
-
-        //Gets direction projectile will be going
-        let direction = (player_translation - ghostship_translation).normalize();
-        let velocity = direction * GHOSTSHIP_MOVEMENT_SPEED;
-
-        //Moves kraken
-        transform.translation += velocity * time.delta_seconds();
     }
 }
 
