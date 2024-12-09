@@ -118,7 +118,6 @@ pub fn create_hitbox(
     entity_type: i32,
     projectile: bool,
     enemy: bool,
-    boat: false;
 ) {
     let lifetime_timer = lifetime.map(|duration| Timer::from_seconds(duration, TimerMode::Once));
     commands.entity(entity).insert(Hitbox {
@@ -146,7 +145,6 @@ pub fn create_hurtbox(
         colliding: false,
         iframe: Timer::from_seconds(1., TimerMode::Once),
         enemy,
-        boat: false;
     });
 }
 
