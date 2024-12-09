@@ -1,8 +1,0 @@
-C:\Users\theoz\OneDrive\Documents\CS 1666\sea-of-fortune\project_code\target\debug\deps\bevy_render_macros-b3b8100ef853d022.dll: C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_render_macros-0.14.2\src/lib.rs C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_render_macros-0.14.2\src\as_bind_group.rs C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_render_macros-0.14.2\src\extract_component.rs C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_render_macros-0.14.2\src\extract_resource.rs
-
-C:\Users\theoz\OneDrive\Documents\CS 1666\sea-of-fortune\project_code\target\debug\deps\bevy_render_macros-b3b8100ef853d022.d: C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_render_macros-0.14.2\src/lib.rs C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_render_macros-0.14.2\src\as_bind_group.rs C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_render_macros-0.14.2\src\extract_component.rs C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_render_macros-0.14.2\src\extract_resource.rs
-
-C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_render_macros-0.14.2\src/lib.rs:
-C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_render_macros-0.14.2\src\as_bind_group.rs:
-C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_render_macros-0.14.2\src\extract_component.rs:
-C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_render_macros-0.14.2\src\extract_resource.rs:

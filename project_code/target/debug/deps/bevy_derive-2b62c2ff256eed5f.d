@@ -1,9 +1,0 @@
-C:\Users\theoz\OneDrive\Documents\CS 1666\sea-of-fortune\project_code\target\debug\deps\bevy_derive-2b62c2ff256eed5f.dll: C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_derive-0.14.2\src/lib.rs C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_derive-0.14.2\src\app_plugin.rs C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_derive-0.14.2\src\bevy_main.rs C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_derive-0.14.2\src\derefs.rs C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_derive-0.14.2\src\enum_variant_meta.rs
-
-C:\Users\theoz\OneDrive\Documents\CS 1666\sea-of-fortune\project_code\target\debug\deps\bevy_derive-2b62c2ff256eed5f.d: C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_derive-0.14.2\src/lib.rs C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_derive-0.14.2\src\app_plugin.rs C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_derive-0.14.2\src\bevy_main.rs C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_derive-0.14.2\src\derefs.rs C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_derive-0.14.2\src\enum_variant_meta.rs
-
-C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_derive-0.14.2\src/lib.rs:
-C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_derive-0.14.2\src\app_plugin.rs:
-C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_derive-0.14.2\src\bevy_main.rs:
-C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_derive-0.14.2\src\derefs.rs:
-C:\Users\theoz\.cargo\registry\src\index.crates.io-6f17d22bba15001f\bevy_derive-0.14.2\src\enum_variant_meta.rs:
