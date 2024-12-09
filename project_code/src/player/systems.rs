@@ -503,6 +503,7 @@ pub fn sword_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     curr_mouse_pos: ResMut<CurrMousePos>,
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
     mut player_query: Query<
         (
             Entity,
@@ -552,7 +553,36 @@ pub fn sword_attack(
                     false,
                     false,
                 );
+
+                commands.spawn((
+                    SpriteBundle {
+                        texture: asset_server.load("s_sword_swipe_bigger.png"), // Replace with your swoosh sprite path
+                        transform: Transform::from_translation(
+                            transform.translation + direction.extend(0.1) * 50.0
+                        )
+                        .with_rotation(Quat::from_rotation_z(direction.angle_between(Vec2::X))),
+                        ..default()
+                    },
+                    SwordSwooshAnimation {
+                        timer: Timer::from_seconds(0.05, TimerMode::Once), // Adjust duration as needed
+                        active: true,
+                    }
+                ));
             }
+        }
+    }
+}
+
+pub fn sword_swoosh_animation(
+    time: Res<Time>,
+    mut commands: Commands,
+    mut swoosh_query: Query<(Entity, &mut SwordSwooshAnimation)>,
+) {
+    for (entity, mut swoosh) in swoosh_query.iter_mut() {
+        swoosh.timer.tick(time.delta());
+        
+        if swoosh.timer.finished() {
+            commands.entity(entity).despawn();
         }
     }
 }
@@ -673,6 +703,7 @@ pub fn musket_attack(
                         entity: PLAYER,
                         projectile: true,
                         enemy: false,
+                        boat: false;
                     },
                 ));
             }
@@ -731,6 +762,7 @@ pub fn pistol_attack(
                         entity: PLAYER,
                         projectile: true,
                         enemy: false,
+                        boat: false,
                     },
                 ));
             }
