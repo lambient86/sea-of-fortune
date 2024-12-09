@@ -6,6 +6,7 @@ use crate::ghost_ship::components::*;
 use crate::hitbox_system::components::*;
 use crate::kraken::components::*;
 use crate::player::components::*;
+use crate::poison_skeleton::components::*;
 use crate::rock::components::*;
 use crate::skeleton::components::*;
 use crate::whirlpool::components::*;
@@ -23,8 +24,8 @@ pub enum EnemyT {
     GhostShip(i32),
     Rock,
     RSkeleton,
-    MSkeleton,
     Whirlpool(i32),
+    PoisonSkeleton,
 }
 
 pub fn spawn_enemy(
@@ -272,6 +273,52 @@ pub fn spawn_enemy(
                 },
             ));
         }
-        EnemyT::MSkeleton => {}
+
+        EnemyT::PoisonSkeleton => {
+            let pskeleton_layout = TextureAtlasLayout::from_grid(
+                UVec2::new(31, 32), // SpriteSheet 1 pixel off, maybe fix later? it works like this though
+                6,                  // Columns
+                1,                  // Rows
+                None,               // Padding
+                None,               // Spacing
+            );
+
+            // Add the texture atlas to the resource
+
+            // Spawn the skeleton entity
+            commands.spawn((
+                SpriteBundle {
+                    texture: asset_server.load("s_poison_skeleton.png"), // This uses the TextureAtlas handle
+                    transform,
+                    ..default()
+                },
+                Skeleton {
+                    rotation_speed: 0.0,
+                    current_hp: PSKELETON_MAX_HP,
+                    max_hp: PSKELETON_MAX_HP,
+                },
+                TextureAtlas {
+                    layout: texture_atlases.add(pskeleton_layout.clone()),
+                    index: 0,
+                },
+                AttackCooldown {
+                    remaining: Timer::from_seconds(1.5, TimerMode::Once),
+                },
+                AnimationTimer::new(Timer::from_seconds(
+                    PSKELETON_ANIMATION_TIME,
+                    TimerMode::Repeating,
+                )),
+                AnimationFrameCount::new(6),
+                Velocity::new(),
+                Hurtbox {
+                    size: Vec2::new(32., 32.), // Adjust as needed
+                    offset: Vec2::ZERO,
+                    colliding: false,
+                    entity: PSKELETON,
+                    iframe: Timer::from_seconds(0.75, TimerMode::Once),
+                    enemy: true,
+                },
+            ));
+        }
     }
 }

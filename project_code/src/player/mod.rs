@@ -10,30 +10,21 @@ use systems::*;
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
-    /// Builds the player plugin
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            OnEnter(GameworldState::Island),
-            (
-                spawn_player,
+         app.add_systems(OnEnter(GameworldState::Island), (
+                initial_spawn_player,
                 apply_deferred,
-                spawn_weapon.after(spawn_player),
-            ),
-        )
-        .add_systems(
-            OnEnter(GameworldState::Dungeon),
-            (
-                spawn_player,
+                spawn_weapon.after(initial_spawn_player),
+                ))  
+            .add_systems(OnEnter(GameworldState::Dungeon), (
+                initial_spawn_player,
                 apply_deferred,
-                spawn_weapon.after(spawn_player),
-            ),
-        )
-        .add_systems(
-            Update,
-            (
-                move_player.after(spawn_player),
+                spawn_weapon.after(initial_spawn_player),))
+            .add_systems(Update, (    
+                move_player,
                 player_animation.after(move_player),
                 sword_attack,
+                sword_swoosh_animation,
                 musket_attack,
                 dagger_attack,
                 pistol_attack,

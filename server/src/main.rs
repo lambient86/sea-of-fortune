@@ -239,36 +239,37 @@ pub fn handle(
                                 )
                                 .expect("Failed to send [update_player] packet");
 
-                            udp.socket
-                                .send_to(
-                                    create_env(
-                                        "update_enemies".to_string(),
-                                        enemies.update.clone(),
-                                    )
-                                    .as_bytes(),
-                                    player.addr.clone(),
-                                )
-                                .expect("Failed to send [update_enemy] packet");
+                            /*
+                             udp.socket
+                                 .send_to(
+                                     create_env(
+                                         "update_enemies".to_string(),
+                                         enemies.update.clone(),
+                                     )
+                                     .as_bytes(),
+                                     player.addr.clone(),
+                                 )
+                                 .expect("Failed to send [update_enemy] packet");
+
+                             udp.socket
+                                 .send_to(
+                                     create_env("new_enemies".to_string(), enemies.new.clone())
+                                         .as_bytes(),
+                                     player.addr.clone(),
+                                 )
+                                 .expect("Failed to send [update_enemy] packet");
 
                             udp.socket
-                                .send_to(
-                                    create_env("new_enemies".to_string(), enemies.new.clone())
-                                        .as_bytes(),
-                                    player.addr.clone(),
-                                )
-                                .expect("Failed to send [update_enemy] packet");
-
-                            /*udp.socket
-                                .send_to(
-                                    create_env(
-                                        "update_projectiles".to_string(),
-                                        projectiles.clone(),
-                                    )
-                                    .as_bytes(),
-                                    player.addr.clone(),
-                                )
-                                .expect("Failed to send [update_projectiles] packet");
-                            projectiles.list.clear();*/
+                                 .send_to(
+                                     create_env(
+                                         "update_projectiles".to_string(),
+                                         projectiles.clone(),
+                                     )
+                                     .as_bytes(),
+                                     player.addr.clone(),
+                                 )
+                                 .expect("Failed to send [update_projectiles] packet");
+                             projectiles.list.clear();*/
                         }
                         enemies.new.list.clear();
                     }

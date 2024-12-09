@@ -1,14 +1,14 @@
 use std::ops::Bound;
 
+use crate::components::*;
 use crate::components::{BoundingBox, GameworldState, SpawnLocations};
 use crate::controls::*;
 use crate::data::gameworld_data::*;
 use crate::hitbox_system::*;
+use crate::network::components::HostPlayer;
 use crate::player::components::*;
-use crate::components::*;
-use super::components::*;
 
-use crate::shop::components::{Inventory, ItemType, Item};
+use crate::shop::components::{Inventory, Item, ItemType};
 use crate::shop::systems::generate_loot_item;
 
 use bevy::input::mouse::{self, MouseButtonInput};
@@ -138,30 +138,37 @@ pub fn player_animation(
 
 /*   SPAWN_PLAYER FUNCTION */
 /// Spawns the player in the gameworld
-pub fn spawn_player(
+pub fn initial_spawn_player(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     gameworld_state: Res<State<GameworldState>>,
-    mut player_query: Query<(&mut Transform, Entity), With<Player>>,
-    mut player_entities: ResMut<PlayerEntities>,
+    mut player_query: Query<&mut Transform, With<Player>>,
+    host: Res<HostPlayer>,
 ) {
-    if player_entities.players.len() >= 4 {
-        return; // Max players reached
-    }
+    // Check if player already exists
+    if let Ok(mut transform) = player_query.get_single_mut() {
+        println!(
+            "Current position before transition: {:?}",
+            transform.translation
+        );
+        // Just update position for existing player
+        transform.translation.z = 0.0; // Bring back into view
 
-    let player_id = player_entities.next_id;
-    player_entities.next_id += 1;
-
-    if let Ok((mut transform, _)) = player_query.get_single_mut() {
-        transform.translation.z = 0.0;
-        
         // Set position based on gameworld state
         transform.translation = match gameworld_state.get() {
             GameworldState::Island => Vec3::ZERO,
             GameworldState::Dungeon => Vec3::new(-2976.0, -2976.0, 0.0),
-            _ => transform.translation
+            _ => transform.translation,
         };
+        println!("New position after transition: {:?}", transform.translation);
+        return;
+    }
+
+    // Only spawn new player if player count < 4
+
+    let player_id = host.player.id;
+    if player_id >= 4 {
         return;
     }
 
@@ -173,22 +180,21 @@ pub fn spawn_player(
 
     let spawn_position = match gameworld_state.get() {
         GameworldState::Dungeon => Vec3::new(-2976.0, -2976.0, 0.0),
-        _ => Vec3::ZERO
+        _ => Vec3::ZERO,
     };
 
     //creating hurtbox for player
     let size = Vec2::new(32., 32.);
     let offset = Vec2::new(0., 0.);
 
-    let inventory = player_entities.saved_inventory.clone()
-        .unwrap_or_else(|| Inventory::new(100));
+    let inventory = Inventory::new(100);
 
     //setting up player for spawning
-    let player_entity = commands.spawn((
+    commands.spawn((
         SpriteBundle {
             texture: master_handle,
             transform: Transform {
-                // scale: Vec3::splat(2.0),
+                translation: spawn_position,
                 ..default()
             },
             ..default()
@@ -207,7 +213,7 @@ pub fn spawn_player(
             remaining: Timer::from_seconds(0.75, TimerMode::Once),
         },
         Player {
-            entity: Entity::from_raw(player_id as u32),
+            host_id: player_id,
             animation_state: SpriteState::Idle,
             timer: Timer::from_seconds(SpriteState::Idle.animation_speed(), TimerMode::Repeating),
             health: PLAYER_MAX_HP,
@@ -228,12 +234,7 @@ pub fn spawn_player(
             iframe: Timer::from_seconds(0.75, TimerMode::Once),
             enemy: false,
         },
-    )).id();
-
-    player_entities.players.push(player_entity);
-
-    println!("Player spawned with ID: {}", player_id);
-    println!("Current players: {:?}", player_entities.players);
+    ));
 }
 
 /*   SPAWN_WEAPON FUNCTION   */
@@ -246,13 +247,17 @@ pub fn spawn_weapon(
 ) {
     if let Ok((player_entity, player)) = player_query.get_single() {
         // Get initial weapon (sword)
-        let sword_level = player.inventory.items.iter()
+        let sword_level = player
+            .inventory
+            .items
+            .iter()
             .find(|item| item.item_type == ItemType::Sword)
             .map(|item| item.level)
             .unwrap_or(0);
 
         let master_handle: Handle<Image> = asset_server.load("s_cutlass.png");
-        let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
+        let master_layout =
+            TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
         let master_layout_handle = texture_atlases.add(master_layout);
 
         commands.entity(player_entity).with_children(|parent| {
@@ -277,8 +282,6 @@ pub fn spawn_weapon(
             ));
         });
     }
-    
-    
 }
 
 /*   SWAP_WEAPON FUNCTION   */
@@ -299,21 +302,24 @@ pub fn swap_weapon(
     if keyboard_input.just_pressed(KeyCode::Digit1) {
         // Switch to sword
         if player.weapon != 0 {
-
             if let Ok(children) = player_children_query.get_single() {
                 despawn_weapon_internal(&mut commands, children, &weapon_query);
             }
 
             player.weapon = 0;
             println!("Switched to sword!");
-            
-            let sword_level = player.inventory.items.iter()
+
+            let sword_level = player
+                .inventory
+                .items
+                .iter()
                 .find(|item| item.item_type == ItemType::Sword)
                 .map(|item| item.level)
                 .unwrap_or(0);
 
             let master_handle: Handle<Image> = asset_server.load("s_cutlass.png");
-            let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
+            let master_layout =
+                TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
             let master_layout_handle = texture_atlases.add(master_layout);
 
             let player = player_entity_query.single();
@@ -342,21 +348,24 @@ pub fn swap_weapon(
     } else if keyboard_input.just_pressed(KeyCode::Digit2) {
         // Switch to musket
         if player.weapon != 1 {
-
             if let Ok(children) = player_children_query.get_single() {
                 despawn_weapon_internal(&mut commands, children, &weapon_query);
             }
 
             player.weapon = 1;
             println!("Switched to dagger!");
-            
-            let dagger_level = player.inventory.items.iter()
+
+            let dagger_level = player
+                .inventory
+                .items
+                .iter()
                 .find(|item| item.item_type == ItemType::Dagger)
                 .map(|item| item.level)
                 .unwrap_or(0);
 
             let master_handle: Handle<Image> = asset_server.load("s_dagger.png");
-            let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
+            let master_layout =
+                TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
             let master_layout_handle = texture_atlases.add(master_layout);
 
             let player = player_entity_query.single();
@@ -385,7 +394,6 @@ pub fn swap_weapon(
     } else if keyboard_input.just_pressed(KeyCode::Digit3) {
         // Switch to dagger
         if player.weapon != 2 {
-
             if let Ok(children) = player_children_query.get_single() {
                 despawn_weapon_internal(&mut commands, children, &weapon_query);
             }
@@ -393,12 +401,16 @@ pub fn swap_weapon(
             player.weapon = 2;
             println!("Switched to musket!");
 
-            let musket_level = player.inventory.items.iter()
+            let musket_level = player
+                .inventory
+                .items
+                .iter()
                 .find(|item| item.item_type == ItemType::Musket)
                 .map(|item| item.level)
                 .unwrap_or(0);
             let master_handle: Handle<Image> = asset_server.load("s_musket.png");
-            let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
+            let master_layout =
+                TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
             let master_layout_handle = texture_atlases.add(master_layout);
 
             let player = player_entity_query.single();
@@ -416,28 +428,31 @@ pub fn swap_weapon(
                     Musket {
                         damage: Musket::default().calculate_damage(musket_level),
                         upgraded: musket_level > 0,
-                    }
+                    },
                 ));
             });
         }
     } else if keyboard_input.just_pressed(KeyCode::Digit4) {
         // Switch to pistol
         if player.weapon != 3 {
-
             if let Ok(children) = player_children_query.get_single() {
                 despawn_weapon_internal(&mut commands, children, &weapon_query);
             }
 
             player.weapon = 3;
             println!("Switched to pistol!");
-            
-            let pistol_level = player.inventory.items.iter()
+
+            let pistol_level = player
+                .inventory
+                .items
+                .iter()
                 .find(|item| item.item_type == ItemType::Pistol)
                 .map(|item| item.level)
                 .unwrap_or(0);
 
             let master_handle: Handle<Image> = asset_server.load("s_pistol.png");
-            let master_layout = TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
+            let master_layout =
+                TextureAtlasLayout::from_grid(UVec2::splat(TILE_SIZE), 8, 5, None, None);
             let master_layout_handle = texture_atlases.add(master_layout);
 
             let player = player_entity_query.single();
@@ -473,16 +488,20 @@ pub fn move_weapon(
         for &child in children.iter() {
             if let Ok((mut transform, mut sprite)) = transform_query.get_mut(child) {
                 let player_direction = player.animation_state;
-                let is_gun = player.weapon >= 2;  // weapons 2 and 3 are guns
+                let is_gun = player.weapon >= 2; // weapons 2 and 3 are guns
 
-                if player_direction == SpriteState::LeftRun || player_direction == SpriteState::BackwardRun {
+                if player_direction == SpriteState::LeftRun
+                    || player_direction == SpriteState::BackwardRun
+                {
                     transform.translation = if is_gun {
                         Vec3::new(-40., 0., 0.)
                     } else {
                         Vec3::new(-32., 0., 0.)
                     };
                     sprite.flip_x = true;
-                } else if player_direction == SpriteState::RightRun || player_direction == SpriteState::ForwardRun {
+                } else if player_direction == SpriteState::RightRun
+                    || player_direction == SpriteState::ForwardRun
+                {
                     transform.translation = if is_gun {
                         Vec3::new(40., 0., 0.)
                     } else {
@@ -503,6 +522,7 @@ pub fn sword_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     curr_mouse_pos: ResMut<CurrMousePos>,
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
     mut player_query: Query<
         (
             Entity,
@@ -552,7 +572,36 @@ pub fn sword_attack(
                     false,
                     false,
                 );
+
+                commands.spawn((
+                    SpriteBundle {
+                        texture: asset_server.load("s_sword_swipe_bigger.png"), // Replace with your swoosh sprite path
+                        transform: Transform::from_translation(
+                            transform.translation + direction.extend(0.1) * 50.0,
+                        )
+                        .with_rotation(Quat::from_rotation_z(direction.angle_between(Vec2::X))),
+                        ..default()
+                    },
+                    SwordSwooshAnimation {
+                        timer: Timer::from_seconds(0.05, TimerMode::Once), // Adjust duration as needed
+                        active: true,
+                    },
+                ));
             }
+        }
+    }
+}
+
+pub fn sword_swoosh_animation(
+    time: Res<Time>,
+    mut commands: Commands,
+    mut swoosh_query: Query<(Entity, &mut SwordSwooshAnimation)>,
+) {
+    for (entity, mut swoosh) in swoosh_query.iter_mut() {
+        swoosh.timer.tick(time.delta());
+
+        if swoosh.timer.finished() {
+            commands.entity(entity).despawn();
         }
     }
 }
@@ -563,7 +612,10 @@ pub fn dagger_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     curr_mouse_pos: ResMut<CurrMousePos>,
     mut commands: Commands,
-    mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown, &Player), With<Player>>,
+    mut player_query: Query<
+        (Entity, &Transform, &Velocity, &mut AttackCooldown, &Player),
+        With<Player>,
+    >,
 ) {
     for (entity, transform, velocity, mut cooldown, player) in player_query.iter_mut() {
         if !cooldown.remaining.finished() {
@@ -686,7 +738,10 @@ pub fn pistol_attack(
     mouse_input: Res<ButtonInput<MouseButton>>,
     curr_mouse_pos: ResMut<CurrMousePos>,
     mut commands: Commands,
-    mut player_query: Query<(Entity, &Transform, &Velocity, &mut AttackCooldown, &Player), With<Player>>,
+    mut player_query: Query<
+        (Entity, &Transform, &Velocity, &mut AttackCooldown, &Player),
+        With<Player>,
+    >,
     asset_server: Res<AssetServer>,
 ) {
     for (entity, transform, velocity, mut cooldown, player) in player_query.iter_mut() {
@@ -701,7 +756,9 @@ pub fn pistol_attack(
                 cooldown.remaining = Timer::from_seconds(PISTOL_COOLDOWN, TimerMode::Once);
 
                 let player_position = transform.translation;
-                let original_direction = (Vec3::new(curr_mouse_pos.0.x, curr_mouse_pos.0.y, 0.) - transform.translation).normalize();
+                let original_direction = (Vec3::new(curr_mouse_pos.0.x, curr_mouse_pos.0.y, 0.)
+                    - transform.translation)
+                    .normalize();
                 let angle = original_direction.x.atan2(original_direction.y);
                 let firing_angle = Vec3::new(angle.sin(), angle.cos(), 0.0);
                 let projectile_start_position = player_position + firing_angle * 10.0;
@@ -755,6 +812,7 @@ pub fn move_musketball(
 /// if current health == 0 --> respawn player
 pub fn check_player_health(
     mut player_query: Query<(&mut Player, Entity, &mut Hurtbox, &mut Transform), With<Player>>,
+    gameworld_state: Res<State<GameworldState>>,
 ) {
     for (mut player, entity, mut hurtbox, mut transform) in player_query.iter_mut() {
         if !hurtbox.colliding {
@@ -766,7 +824,13 @@ pub fn check_player_health(
         if player.health <= 0. {
             println!("Player died... yikes!");
             player.health = player.max_health;
-            transform.translation = player.spawn_position;
+
+            let respawn_pos = match gameworld_state.get() {
+                GameworldState::Dungeon => Vec3::new(-2976.0, -2976.0, 0.0),
+                _ => Vec3::ZERO,
+            };
+
+            transform.translation = respawn_pos;
             println!("Player respawned!");
         } else {
             println!("Ouch! Player was hit.");
@@ -779,10 +843,7 @@ pub fn check_player_health(
 /*   DESPAWN_PLAYER FUNCTION   */
 /// Despawns the player entity
 /// DEBUG: Will despawn any and all players
-pub fn despawn_player(
-    mut commands: Commands,
-    mut player_query: Query<&mut Transform, With<Player>>,
-) {
+pub fn despawn_player(mut player_query: Query<&mut Transform, With<Player>>) {
     if let Ok(mut transform) = player_query.get_single_mut() {
         transform.translation.z = 10000.0;
     }
