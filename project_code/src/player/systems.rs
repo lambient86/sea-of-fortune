@@ -227,7 +227,6 @@ pub fn spawn_player(
             entity: PLAYER,
             iframe: Timer::from_seconds(0.75, TimerMode::Once),
             enemy: false,
-            boat: false,
         },
     )).id();
 
