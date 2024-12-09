@@ -4,6 +4,9 @@ pub mod components;
 pub mod systems;
 
 use crate::components::GameState;
+use crate::hud::systems::init_ship_hud;
+use crate::player::systems::despawn_player;
+
 use crate::GameworldState;
 use systems::*;
 use crate::player::systems::*;
@@ -15,7 +18,7 @@ impl Plugin for BoatPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             OnEnter(GameworldState::Ocean),
-            spawn_boat.after(despawn_player),
+            (spawn_boat.after(despawn_player),),
         )
         .add_systems(
             Update,

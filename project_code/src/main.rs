@@ -7,6 +7,7 @@ mod data;
 mod enemies;
 mod ghost_ship;
 mod hitbox_system;
+mod hud;
 mod kraken;
 mod level;
 mod network;
@@ -36,6 +37,7 @@ use enemies::*;
 use ghost_ship::components::*;
 use ghost_ship::GhostShipPlugin;
 use hitbox_system::*;
+use hud::HUDPlugin;
 use kraken::components::*;
 use kraken::KrakenPlugin;
 use level::components::*;
@@ -171,6 +173,7 @@ fn main() {
         .add_plugins(WindPlugin)
         .add_plugins(WhirlpoolPlugin)
         .add_plugins(BossPlugin)
+        .add_plugins(HUDPlugin)
         .add_systems(
             Update,
             move_player_camera.after(move_player).run_if(
@@ -278,8 +281,9 @@ pub fn update(
                                 rotation_speed: f32::to_radians(100.0),
                                 acceleration: 0.,
                                 aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
-                                health: 200.,
-                                max_health: 200.,
+                                health: 10.,
+                                max_health: 10.,
+                                cannon_damage: 1.,
                             },
                         ));
                     }

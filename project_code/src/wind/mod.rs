@@ -12,11 +12,12 @@ pub struct WindPlugin;
 impl Plugin for WindPlugin {
     /// Builds the boat plugin
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, init_wind).add_systems(
-            Update,
-            (change_wind_dir)
-                .run_if(in_state(GameworldState::Ocean))
-                .run_if(in_state(GameState::Running)),
-        );
+        app.add_systems(Startup, (init_wind, init_timer))
+            .add_systems(
+                Update,
+                (change_wind_dir)
+                    .run_if(in_state(GameworldState::Ocean))
+                    .run_if(in_state(GameState::Running)),
+            );
     }
 }
