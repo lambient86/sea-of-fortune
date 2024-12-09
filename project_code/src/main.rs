@@ -25,9 +25,6 @@ use bevy::{prelude::*, window::PresentMode};
 use boat::components::Boat;
 use boat::systems::*;
 use boat::BoatPlugin;
-use components::GameState;
-use components::GameworldState;
-use components::SpawnLocations;
 use components::*;
 use controls::*;
 use data::gameworld_data::*;
@@ -198,6 +195,8 @@ fn main() {
         .insert_state(GameState::Running)
         .insert_resource(SpawnLocations::default())
         .add_systems(Last, leave)
+        .insert_resource(PlayerEntities::default())
+        .insert_resource(CurrentIslandType::default())
         .run();
 }
 

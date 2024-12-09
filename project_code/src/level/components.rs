@@ -23,6 +23,7 @@ pub struct SandTile;
 
 #[derive(Component, Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum IslandType {
+    Start,
     Level1,
     Level2,
     Level3,

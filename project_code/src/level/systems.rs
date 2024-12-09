@@ -1,5 +1,6 @@
 use crate::components::{BoundingBox, GameworldState};
 use crate::level::components::*;
+use crate::components::*;
 use bevy::prelude::*;
 
 use crate::data::gameworld_data::*;
@@ -164,6 +165,7 @@ pub fn setup_island(
     island_query: Query<&Island, With<Island>>,
     dungeon_tile_sheet: Res<DungeonSheet>,
     ocean_door: Res<OceanDoorHandle>,
+    current_island_type: Res<CurrentIslandType>,
 ) {
     if *game_world_state.get() == GameworldState::Island {
         let mut rng = rand::thread_rng();
@@ -214,6 +216,23 @@ pub fn setup_island(
             t += Vec3::new(0., (TILE_SIZE * 2) as f32, 0.);
             t.x = -SAND_W_CENTER + (TILE_SIZE * 2) as f32 / 2.0;
             h += 1;
+        }
+
+        if current_island_type.island_type == IslandType::Start {
+            commands.spawn((
+                SpriteBundle {
+                    texture: ocean_door.0.clone(),
+                    transform: Transform {
+                        translation: Vec3::new(-400., 0., 10.0),
+                        ..default()
+                    },
+                    ..default()
+                },
+                OceanDoor {
+                    aabb: BoundingBox::new(Vec3::new(-400., 0., 10.).truncate(), Vec2::splat(64.0)),
+                },
+            ));
+            return;
         }
 
         commands.spawn((
@@ -271,6 +290,45 @@ pub fn setup_island(
             Dungeon {
                 aabb: BoundingBox::new(Vec3::new(0., 256., 10.).truncate(), Vec2::splat(64.0)),
                 dungeon_type: curr_dungeon_type,
+                size: Vec2::splat(64.0),
+            },
+        ));
+    }
+}
+
+pub fn setup_dungeon(
+    mut commands: Commands,
+    game_world_state: Res<State<GameworldState>>,
+    dungeon_tile_sheet: Res<DungeonSheet>,
+    current_island_type: Res<CurrentIslandType>,
+    ocean_door: Res<OceanDoorHandle>,
+) {
+    if *game_world_state.get() == GameworldState::Dungeon {
+        // Get correct dungeon texture based on island type
+        let curr_dungeon = match current_island_type.island_type {
+            IslandType::Start => dungeon_tile_sheet.0.clone(),
+            IslandType::Level1 => dungeon_tile_sheet.0.clone(),
+            IslandType::Level2 => dungeon_tile_sheet.1.clone(),
+            IslandType::Level3 => dungeon_tile_sheet.2.clone(),
+            IslandType::Boss => dungeon_tile_sheet.3.clone(),
+        };
+
+        // Spawn dungeon door/exit
+        commands.spawn((
+            SpriteBundle {
+                texture: ocean_door.0.clone(),
+                transform: Transform {
+                    translation: Vec3::new(-2976.0, -3200.0, 10.0),
+                    ..default()
+                },
+                ..default()
+            },
+            Dungeon {
+                aabb: BoundingBox::new(
+                    Vec3::new(-2976.0, -3200.0, 10.0).truncate(),
+                    Vec2::splat(64.0)
+                ),
+                dungeon_type: current_island_type.island_type,
                 size: Vec2::splat(64.0),
             },
         ));

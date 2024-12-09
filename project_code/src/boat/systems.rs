@@ -2,6 +2,9 @@ use std::thread;
 
 use crate::boat::components::*;
 use crate::components::BoundingBox;
+use crate::components::*;
+use crate::controls::*;
+
 use crate::data::gameworld_data::*;
 use crate::player::components::AttackCooldown;
 use crate::wind::components::Wind;
@@ -102,49 +105,53 @@ pub fn spawn_boat(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     host: Res<HostPlayer>,
+    player_entities: Res<PlayerEntities>,
 ) {
-    //getting boat sprite info
-    let boat_sheet_handle = asset_server.load("s_basic_ship.png");
-    let boat_layout = TextureAtlasLayout::from_grid(UVec2::splat(100), 2, 2, None, None);
-    let boat_layout_handle = texture_atlases.add(boat_layout);
+    if let Some(&player_entity) = player_entities.players.first() {
+        //getting boat sprite info
+        let boat_sheet_handle = asset_server.load("s_basic_ship.png");
+        let boat_layout = TextureAtlasLayout::from_grid(UVec2::splat(100), 2, 2, None, None);
+        let boat_layout_handle = texture_atlases.add(boat_layout);
 
-    //getting hurtbox information
-    let hurtbox_size = Vec2::new(50., 50.);
-    let hurtbox_offset = Vec2::new(0., 0.);
+        //getting hurtbox information
+        let hurtbox_size = Vec2::new(50., 50.);
+        let hurtbox_offset = Vec2::new(0., 0.);
 
-    //spawning boat
-    commands.spawn((
-        SpriteBundle {
-            texture: boat_sheet_handle,
-            transform: Transform {
-                translation: Vec3::new(0., 0., 900.),
+        
+        //spawning boat
+        commands.spawn((
+            SpriteBundle {
+                texture: boat_sheet_handle,
+                transform: Transform {
+                    translation: Vec3::new(0., 0., 900.),
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        },
-        TextureAtlas {
-            layout: boat_layout_handle.clone(),
-            index: 0,
-        },
-        Boat {
-            movement_speed: 150.,
-            rotation_speed: f32::to_radians(100.0),
-            acceleration: 0.,
-            aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
-            id: host.player.id,
-        },
-        AttackCooldown {
-            remaining: Timer::from_seconds(1.5, TimerMode::Once),
-        },
-        Hurtbox {
-            size: hurtbox_size,
-            offset: hurtbox_offset,
-            entity: BOAT,
-            colliding: false,
-            iframe: Timer::from_seconds(0.75, TimerMode::Once),
-            enemy: false,
-        },
-    ));
+            TextureAtlas {
+                layout: boat_layout_handle.clone(),
+                index: 0,
+            },
+            Boat {
+                owner: player_entity,
+                movement_speed: 150.,
+                rotation_speed: f32::to_radians(100.0),
+                acceleration: 0.,
+                aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
+            },
+            AttackCooldown {
+                remaining: Timer::from_seconds(1.5, TimerMode::Once),
+            },
+            Hurtbox {
+                size: hurtbox_size,
+                offset: hurtbox_offset,
+                entity: BOAT,
+                colliding: false,
+                iframe: Timer::from_seconds(0.75, TimerMode::Once),
+                enemy: false,
+            },
+        ));
+    }
 }
 
 /*   BOAT_ATTACK FUNCTION   */
