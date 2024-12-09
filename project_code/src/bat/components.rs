@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use crate::shop::components::Item;
 
 //constants
 pub const BAT_ANIMATION_TIME: f32 = 0.2;
@@ -22,3 +23,13 @@ pub struct Bat {
 
 #[derive(Component)]
 pub struct BatProjectile;
+
+#[derive(Component)]
+pub struct Loot;
+
+#[derive(Bundle)]
+pub struct LootBundle {
+    pub item: Item,
+    pub sprite_bundle: SpriteBundle,
+    pub marker: Loot,
+}

@@ -7,6 +7,7 @@ use crate::enemies::*;
 use crate::hitbox_system::*;
 use crate::player::components::*;
 use crate::skeleton::components::*;
+use crate::shop::systems::*;
 
 /*   ROTATE_skeleton FUNCTION   */
 /// This should be changed to a function called "track_player", which will
@@ -96,9 +97,10 @@ pub fn spawn_skeleton(
 // player weapon/attack collision) and then takes 1 damage (dies)
 pub fn skeleton_damaged(
     mut commands: Commands,
-    mut skeleton_query: Query<(&mut Skeleton, Entity, &mut Hurtbox), With<Skeleton>>,
+    mut skeleton_query: Query<(&mut Skeleton, Entity, &mut Hurtbox, &Transform), With<Skeleton>>,
+    mut player_query: Query<&mut Player>,
 ) {
-    for (mut skeleton, entity, mut hurtbox) in skeleton_query.iter_mut() {
+    for (mut skeleton, entity, mut hurtbox, transform) in skeleton_query.iter_mut() {
         if !hurtbox.colliding {
             continue;
         }
@@ -107,6 +109,13 @@ pub fn skeleton_damaged(
 
         if skeleton.current_hp <= 0. {
             println!("Skeleton was attacked by player, it is dead :(");
+            let loot = generate_loot_item(Enemy::Skeleton);
+            if loot.price > 0 {
+                println!("Skeleton dropped: {}", loot.name);
+                if let Ok(mut player) = player_query.get_single_mut() {
+                    player.inventory.add_item(loot);
+                }
+            }
             commands.entity(entity).despawn();
         } else {
             println!("Skeleton was attacked by player");
