@@ -24,6 +24,7 @@ impl Plugin for PlayerPlugin {
                 move_player,
                 player_animation.after(move_player),
                 sword_attack,
+                sword_swoosh_animation,
                 musket_attack,
                 dagger_attack,
                 pistol_attack,

@@ -68,6 +68,13 @@ pub struct MusketballVelocity {
     pub v: Vec3,
 }
 
+#[derive(Component)]
+pub struct SwordSwooshAnimation {
+    pub timer: Timer,
+    pub active: bool,
+}
+
+
 /// Struct representing the sword weapon for the player
 #[derive(Component)]
 pub struct Sword {

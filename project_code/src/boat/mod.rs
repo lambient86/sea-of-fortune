@@ -24,6 +24,7 @@ impl Plugin for BoatPlugin {
                 boat_attack.after(move_boat),
                 move_cannonball,
                 cannonball_lifetime_check,
+                check_boat_health,
             )
                 .run_if(in_state(GameworldState::Ocean))
                 .run_if(in_state(GameState::Running)),

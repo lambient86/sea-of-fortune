@@ -24,7 +24,7 @@ pub fn check_hitbox_hurtbox_collisions(
         let hurtbox_max = hurtbox_pos + hurtbox.size / 2.0;
 
         for (hitbox_entity, hitbox_transform, hitbox) in hitbox_query.iter() {
-            if hurtbox.enemy != hitbox.enemy {
+            if hurtbox.enemy != hitbox.enemy{
                 let hitbox_pos = hitbox_transform.translation.truncate() + hitbox.offset;
                 let hitbox_min = hitbox_pos - hitbox.size / 2.0;
                 let hitbox_max = hitbox_pos + hitbox.size / 2.0;
