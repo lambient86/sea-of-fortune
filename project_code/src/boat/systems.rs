@@ -150,6 +150,7 @@ pub fn spawn_boat(
                 colliding: false,
                 iframe: Timer::from_seconds(0.75, TimerMode::Once),
                 enemy: false,
+                boat: true;
             },
         ));
     }
@@ -167,11 +168,12 @@ pub fn check_boat_health(
 
         if boat.health <= 0. {
             println!("Boat died... yikes!");
+            transform.translation = Vec3::new(0., 0., 900.);
             boat.health = boat.max_health;
             //transform.translation = boat.spawn_position;
             println!("Boat respawned!");
         } else {
-            println!("Ouch! Boat was hit.");
+            println!("Ouch! Boat was hit... HP: {}", boat.health);
         }
 
         hurtbox.colliding = false;

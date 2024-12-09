@@ -219,6 +219,7 @@ pub fn skeleton_attack(
                 entity: SKELETON,
                 projectile: true,
                 enemy: true,
+                boat: false,
             },
             AnimationTimer::new(Timer::from_seconds(0.5, TimerMode::Repeating)),
         ));

@@ -227,6 +227,7 @@ pub fn spawn_player(
             entity: PLAYER,
             iframe: Timer::from_seconds(0.75, TimerMode::Once),
             enemy: false,
+            boat: false,
         },
     )).id();
 
@@ -703,6 +704,7 @@ pub fn musket_attack(
                         entity: PLAYER,
                         projectile: true,
                         enemy: false,
+                        boat: false;
                     },
                 ));
             }
@@ -761,6 +763,7 @@ pub fn pistol_attack(
                         entity: PLAYER,
                         projectile: true,
                         enemy: false,
+                        boat: false,
                     },
                 ));
             }

@@ -238,7 +238,7 @@ pub fn handle(
                                     player.addr.clone(),
                                 )
                                 .expect("Failed to send [update_player] packet");
-
+                            /*
                             udp.socket
                                 .send_to(
                                     create_env(
@@ -258,7 +258,7 @@ pub fn handle(
                                 )
                                 .expect("Failed to send [update_enemy] packet");
 
-                            /*udp.socket
+                            udp.socket
                                 .send_to(
                                     create_env(
                                         "update_projectiles".to_string(),
