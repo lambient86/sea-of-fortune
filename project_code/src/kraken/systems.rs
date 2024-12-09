@@ -219,7 +219,6 @@ pub fn kraken_attack(
                 entity: KRAKEN,
                 projectile: true,
                 enemy: true,
-                boat: false,
             },
         ));
         }
