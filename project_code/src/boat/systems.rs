@@ -138,6 +138,7 @@ pub fn spawn_boat(
             aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
             health: BOAT_MAX_HP,
             max_health: BOAT_MAX_HP,
+            cannon_damage: 1.,
         },
         AttackCooldown {
             remaining: Timer::from_seconds(1.5, TimerMode::Once),

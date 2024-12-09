@@ -4,6 +4,7 @@ pub mod components;
 pub mod systems;
 
 use crate::components::GameState;
+use crate::hud::systems::init_ship_hud;
 use crate::player::systems::despawn_player;
 
 use crate::GameworldState;

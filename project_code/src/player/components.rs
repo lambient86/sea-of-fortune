@@ -1,4 +1,5 @@
 use crate::{components::BoundingBox, shop::components::Inventory};
+use crate::network::components::HostPlayer;
 use bevy::prelude::*;
 
 /// The speed at which the player accelerates
@@ -21,6 +22,12 @@ pub const PISTOL_COOLDOWN: f32 = 0.75;  // Half of musket cooldown
 pub const PLAYER_MAX_HP: f32 = 3.;
 
 #[derive(Component)]
+pub struct PlayerVisibility {
+    pub visible: bool
+}
+
+
+#[derive(Component)]
 pub struct DespawnWeapon {
     pub should_despawn: bool,
 }
@@ -36,7 +43,7 @@ impl Default for DespawnWeapon {
 /// Struct representing the player
 #[derive(Component)]
 pub struct Player {
-    pub entity: Entity,
+    pub host_id: i32,
     pub animation_state: SpriteState,
     pub timer: Timer,
     pub health: f32,
@@ -60,6 +67,13 @@ pub struct MusketballLifetime(pub f32);
 pub struct MusketballVelocity {
     pub v: Vec3,
 }
+
+#[derive(Component)]
+pub struct SwordSwooshAnimation {
+    pub timer: Timer,
+    pub active: bool,
+}
+
 
 /// Struct representing the sword weapon for the player
 #[derive(Component)]

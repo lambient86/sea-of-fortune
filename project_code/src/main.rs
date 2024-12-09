@@ -7,10 +7,12 @@ mod data;
 mod enemies;
 mod ghost_ship;
 mod hitbox_system;
+mod hud;
 mod kraken;
 mod level;
 mod network;
 mod player;
+mod poison_skeleton;
 mod rock;
 mod shop;
 mod skeleton;
@@ -36,15 +38,15 @@ use enemies::*;
 use ghost_ship::components::*;
 use ghost_ship::GhostShipPlugin;
 use hitbox_system::*;
+use hud::HUDPlugin;
 use kraken::components::*;
 use kraken::KrakenPlugin;
 use level::components::*;
 use level::LevelPlugin;
 use player::components::AttackCooldown;
-use player::systems::move_player;
-use player::systems::spawn_player;
 use player::systems::*;
 use player::PlayerPlugin;
+use poison_skeleton::PSkeletonPlugin;
 use rock::RockPlugin;
 use shop::ShopPlugin;
 use skeleton::SkeletonPlugin;
@@ -174,6 +176,7 @@ fn main() {
         .add_plugins(WhirlpoolPlugin)
         .add_plugins(StormPlugin)
         .add_plugins(BossPlugin)
+        .add_plugins(HUDPlugin)
         .add_systems(
             Update,
             move_player_camera.after(move_player).run_if(
@@ -190,9 +193,10 @@ fn main() {
         .add_systems(Update, change_game_state)
         .add_systems(Update, update_mouse_pos)
         .add_systems(Update, check_wall_collisions.after(move_player))
+        .add_systems(Update, handle_transition_immunity)
         .add_systems(
             OnEnter(GameworldState::Dungeon),
-            handle_dungeon_entry.after(spawn_player),
+            handle_dungeon_entry.after(initial_spawn_player),
         )
         .add_systems(OnEnter(GameworldState::Dungeon), handle_door_translation)
         .add_systems(OnEnter(GameworldState::Island), handle_door_translation)
@@ -203,6 +207,7 @@ fn main() {
         .add_systems(Last, leave)
         .insert_resource(PlayerEntities::default())
         .insert_resource(CurrentIslandType::default())
+        .insert_resource(StateTransitionCooldown::default())
         .run();
 }
 
@@ -279,13 +284,15 @@ pub fn update(
                                 rotation_speed: f32::to_radians(100.0),
                                 acceleration: 0.,
                                 aabb: BoundingBox::new(Vec2::splat(0.), Vec2::splat(16.)),
-                                health: 200.,
-                                max_health: 200.,
+                                health: 10.,
+                                max_health: 10.,
+                                cannon_damage: 1.,
                             },
                         ));
                     }
                 }
-            } /*else if env.message == "update_enemies" {
+
+            /*else if env.message == "update_enemies" {
                 let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
                 let enemies = packet.payload;
 
@@ -389,7 +396,8 @@ pub fn update(
                     println!("Enemy [{}] dead", e.id);
                     break;
                 }
-            } else if env.message == "new_enemies" {
+            }
+            /*else if env.message == "new_enemies" {
                 let packet: Packet<Enemies> = serde_json::from_str(&env.packet).unwrap();
                 let enemies = packet.payload;
 
